@@ -7,8 +7,17 @@ if (!require('sidora.core')) {
 if (!require('pandora2eager')) {
   if(!require('remotes')) install.packages('remotes')
   remotes::install_github('sidora-tools/pandora2eager', quiet=T)
-} else {library(sidora.core)}
-library(tidyverse, warn.conflicts = F)
+} else {library(pandora2eager)}
+library(purrr)
+library(dplyr, warn.conflicts = F)
+require(optparse)
+
+## Validate analysis type option input
+validate_analysis_type <- function(option, opt_str, value, parser) {
+  valid_entries=c("TF", "SG")
+  ifelse(value %in% valid_entries, return(value), stop(call.=F, "\nInvalid analysis type: '", value, 
+                                                       "'\nAccepted values: ", paste(valid_entries,collapse=", "),"\n\n"))
+}
 
 ## MAIN ##
 
@@ -17,9 +26,12 @@ parser <- OptionParser(usage = "%prog [options] .credentials")
 parser <- add_option(parser, c("-i", "--input_iid"), type = 'character', 
                      action = "store", dest = "input_iid", 
                      help = "The Pandora individual ID of the input individual. A TSV file will be prepared with all relevant processed BAM files from this\n\t\tindividual")
-parser <- add_option(parser, c("-a", "--analysis_type"), type='character',
-                     action ='store', dest = "analysis_type",
+parser <- add_option(parser, c("-a", "--analysis_type"), type = 'character',
+                     action = "callback", dest = "analysis_type",
+                     callback = validate_analysis_type, default=NA,
                      help="The analysis type to compile the data from. Should be one of: 'SG', 'TF'.")
+arguments <- parse_args(parser, positional_arguments = 1)
+
 arguments <- parse_args(parser, positional_arguments = 1)
 
 opts <- arguments$options
