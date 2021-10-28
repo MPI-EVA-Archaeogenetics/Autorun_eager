@@ -8,9 +8,10 @@ if (!require('pandora2eager')) {
   if(!require('remotes')) install.packages('remotes')
   remotes::install_github('sidora-tools/pandora2eager', quiet=T)
 } else {library(pandora2eager)}
-library(purrr)
-library(dplyr, warn.conflicts = F)
+require(purrr)
+require(dplyr, warn.conflicts = F)
 require(optparse)
+require(readr)
 
 ## Validate analysis type option input
 validate_analysis_type <- function(option, opt_str, value, parser) {
@@ -30,6 +31,12 @@ parser <- add_option(parser, c("-a", "--analysis_type"), type = 'character',
                      action = "callback", dest = "analysis_type",
                      callback = validate_analysis_type, default=NA,
                      help="The analysis type to compile the data from. Should be one of: 'SG', 'TF'.")
+parser <- add_option(parser, c("-r", "--rename"), type='logical',
+                     action='store_true', dest='rename', default=F,
+                     help="Changes all dots (.) in the Library_ID field of the output to underscores (_).
+			Some tools used in nf-core/eager will strip everything after the first dot (.)
+			from the name of the input file, which can cause naming conflicts in rare cases."
+                     )
 arguments <- parse_args(parser, positional_arguments = 1)
 
 arguments <- parse_args(parser, positional_arguments = 1)
@@ -86,4 +93,17 @@ results <- inner_join(complete_pandora_table, tibble_input_iid, by=c("individual
      "R2",
      "BAM"
     )
-
+if (opts$rename) {
+  cat(
+    format_tsv(results %>% 
+                 mutate(Library_ID=str_replace_all(Library_ID, "[.]", "_")) %>% ## Replace dots in the Library_ID to underscores.
+                 select(Sample_Name, Library_ID,  Lane, Colour_Chemistry, 
+                        SeqType, Organism, Strandedness, UDG_Treatment, R1, R2, BAM))
+  )
+} else {
+  cat(
+    format_tsv(results %>% 
+                 select(Sample_Name, Library_ID,  Lane, Colour_Chemistry, 
+                        SeqType, Organism, Strandedness, UDG_Treatment, R1, R2, BAM))
+  )
+}
