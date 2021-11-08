@@ -39,8 +39,6 @@ parser <- add_option(parser, c("-r", "--rename"), type='logical',
                      )
 arguments <- parse_args(parser, positional_arguments = 1)
 
-arguments <- parse_args(parser, positional_arguments = 1)
-
 opts <- arguments$options
 cred_file <- arguments$args
 
