@@ -34,7 +34,7 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
   }
   ind_dir <- paste0(output_dir,"/",ind_id)
   # print(ind_dir)
-  if (dir.exists(ind_dir)) {write(paste0("Creating output directory '",ind_dir,"'"), stdout())}
+  if (!dir.exists(ind_dir)) {write(paste0("Creating output directory '",ind_dir,"'"), stdout())}
   dir.create(ind_dir, showWarnings = F, recursive = T) ## Create output directory and subdirs if they do not exist.
   readr::write_tsv(data, file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
 }
