@@ -40,6 +40,18 @@ for analysis_type in "SG" "TF"; do
                 -w ${eager_output_dir}/work \
                 -with-tower -ansi-log false \
                 -resume ${run_name}"
+            
+            ## Actually run eager now.
+            nextflow run nf-core/eager \
+                -r ${eager_version} \
+                -profile ${analysis_profiles} \
+                -c ${autorun_config} \
+                --input ${eager_input} \
+                --email ${USER}@eva.mpg.de \
+                --outdir ${eager_output_dir} \
+                -w ${eager_output_dir}/work \
+                -with-tower -ansi-log false \
+                -resume ${run_name}
         fi
     done
 done
