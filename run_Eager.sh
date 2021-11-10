@@ -7,7 +7,7 @@ root_input_dir='/mnt/archgen/users/lamnidis/popgen_autoprocess/eager_inputs' ## 
 root_output_dir='/mnt/archgen/users/lamnidis/popgen_autoprocess/eager_outputs'
 
 ## Set base profiles for EVA cluster.
-nextflow_profiles="eva,archgen,"
+nextflow_profiles="eva,archgen,autorun"
 
 ## Set colour and face for colour printing
 Red='\033[1;31m'$(tput bold) ## Red bold face
@@ -15,13 +15,16 @@ Yellow=$(tput sgr0)'\033[1;33m' ## Yellow normal face
 
 ## Since I'm running through all data every time, the runtime of the script will increase marginally over time. 
 ## Maybe create a list of eager inputs that are newer than the MQC reports and use that to loop over?
-for analysis_type in SG TF; do
+for analysis_type in "SG" "TF"; do
+    # echo ${analysis_type}
     analysis_profiles="${nextflow_profiles},${analysis_type}"
-    for eager_input in ${root_input_dir}/${analysis_type}/*/*.eager_input.tsv; do
+    # echo "${root_input_dir}/${analysis_type}"
+    for eager_input in ${root_input_dir}/${analysis_type}/*/*.tsv; do
         ## Set output directory name from eager input name
         eager_output_dir="${root_output_dir}/$(basename ${eager_input} .tsv)"
         ## Run name is individual ID followed by analysis_type
         run_name="$(basename ${eager_input} .tsv)_${analysis_type}"
+        # echo $run_name
         ## If no multiqc_report exists (last step of eager), or TSV is newer than the report, start an eager run.
         #### Always running with resume will ensure runs are only ever resumed instead of restarting.
         if [[ ${eager_input} -nt ${eager_output_dir}/multiqc/multiqc_report.html ]]; then
