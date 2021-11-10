@@ -34,7 +34,7 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
   }
   ind_dir <- paste0(output_dir,"/",ind_id)
   # print(ind_dir)
-  write(paste0("Creating output directory '",ind_dir,"'"), stdout())
+  if (dir.exists(ind_dir)) {write(paste0("Creating output directory '",ind_dir,"'"), stdout())}
   dir.create(ind_dir, showWarnings = F, recursive = T) ## Create output directory and subdirs if they do not exist.
   readr::write_tsv(data, file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
 }
@@ -59,6 +59,10 @@ parser <- add_option(parser, c("-o", "--outDir"), type = 'character',
                      action = "store", dest = "outdir",
                      help= "The desired output directory. Within this directory, one subdirectory will be created per individual ID, and one TSV within each directory."
                      )
+parser <- add_option(parser, c("-d", "--debug_output"), type = 'logical',
+                     action = "store_true", dest = "debug", default=F,
+                     help= "TWhen provided, the entire result table for the run will be saved as '<seq_batch_ID>.results.txt'. Helpful to check all the output data in one place."
+)
                      
 arguments <- parse_args(parser, positional_arguments = 1)
 
@@ -95,6 +99,7 @@ results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individua
   filter(grepl(paste0("\\.", analysis_type), sequencing.Full_Sequencing_Id)) %>%
   select(individual.Full_Individual_Id,individual.Organism,library.Full_Library_Id,library.Protocol,analysis.Result_Directory,sequencing.Sequencing_Id) %>%
   distinct() %>%
+  group_by(individual.Full_Individual_Id) %>%
   mutate(
     BAM=paste0(analysis.Result_Directory,"out.bam"),
     ## Colour chemistry should not matter since we start with BAMs
@@ -121,7 +126,8 @@ results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individua
      "BAM"
     )
 
-write_tsv(results, file="results.txt")
+## Save results into single file for debugging
+if ( opts$debug ) { write_tsv(results, file=paste0(sequencing_batch_id, ".results.txt")) }
 
 ## Group by individual IDs and save each chunk as TSV
 results %>% group_by(Sample_Name) %>% group_walk(~save_ind_tsv(., rename=F, output_dir=output_dir), .keep=T)
