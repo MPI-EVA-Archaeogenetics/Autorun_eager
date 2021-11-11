@@ -21,7 +21,7 @@ for analysis_type in "SG" "TF"; do
     # echo "${root_input_dir}/${analysis_type}"
     for eager_input in ${root_input_dir}/${analysis_type}/*/*.tsv; do
         ## Set output directory name from eager input name
-        eager_output_dir="${root_output_dir}/${analysis_type}/(basename ${eager_input} .tsv)"
+        eager_output_dir="${root_output_dir}/${analysis_type}/$(basename ${eager_input} .tsv)"
         # ## Run name is individual ID followed by analysis_type
         # run_name="$(basename ${eager_input} .tsv)_${analysis_type}"
         # echo $run_name
