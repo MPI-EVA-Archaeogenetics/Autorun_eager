@@ -57,7 +57,7 @@ parser <- add_option(parser, c("-r", "--rename"), type = 'logical',
                      )
 parser <- add_option(parser, c("-o", "--outDir"), type = 'character',
                      action = "store", dest = "outdir",
-                     help= "The desired output directory. Within this directory, one subdirectory will be created per individual ID, and one TSV within each directory."
+                     help= "The desired output directory. Within this directory, one subdirectory will be created per analysis type, within that one subdirectory per individual ID, and one TSV within each of these directory."
                      )
 parser <- add_option(parser, c("-d", "--debug_output"), type = 'logical',
                      action = "store_true", dest = "debug", default=F,
@@ -75,7 +75,7 @@ analysis_type <- opts$analysis_type
 if (is.na(analysis_type)) {
   stop(call.=F, "\nNo analysis type provided.\n")
 }
-output_dir <- opts$outdir
+output_dir <- paste0(opts$outdir,"/",analysis_type)
 
 #############
 ## PANDORA ##
@@ -100,6 +100,7 @@ results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individua
   select(individual.Full_Individual_Id,individual.Organism,library.Full_Library_Id,library.Protocol,analysis.Result_Directory,sequencing.Sequencing_Id) %>%
   distinct() %>%
   group_by(individual.Full_Individual_Id) %>%
+  filter(!is.na(analysis.Result_Directory)) %>% ## Exclude individuals with no results directory (seem to mostly be controls)
   mutate(
     BAM=paste0(analysis.Result_Directory,"out.bam"),
     ## Colour chemistry should not matter since we start with BAMs
@@ -127,7 +128,7 @@ results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individua
     )
 
 ## Save results into single file for debugging
-if ( opts$debug ) { write_tsv(results, file=paste0(sequencing_batch_id, ".results.txt")) }
+if ( opts$debug ) { write_tsv(results, file=paste0(sequencing_batch_id, ".", analysis_type, ".results.txt")) }
 
 ## Group by individual IDs and save each chunk as TSV
 results %>% group_by(Sample_Name) %>% group_walk(~save_ind_tsv(., rename=F, output_dir=output_dir), .keep=T)
