@@ -97,7 +97,7 @@ tibble_input_iids <- complete_pandora_table %>% filter(sequencing.Batch == seque
 ## Pull information from pandora, keeping only matching IIDs and requested Sequencing types.
 results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individual.Full_Individual_Id"="individual.Full_Individual_Id")) %>%
   filter(grepl(paste0("\\.", analysis_type), sequencing.Full_Sequencing_Id)) %>%
-  select(individual.Full_Individual_Id,individual.Organism,library.Full_Library_Id,library.Protocol,analysis.Result_Directory,sequencing.Sequencing_Id) %>%
+  select(individual.Full_Individual_Id,individual.Organism,library.Full_Library_Id,library.Protocol,analysis.Result_Directory,sequencing.Sequencing_Id,sequencing.Single_Stranded) %>%
   distinct() %>%
   group_by(individual.Full_Individual_Id) %>%
   filter(!is.na(analysis.Result_Directory)) %>% ## Exclude individuals with no results directory (seem to mostly be controls)
@@ -108,7 +108,10 @@ results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individua
     ## SeqType and Seq Lane should not matter since we start with BAMs
     SeqType="SE",
     Lane=row_number(),
-    Strandedness=map_chr(library.Protocol, function (.) {pandora2eager::infer_library_specs(.)[1]}), 
+    Strandedness=case_when(
+      sequencing.Single_Stranded == 'yes' ~ "single",
+      sequencing.Single_Stranded == 'no' ~ "double",
+      is.na(sequencing.Single_Stranded) ~ "Unknown"), ## So far, any NAs are for libraries that were never sequenced, but just in case.
     UDG_Treatment=map_chr(library.Protocol, function(.){pandora2eager::infer_library_specs(.)[2]}),
     R1=NA,
     R2=NA
