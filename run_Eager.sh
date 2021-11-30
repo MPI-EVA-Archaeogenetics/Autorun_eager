@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-eager_version='2.3.5'
+eager_version='2.4.1'
 autorun_config='/mnt/archgen/users/lamnidis/popgen_autoprocess/Autorun.config' ## Contains specific profiles with params for each analysis type.
 root_input_dir='/mnt/archgen/users/lamnidis/popgen_autoprocess/eager_inputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each individual.
 ####        E.g. /mnt/archgen/users/lamnidis/popgen_autoprocess/eager_inputs/SG/GUB001/GUB001.tsv
