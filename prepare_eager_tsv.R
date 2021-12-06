@@ -102,12 +102,12 @@ tibble_input_iids <- complete_pandora_table %>% filter(sequencing.Batch == seque
 ## Pull information from pandora, keeping only matching IIDs and requested Sequencing types.
 results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individual.Full_Individual_Id"="individual.Full_Individual_Id")) %>%
   filter(grepl(paste0("\\.", analysis_type), sequencing.Full_Sequencing_Id)) %>%
-  select(individual.Full_Individual_Id,individual.Organism,library.Full_Library_Id,library.Protocol,analysis.Result_Directory,sequencing.Sequencing_Id,sequencing.Single_Stranded) %>%
+  select(individual.Full_Individual_Id,individual.Organism,library.Full_Library_Id,library.Protocol,analysis.Result_Directory,sequencing.Sequencing_Id,sequencing.Full_Sequencing_Id,sequencing.Single_Stranded) %>%
   distinct() %>%
   group_by(individual.Full_Individual_Id) %>%
   filter(!is.na(analysis.Result_Directory)) %>% ## Exclude individuals with no results directory (seem to mostly be controls)
   mutate(
-    BAM=paste0(analysis.Result_Directory,"out.bam"),
+    BAM=paste0(analysis.Result_Directory,sequencing.Full_Sequencing_Id,".bam"),
     ## Colour chemistry should not matter since we start with BAMs
     Colour_Chemistry=4,
     ## SeqType and Seq Lane should not matter since we start with BAMs
