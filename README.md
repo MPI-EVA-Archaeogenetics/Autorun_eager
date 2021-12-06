@@ -69,9 +69,9 @@ The outputs are saved with the same directory structure as the inputs, but in a 
 ```
 eager_outputs
 ├── SG
-│   ├── GUB001
-│   └── SPR015
+│   ├── IND001
+│   └── IND002
 └── TF
-    ├── GUB001
-    └── SPR015
+    ├── IND001
+    └── IND002
 ```
