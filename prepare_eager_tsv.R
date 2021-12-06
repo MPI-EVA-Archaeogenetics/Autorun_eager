@@ -1,13 +1,17 @@
 #!/usr/bin/env Rscript
 
+## Need sidora.core to pull sequencing metainfo
 if (!require('sidora.core')) {
   if(!require('remotes')) install.packages('remotes')
   remotes::install_github('sidora-tools/sidora.core', quiet=T)
 } else {library(sidora.core)}
+
+## Need pandora2eager to generate TSV table
 if (!require('pandora2eager')) {
   if(!require('remotes')) install.packages('remotes')
   remotes::install_github('sidora-tools/pandora2eager', quiet=T)
 } else {library(pandora2eager)}
+
 require(purrr)
 require(dplyr, warn.conflicts = F)
 require(optparse)
@@ -15,29 +19,31 @@ require(readr)
 
 ## Validate analysis type option input
 validate_analysis_type <- function(option, opt_str, value, parser) {
-  valid_entries=c("TF", "SG")
-  ifelse(value %in% valid_entries, return(value), stop(call.=F, "\nInvalid analysis type: '", value, 
+  valid_entries=c("TF", "SG") ## TODO comment: should this be embedded within the function? You would want to maybe update this over time no? 
+  ifelse(value %in% valid_entries, return(value), stop(call.=F, "\n[prepare_eager_tsv.tsv] error: Invalid analysis type: '", value, 
                                                        "'\nAccepted values: ", paste(valid_entries,collapse=", "),"\n\n"))
 }
 
 ## Save one eager input TSV per individual. Rename if necessary. Input is already subset data.
 save_ind_tsv <- function(data, rename, output_dir, ...) {
-  # print(rename)
-  # print(output_dir)
-  ## Infer Individual Id from input.
+
+  ## Infer Individual Id(s) from input.
   ind_id <- data %>% select(Sample_Name) %>% distinct() %>% pull()
-  # print(ind_id)
+  
   if (rename) {
     data <- data %>% mutate(Library_ID=str_replace_all(Library_ID, "[.]", "_")) %>% ## Replace dots in the Library_ID to underscores.
       select(Sample_Name, Library_ID,  Lane, Colour_Chemistry, 
              SeqType, Organism, Strandedness, UDG_Treatment, R1, R2, BAM)
   }
+  
   ind_dir <- paste0(output_dir,"/",ind_id)
-  # print(ind_dir)
-  if (!dir.exists(ind_dir)) {write(paste0("Creating output directory '",ind_dir,"'"), stdout())}
+  
+  if (!dir.exists(ind_dir)) {write(paste0("[prepare_eager_tsv.tsv]: Creating output directory '",ind_dir,"'"), stdout())}
+  
   dir.create(ind_dir, showWarnings = F, recursive = T) ## Create output directory and subdirs if they do not exist.
   readr::write_tsv(data, file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
 }
+
 ## MAIN ##
 
 ## Parse arguments ----------------------------
@@ -70,16 +76,16 @@ parser <- add_option(parser, c("-d", "--debug_output"), type = 'logical',
 )
                      
 arguments <- parse_args(parser, positional_arguments = 1)
-
 opts <- arguments$options
-cred_file <- arguments$args
 
+cred_file <- arguments$args
 sequencing_batch_id <- opts$sequencing_batch_id
 analysis_type <- opts$analysis_type
 
 if (is.na(analysis_type)) {
-  stop(call.=F, "\nNo analysis type provided.\n")
+  stop(call.=F, "\n[prepare_eager_tsv.tsv] error: No analysis type provided with -a. Please see --help for more information.\n")
 }
+
 output_dir <- paste0(opts$outdir,"/",analysis_type)
 
 #############
@@ -103,7 +109,7 @@ tibble_input_iids <- complete_pandora_table %>% filter(sequencing.Batch == seque
 results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individual.Full_Individual_Id"="individual.Full_Individual_Id")) %>%
   filter(grepl(paste0("\\.", analysis_type), sequencing.Full_Sequencing_Id)) %>%
   select(individual.Full_Individual_Id,individual.Organism,library.Full_Library_Id,library.Protocol,analysis.Result_Directory,sequencing.Sequencing_Id,sequencing.Full_Sequencing_Id,sequencing.Single_Stranded) %>%
-  distinct() %>%
+  distinct() %>% ## TODO comment: would be worrying if not already unique, maybe consider throwing a warn?
   group_by(individual.Full_Individual_Id) %>%
   filter(!is.na(analysis.Result_Directory)) %>% ## Exclude individuals with no results directory (seem to mostly be controls)
   mutate(
@@ -122,7 +128,7 @@ results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individua
     R2=NA
     ) %>%
   select(
-    "Sample_Name"=individual.Full_Individual_Id,
+     "Sample_Name"=individual.Full_Individual_Id,
      "Library_ID"=library.Full_Library_Id,
      "Lane",
      "Colour_Chemistry",
