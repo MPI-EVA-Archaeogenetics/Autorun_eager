@@ -49,12 +49,12 @@ Options:
 	-h, --help
 		Show this help message and exit
 
-	-s <SEQUENCING_BATCH_ID>, --sequencing_batch_id=<SEQUENCING_BATCH_ID>
+	-s SEQUENCING_BATCH_ID, --sequencing_batch_id=SEQUENCING_BATCH_ID
 		The Pandora sequencing batch ID to update eager input for. A TSV file will be prepared
 			for each individual in this run, containing all relevant processed BAM files
 			from the individual
 
-	-a <ANALYSIS_TYPE>, --analysis_type=<ANALYSIS_TYPE>
+	-a ANALYSIS_TYPE, --analysis_type=ANALYSIS_TYPE
 		The analysis type to compile the data from. Should be one of: 'SG', 'TF'.
 
 	-r, --rename
@@ -62,7 +62,7 @@ Options:
 			Some tools used in nf-core/eager will strip everything after the first dot (.)
 			from the name of the input file, which can cause naming conflicts in rare cases.
 
-	-o <OUTDIR>/, --outDir=<OUTDIR>/
+	-o OUTDIR/, --outDir=OUTDIR/
 		The desired output directory. Within this directory, one subdirectory will be 
 			created per analysis type, within that one subdirectory per individual ID,
 			and one TSV within each of these directory.
