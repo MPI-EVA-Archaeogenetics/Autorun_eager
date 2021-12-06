@@ -4,14 +4,14 @@ Automated eager processing of Autorun output bams.
 ## Autorun.config
 Contains the `autorun`, `SG` and `TF` profiles.
 
-### autorun
+#### autorun
 Broader scope options and parameters for use across all processing with autorun.  
 Turns off automatic cleanup of intermediate files on successful completion of a run to allow resuming of the run when additional data becomes available, without rerunning completed steps.
 
-### SG
+#### SG
 The standardised parameters for processing shotgun data.
 
-### TF
+#### TF
 The standardised parameters for processing 1240k capture data.
 
 ## prepare_eager_tsv.R
@@ -64,6 +64,8 @@ eager run for that individual if necessary.
 
 Currently uses eager version `2.4.1` and profiles `eva,archgen,medium_data,autorun` across all runs, with the `SG` or `TF` profiles used for their respective
 data types.
+
+The outputs are saved with the same directory structure as the inputs, but in a separate parent directory.
 ```
 eager_outputs
 ├── SG
