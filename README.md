@@ -1,6 +1,20 @@
 # EVA_autorun
 Automated eager processing of Autorun output bams. 
 
+# Quickstart
+ - Run `prepare_eager_tsv.R` for SG or TF data for a given sequencing batch:
+```
+./prepare_eager_tsv.R -s 210429_K00233_0191_AHKJHFBBXY_Jena0014 -a SG -o eager_inputs/ -d .eva_credentials
+./prepare_eager_tsv.R -s 210802_K00233_0212_BHLH3FBBXY_SRdi_JR_BN -a TF -o eager_inputs/ -d .eva_credentials
+```
+ - Run eager:
+```
+run_Eager.sh
+```
+
+⚠️ For some library preparation protocols and external libraries, UDG treatment cannot be reliably inferred, and errors will be thrown.
+In such cases, an eager input TSV will still be created, but UDG treatment for affected libraries will be set to 'Unknown' and needs to be manually edited.
+
 ## Autorun.config
 Contains the `autorun`, `SG` and `TF` profiles.
 
