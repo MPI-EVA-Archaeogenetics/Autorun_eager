@@ -44,7 +44,9 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
 parser <- OptionParser(usage = "%prog [options] .credentials")
 parser <- add_option(parser, c("-s", "--sequencing_batch_id"), type = 'character', 
                      action = "store", dest = "sequencing_batch_id", 
-                     help = "The Pandora sequencing batch ID to update eager input for. A TSV file will be prepared for each individual in this run, containing all relevant processed BAM files from the\n\t\tindividual")
+                     help = "The Pandora sequencing batch ID to update eager input for. A TSV file will be prepared
+			for each individual in this run, containing all relevant processed BAM files
+			from the individual")
 parser <- add_option(parser, c("-a", "--analysis_type"), type = 'character',
                      action = "callback", dest = "analysis_type",
                      callback = validate_analysis_type, default=NA,
@@ -57,11 +59,14 @@ parser <- add_option(parser, c("-r", "--rename"), type = 'logical',
                      )
 parser <- add_option(parser, c("-o", "--outDir"), type = 'character',
                      action = "store", dest = "outdir",
-                     help= "The desired output directory. Within this directory, one subdirectory will be created per analysis type, within that one subdirectory per individual ID, and one TSV within each of these directory."
+                     help= "The desired output directory. Within this directory, one subdirectory will be 
+			created per analysis type, within that one subdirectory per individual ID,
+			and one TSV within each of these directory."
                      )
 parser <- add_option(parser, c("-d", "--debug_output"), type = 'logical',
                      action = "store_true", dest = "debug", default=F,
-                     help= "TWhen provided, the entire result table for the run will be saved as '<seq_batch_ID>.results.txt'. Helpful to check all the output data in one place."
+                     help= "When provided, the entire result table for the run will be saved as '<seq_batch_ID>.results.txt'.
+			Helpful to check all the output data in one place."
 )
                      
 arguments <- parse_args(parser, positional_arguments = 1)
