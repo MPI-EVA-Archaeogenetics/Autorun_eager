@@ -26,12 +26,10 @@ validate_analysis_type <- function(option, opt_str, value, parser) {
 
 ## Save one eager input TSV per individual. Rename if necessary. Input is already subset data.
 save_ind_tsv <- function(data, rename, output_dir, ...) {
-  # print(rename) ## TODO comment: if want to keep these for debugging purposes, consider including a `--verbose` flag which prints this if necessary
-  # print(output_dir)
+
   ## Infer Individual Id(s) from input.
   ind_id <- data %>% select(Sample_Name) %>% distinct() %>% pull()
   
-  # print(ind_id)
   if (rename) {
     data <- data %>% mutate(Library_ID=str_replace_all(Library_ID, "[.]", "_")) %>% ## Replace dots in the Library_ID to underscores.
       select(Sample_Name, Library_ID,  Lane, Colour_Chemistry, 
@@ -39,7 +37,6 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
   }
   
   ind_dir <- paste0(output_dir,"/",ind_id)
-  # print(ind_dir)
   
   if (!dir.exists(ind_dir)) {write(paste0("[prepare_eager_tsv.tsv]: Creating output directory '",ind_dir,"'"), stdout())}
   
