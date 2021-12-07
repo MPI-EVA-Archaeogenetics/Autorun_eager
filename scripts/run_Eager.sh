@@ -43,17 +43,17 @@ for analysis_type in "SG" "TF"; do
                 -resume"
             
             ## Actually run eager now.
+                ## Email the submitting user the resulting MultiQC report.
+                ## Monitor run in nf tower. Only works if TOWER_ACCESS_TOKEN is set.
+                ## TODO Maybe an EVA_Autorun account can be made for tower, to monitor runs outside of users?
             nextflow run nf-core/eager \
                 -r ${eager_version} \
                 -profile ${analysis_profiles} \
                 -c ${autorun_config} \
                 --input ${eager_input} \
-                ## Email the submitting user the resulting MultiQC report.
                 --email ${USER}@eva.mpg.de \
                 --outdir ${eager_output_dir} \
                 -w ${eager_output_dir}/work \
-                ## Monitor run in nf tower. Only works if TOWER_ACCESS_TOKEN is set.
-                ## TODO Maybe an EVA_Autorun account can be made for tower, to monitor runs outside of users?
                 -with-tower \
                 -ansi-log false \
                 -resume # ${run_name}
