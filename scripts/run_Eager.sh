@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 eager_version='2.4.1'
-autorun_config='/mnt/archgen/users/lamnidis/popgen_autoprocess/Autorun.config' ## Contains specific profiles with params for each analysis type.
-root_input_dir='/mnt/archgen/users/lamnidis/popgen_autoprocess/eager_inputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each individual.
-####        E.g. /mnt/archgen/users/lamnidis/popgen_autoprocess/eager_inputs/SG/GUB001/GUB001.tsv
-root_output_dir='/mnt/archgen/users/lamnidis/popgen_autoprocess/eager_outputs'
+autorun_config='/mnt/archgen/Autorun_eager/conf/Autorun.config' ## Contains specific profiles with params for each analysis type.
+root_input_dir='/mnt/archgen/Autorun_eager/eager_inputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each individual.
+####        E.g. /mnt/archgen/Autorun_eager/eager_inputs/SG/GUB001/GUB001.tsv
+root_output_dir='/mnt/archgen/Autorun_eager/eager_outputs'
 
 ## Set base profiles for EVA cluster.
 nextflow_profiles="eva,archgen,medium_data,autorun"
@@ -38,7 +38,8 @@ for analysis_type in "SG" "TF"; do
                 --email ${USER}@eva.mpg.de \
                 --outdir ${eager_output_dir} \
                 -w ${eager_output_dir}/work \
-                -with-tower -ansi-log false \
+                -with-tower \
+                -ansi-log false \
                 -resume"
             
             ## Actually run eager now.
@@ -47,10 +48,14 @@ for analysis_type in "SG" "TF"; do
                 -profile ${analysis_profiles} \
                 -c ${autorun_config} \
                 --input ${eager_input} \
+                ## Email the submitting user the resulting MultiQC report.
                 --email ${USER}@eva.mpg.de \
                 --outdir ${eager_output_dir} \
                 -w ${eager_output_dir}/work \
-                -with-tower -ansi-log false \
+                ## Monitor run in nf tower. Only works if TOWER_ACCESS_TOKEN is set.
+                ## TODO Maybe an EVA_Autorun account can be made for tower, to monitor runs outside of users?
+                -with-tower \
+                -ansi-log false \
                 -resume # ${run_name}
         fi
     done
