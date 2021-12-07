@@ -16,6 +16,7 @@ require(purrr)
 require(dplyr, warn.conflicts = F)
 require(optparse)
 require(readr)
+require(stringr)
 
 ## Validate analysis type option input
 validate_analysis_type <- function(option, opt_str, value, parser) {
@@ -113,6 +114,8 @@ results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individua
   group_by(individual.Full_Individual_Id) %>%
   filter(!is.na(analysis.Result_Directory)) %>% ## Exclude individuals with no results directory (seem to mostly be controls)
   mutate(
+    ## Older entries have analysis directories pointing to projects1. These are in /mnt/archgen in EVA. 
+    analysis.Result_Directory=str_replace(analysis.Result_Directory, "^/projects1", "/mnt/archgen"),
     BAM=paste0(analysis.Result_Directory,sequencing.Full_Sequencing_Id,".bam"),
     ## Colour chemistry should not matter since we start with BAMs
     Colour_Chemistry=4,
