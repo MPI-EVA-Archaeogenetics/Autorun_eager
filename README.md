@@ -1,4 +1,4 @@
-# EVA_autorun
+# Autorun_eager
 
 Automated nf-core/eager processing of Autorun output bams. 
 
