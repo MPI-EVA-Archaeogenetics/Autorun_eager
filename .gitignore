@@ -1,3 +1,7 @@
 eager_inputs/
 eager_outputs/
 .eva_credentials
+*results.txt
+.next*
+.RData
+.Rhistory
