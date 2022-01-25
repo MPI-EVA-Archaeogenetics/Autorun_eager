@@ -21,7 +21,7 @@ require(stringr)
 ## Validate analysis type option input
 validate_analysis_type <- function(option, opt_str, value, parser) {
   valid_entries=c("TF", "SG") ## TODO comment: should this be embedded within the function? You would want to maybe update this over time no? 
-  ifelse(value %in% valid_entries, return(value), stop(call.=F, "\n[prepare_eager_tsv.tsv] error: Invalid analysis type: '", value, 
+  ifelse(value %in% valid_entries, return(value), stop(call.=F, "\n[prepare_eager_tsv.R] error: Invalid analysis type: '", value, 
                                                        "'\nAccepted values: ", paste(valid_entries,collapse=", "),"\n\n"))
 }
 
@@ -39,7 +39,7 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
   
   ind_dir <- paste0(output_dir,"/",ind_id)
   
-  if (!dir.exists(ind_dir)) {write(paste0("[prepare_eager_tsv.tsv]: Creating output directory '",ind_dir,"'"), stdout())}
+  if (!dir.exists(ind_dir)) {write(paste0("[prepare_eager_tsv.R]: Creating output directory '",ind_dir,"'"), stdout())}
   
   dir.create(ind_dir, showWarnings = F, recursive = T) ## Create output directory and subdirs if they do not exist.
   readr::write_tsv(data, file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
@@ -84,7 +84,7 @@ sequencing_batch_id <- opts$sequencing_batch_id
 analysis_type <- opts$analysis_type
 
 if (is.na(analysis_type)) {
-  stop(call.=F, "\n[prepare_eager_tsv.tsv] error: No analysis type provided with -a. Please see --help for more information.\n")
+  stop(call.=F, "\n[prepare_eager_tsv.R] error: No analysis type provided with -a. Please see --help for more information.\n")
 }
 
 output_dir <- paste0(opts$outdir,"/",analysis_type)
