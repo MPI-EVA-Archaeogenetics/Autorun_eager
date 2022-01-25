@@ -91,7 +91,7 @@ eager_inputs
 A wrapper shell script that goes through all TSVs in the `eager_inputs` directory, checks if a completed run exists for a given TSV, and submits/resumes an
 eager run for that individual if necessary.
 
-Currently uses eager version `2.4.1` and profiles `eva,archgen,medium_data,autorun` across all runs, with the `SG` or `TF` profiles used for their respective
+Currently uses eager version `2.4.2` and profiles `eva,archgen,medium_data,autorun` across all runs, with the `SG` or `TF` profiles used for their respective
 data types.
 
 The outputs are saved with the same directory structure as the inputs, but in a separate parent directory.
