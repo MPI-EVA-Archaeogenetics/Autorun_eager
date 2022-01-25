@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+nxf_path="/mnt/archgen/tools/nextflow/21.04.3.5560"
 eager_version='2.4.2'
 autorun_config='/mnt/archgen/Autorun_eager/conf/Autorun.config' ## Contains specific profiles with params for each analysis type.
 root_input_dir='/mnt/archgen/Autorun_eager/eager_inputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each individual.
@@ -30,7 +31,7 @@ for analysis_type in "SG" "TF"; do
         if [[ ${eager_input} -nt ${eager_output_dir}/multiqc/multiqc_report.html ]]; then
             ## Debugging info.
             echo "Running eager on ${eager_input}:"
-            echo "nextflow run nf-core/eager \
+            echo "${nxf_path}/nextflow run nf-core/eager \
                 -r ${eager_version} \
                 -profile ${analysis_profiles} \
                 -c ${autorun_config} \
@@ -46,7 +47,7 @@ for analysis_type in "SG" "TF"; do
                 ## Email the submitting user the resulting MultiQC report.
                 ## Monitor run in nf tower. Only works if TOWER_ACCESS_TOKEN is set.
                 ## TODO Maybe an EVA_Autorun account can be made for tower, to monitor runs outside of users?
-            nextflow run nf-core/eager \
+            ${nxf_path}/nextflow run nf-core/eager \
                 -r ${eager_version} \
                 -profile ${analysis_profiles} \
                 -c ${autorun_config} \
