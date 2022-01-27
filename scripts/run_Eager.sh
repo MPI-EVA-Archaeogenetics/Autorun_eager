@@ -36,7 +36,6 @@ for analysis_type in "SG" "TF"; do
                 -profile ${analysis_profiles} \
                 -c ${autorun_config} \
                 --input ${eager_input} \
-                --email ${USER}@eva.mpg.de \
                 --outdir ${eager_output_dir} \
                 -w ${eager_output_dir}/work \
                 -with-tower \
@@ -52,7 +51,6 @@ for analysis_type in "SG" "TF"; do
                 -profile ${analysis_profiles} \
                 -c ${autorun_config} \
                 --input ${eager_input} \
-                --email ${USER}@eva.mpg.de \
                 --outdir ${eager_output_dir} \
                 -w ${eager_output_dir}/work \
                 -with-tower \
