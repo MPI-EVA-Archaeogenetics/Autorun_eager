@@ -100,9 +100,12 @@ complete_pandora_table <- join_pandora_tables(
   get_df_list(
     c(make_complete_table_list(
       c("TAB_Site", "TAB_Analysis")
-    )), con = con
+    )), con = con,
+    cache = F
   )
-) %>% convert_all_ids_to_values(., con = con)
+) %>% 
+  convert_all_ids_to_values(., con = con) %>%
+  filter(sample.Ethically_culturally_sensitive == FALSE) ## Exclude ethically/culturally sensitive data. Conservative since it excludes NAs
 
 tibble_input_iids <- complete_pandora_table %>% filter(sequencing.Batch == sequencing_batch_id) %>% select(individual.Full_Individual_Id)
 
