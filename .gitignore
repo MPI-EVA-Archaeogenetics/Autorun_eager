@@ -5,3 +5,4 @@ eager_outputs/
 .next*
 .RData
 .Rhistory
+.Rproj.user
