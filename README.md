@@ -79,11 +79,13 @@ The eager input TSVs will be created in the following directory structure, given
 ```
 eager_inputs
 ├── SG
-│   ├── IND001
-│   └── IND002
+│   └──IND
+│       ├── IND001
+│       └── IND002
 └── TF
-    ├── IND001
-    └── IND002
+    └──IND
+         ├── IND001
+         └── IND002
 ```
 
 ## run_eager.sh
@@ -99,9 +101,11 @@ The outputs are saved with the same directory structure as the inputs, but in a 
 ```
 eager_outputs
 ├── SG
-│   ├── IND001
-│   └── IND002
+│   └──IND
+│       ├── IND001
+│       └── IND002
 └── TF
-    ├── IND001
-    └── IND002
+    └──IND
+         ├── IND001
+         └── IND002
 ```

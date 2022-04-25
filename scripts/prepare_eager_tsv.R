@@ -30,14 +30,15 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
 
   ## Infer Individual Id(s) from input.
   ind_id <- data %>% select(Sample_Name) %>% distinct() %>% pull()
-  
+  site_id <- substr(ind_id,1,3)
+
   if (rename) {
     data <- data %>% mutate(Library_ID=str_replace_all(Library_ID, "[.]", "_")) %>% ## Replace dots in the Library_ID to underscores.
       select(Sample_Name, Library_ID,  Lane, Colour_Chemistry, 
              SeqType, Organism, Strandedness, UDG_Treatment, R1, R2, BAM)
   }
   
-  ind_dir <- paste0(output_dir,"/",ind_id)
+  ind_dir <- paste0(output_dir, "/", site_id, "/", ind_id)
   
   if (!dir.exists(ind_dir)) {write(paste0("[prepare_eager_tsv.R]: Creating output directory '",ind_dir,"'"), stdout())}
   
