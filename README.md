@@ -1,8 +1,8 @@
 # Autorun_eager
 
-Automated nf-core/eager processing of Autorun output bams. 
+Automated nf-core/eager processing of Autorun output bams.
 
-# Quickstart
+## Quickstart
 
 - Run `prepare_eager_tsv.R` for human SG or TF data for a given sequencing batch:
 
@@ -11,7 +11,7 @@ Automated nf-core/eager processing of Autorun output bams.
     prepare_eager_tsv.R -s 210802_K00233_0212_BHLH3FBBXY_SRdi_JR_BN -a TF -o eager_inputs/ -d .eva_credentials
     ```
 
-- Run eager with the following script, which then runs on the generated TSV files: 
+- Run eager with the following script, which then runs on the generated TSV files:
 
     ```bash
     run_eager.sh
@@ -24,17 +24,17 @@ In such cases, an eager input TSV will still be created, but UDG treatment for a
 
 Contains the `autorun`, `SG` and `TF` profiles.
 
-#### autorun
+### autorun
 
 Broader scope options and parameters for use across all processing with autorun.
 
 Turns off automatic cleanup of intermediate files on successful completion of a run to allow resuming of the run when additional data becomes available, without rerunning completed steps.
 
-#### SG
+### SG
 
 The standardised parameters for processing human shotgun data.
 
-#### TF
+### TF
 
 The standardised parameters for processing human 1240k capture data.
 
@@ -76,7 +76,7 @@ Note: a valid sidora .credentials file is required. Contact the Pandora/Sidora t
 
 The eager input TSVs will be created in the following directory structure, given `-o eager_inputs`:
 
-```
+```text
 eager_inputs
 ├── SG
 │   └──IND
@@ -98,7 +98,7 @@ data types.
 
 The outputs are saved with the same directory structure as the inputs, but in a separate parent directory.
 
-```
+```text
 eager_outputs
 ├── SG
 │   └──IND
