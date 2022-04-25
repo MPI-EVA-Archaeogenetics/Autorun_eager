@@ -46,6 +46,18 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
   readr::write_tsv(data, file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
 }
 
+## Correspondance between '-a' analysis type and the name of Kay's pipeline.
+##    Only bams from the output autorun_name will be included in the output
+autorun_name_from_analysis_type <- function(analysis_type) {
+  autorun_name <- case_when(
+    analysis_type == "TF" ~ "HUMAN_1240K",
+    analysis_type == "SG" ~ "HUMAN_SHOTGUN",
+    ## Future analyses can be added here to pull those bams for eager processsing.
+    TRUE ~ NA_character_
+  )
+  return(autorun_name)
+}
+
 ## MAIN ##
 
 ## Parse arguments ----------------------------
@@ -112,7 +124,7 @@ tibble_input_iids <- complete_pandora_table %>% filter(sequencing.Batch == seque
 
 ## Pull information from pandora, keeping only matching IIDs and requested Sequencing types.
 results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individual.Full_Individual_Id"="individual.Full_Individual_Id")) %>%
-  filter(grepl(paste0("\\.", analysis_type), sequencing.Full_Sequencing_Id)) %>%
+  filter(grepl(paste0("\\.", analysis_type), sequencing.Full_Sequencing_Id), analysis.Analysis_Id == autorun_name_from_analysis_type(analysis_type)) %>%
   select(individual.Full_Individual_Id,individual.Organism,library.Full_Library_Id,library.Protocol,analysis.Result_Directory,sequencing.Sequencing_Id,sequencing.Full_Sequencing_Id,sequencing.Single_Stranded) %>%
   distinct() %>% ## TODO comment: would be worrying if not already unique, maybe consider throwing a warn?
   group_by(individual.Full_Individual_Id) %>%
