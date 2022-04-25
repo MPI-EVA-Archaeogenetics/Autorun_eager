@@ -20,9 +20,9 @@ require(stringr)
 
 ## Validate analysis type option input
 validate_analysis_type <- function(option, opt_str, value, parser) {
-  valid_entries=c("TF", "SG") ## TODO comment: should this be embedded within the function? You would want to maybe update this over time no? 
+  valid_entries <- c("TF", "SG") ## TODO comment: should this be embedded within the function? You would want to maybe update this over time no? 
   ifelse(value %in% valid_entries, return(value), stop(call.=F, "\n[prepare_eager_tsv.R] error: Invalid analysis type: '", value, 
-                                                       "'\nAccepted values: ", paste(valid_entries,collapse=", "),"\n\n"))
+                                                      "'\nAccepted values: ", paste(valid_entries,collapse=", "),"\n\n"))
 }
 
 ## Save one eager input TSV per individual. Rename if necessary. Input is already subset data.
@@ -35,7 +35,7 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
   if (rename) {
     data <- data %>% mutate(Library_ID=str_replace_all(Library_ID, "[.]", "_")) %>% ## Replace dots in the Library_ID to underscores.
       select(Sample_Name, Library_ID,  Lane, Colour_Chemistry, 
-             SeqType, Organism, Strandedness, UDG_Treatment, R1, R2, BAM)
+            SeqType, Organism, Strandedness, UDG_Treatment, R1, R2, BAM)
   }
   
   ind_dir <- paste0(output_dir, "/", site_id, "/", ind_id)
@@ -51,32 +51,32 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
 ## Parse arguments ----------------------------
 parser <- OptionParser(usage = "%prog [options] .credentials")
 parser <- add_option(parser, c("-s", "--sequencing_batch_id"), type = 'character', 
-                     action = "store", dest = "sequencing_batch_id", 
-                     help = "The Pandora sequencing batch ID to update eager input for. A TSV file will be prepared
+                    action = "store", dest = "sequencing_batch_id", 
+                    help = "The Pandora sequencing batch ID to update eager input for. A TSV file will be prepared
 			for each individual in this run, containing all relevant processed BAM files
 			from the individual")
 parser <- add_option(parser, c("-a", "--analysis_type"), type = 'character',
-                     action = "callback", dest = "analysis_type",
-                     callback = validate_analysis_type, default=NA,
-                     help = "The analysis type to compile the data from. Should be one of: 'SG', 'TF'.")
+                    action = "callback", dest = "analysis_type",
+                    callback = validate_analysis_type, default=NA,
+                    help = "The analysis type to compile the data from. Should be one of: 'SG', 'TF'.")
 parser <- add_option(parser, c("-r", "--rename"), type = 'logical',
-                     action = 'store_true', dest = 'rename', default=F,
-                     help = "Changes all dots (.) in the Library_ID field of the output to underscores (_).
+                    action = 'store_true', dest = 'rename', default=F,
+                    help = "Changes all dots (.) in the Library_ID field of the output to underscores (_).
 			Some tools used in nf-core/eager will strip everything after the first dot (.)
 			from the name of the input file, which can cause naming conflicts in rare cases."
-                     )
+                    )
 parser <- add_option(parser, c("-o", "--outDir"), type = 'character',
-                     action = "store", dest = "outdir",
-                     help= "The desired output directory. Within this directory, one subdirectory will be 
+                    action = "store", dest = "outdir",
+                    help= "The desired output directory. Within this directory, one subdirectory will be 
 			created per analysis type, within that one subdirectory per individual ID,
 			and one TSV within each of these directory."
-                     )
+                    )
 parser <- add_option(parser, c("-d", "--debug_output"), type = 'logical',
-                     action = "store_true", dest = "debug", default=F,
-                     help= "When provided, the entire result table for the run will be saved as '<seq_batch_ID>.results.txt'.
+                    action = "store_true", dest = "debug", default=F,
+                    help= "When provided, the entire result table for the run will be saved as '<seq_batch_ID>.results.txt'.
 			Helpful to check all the output data in one place."
 )
-                     
+
 arguments <- parse_args(parser, positional_arguments = 1)
 opts <- arguments$options
 
@@ -140,18 +140,18 @@ results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individua
     R2=NA
     ) %>%
   select(
-     "Sample_Name"=individual.Full_Individual_Id,
-     "Library_ID"=library.Full_Library_Id,
-     "Lane",
-     "Colour_Chemistry",
-     "SeqType",
-     "Organism"=individual.Organism,
-     "Strandedness",
-     "UDG_Treatment",
-     "R1",
-     "R2",
-     "BAM"
-    )
+    "Sample_Name"=individual.Full_Individual_Id,
+    "Library_ID"=library.Full_Library_Id,
+    "Lane",
+    "Colour_Chemistry",
+    "SeqType",
+    "Organism"=individual.Organism,
+    "Strandedness",
+    "UDG_Treatment",
+    "R1",
+    "R2",
+    "BAM"
+  )
 
 ## Save results into single file for debugging
 if ( opts$debug ) { write_tsv(results, file=paste0(sequencing_batch_id, ".", analysis_type, ".results.txt")) }
