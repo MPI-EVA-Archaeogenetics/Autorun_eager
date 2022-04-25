@@ -6,3 +6,4 @@ eager_outputs/
 .RData
 .Rhistory
 .Rproj.user
+.nfs*
