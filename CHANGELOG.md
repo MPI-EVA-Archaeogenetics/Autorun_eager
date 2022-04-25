@@ -3,14 +3,21 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [dev] - dd/mm/yyyy
+## [1.0.0] - 25/04/2022
 
 ### `Added`
 
+- Directory structure now includes a subdirectory with the site ID.
+- Autorun_eager runs now have informative run names. This will make it easier for users to check the progress of their data in the nextflow tower workspace.
+
 ### `Fixed`
+
+- Fixed a bug where the bams of additional Autorun pipelines would be pulled for processing than intended.
+- The sample names for single stranded libraries now include the suffix `_ss` in the Sample Name field. Avoids file name collisions and makes merging of genotypes easier and allows end users to pick between dsDNA and ssDNA genotypes for individuals where both are available.
 
 ### `Dependencies`
 
+- [nf-core/eager](https://github.com/nf-core/eager) `2.4.2` -> `2.4.4`
 ### `Deprecated`
 
 ## [0.1.0] - 03/02/2022
@@ -30,5 +37,6 @@ Initial release of Autorun_eager.
 
 - [sidora.core](https://github.com/sidora-tools/sidora.core)
 - [pandora2eager](https://github.com/sidora-tools/pandora2eager)
+- [nf-core/eager](https://github.com/nf-core/eager) `2.4.2`
 
 ### `Deprecated`
