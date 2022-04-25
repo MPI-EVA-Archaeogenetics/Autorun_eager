@@ -29,7 +29,7 @@ validate_analysis_type <- function(option, opt_str, value, parser) {
 save_ind_tsv <- function(data, rename, output_dir, ...) {
 
   ## Infer Individual Id(s) from input.
-  ind_id <- data %>% select(Sample_Name) %>% distinct() %>% pull()
+  ind_id <- data %>% select(individual.Full_Individual_Id) %>% distinct() %>% pull()
   site_id <- substr(ind_id,1,3)
 
   if (rename) {
@@ -43,7 +43,7 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
   if (!dir.exists(ind_dir)) {write(paste0("[prepare_eager_tsv.R]: Creating output directory '",ind_dir,"'"), stdout())}
   
   dir.create(ind_dir, showWarnings = F, recursive = T) ## Create output directory and subdirs if they do not exist.
-  readr::write_tsv(data, file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
+  readr::write_tsv(data %>% select(-individual.Full_Individual_Id), file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
 }
 
 ## Correspondance between '-a' analysis type and the name of Kay's pipeline.
@@ -156,8 +156,8 @@ results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individua
       TRUE ~ individual.Full_Individual_Id
     )
   ) %>%
-  ungroup() %>%
   select(
+    individual.Full_Individual_Id, ## Still used for grouping, so ss and ds results of the same sample end up in the same TSV.
     "Sample_Name",
     "Library_ID"=library.Full_Library_Id,
     "Lane",
