@@ -7,6 +7,10 @@ root_input_dir='/mnt/archgen/Autorun_eager/eager_inputs' ## Directory should inc
 ####        E.g. /mnt/archgen/Autorun_eager/eager_inputs/SG/GUB001/GUB001.tsv
 root_output_dir='/mnt/archgen/Autorun_eager/eager_outputs'
 
+## Testing
+# root_input_dir='/mnt/archgen/Autorun_eager/dev/testing/eager_inputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each individual.
+# root_output_dir='/mnt/archgen/Autorun_eager/dev/testing/eager_outputs'
+
 ## Set base profiles for EVA cluster.
 nextflow_profiles="eva,archgen,medium_data,autorun"
 
