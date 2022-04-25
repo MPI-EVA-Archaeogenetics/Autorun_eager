@@ -25,9 +25,17 @@ for analysis_type in "SG" "TF"; do
         ind_id=$(basename ${eager_input} .tsv)
         site_id="${ind_id:0:3}"
         eager_output_dir="${root_output_dir}/${analysis_type}/${site_id}/${ind_id}"
-        # ## Run name is individual ID followed by analysis_type
-        # run_name="$(basename ${eager_input} .tsv)_${analysis_type}"
-        # echo $run_name
+
+        ## Give informative run names for easier trackingin tower.nf
+        ##  If the output directory exists, assume you need to resume a run, else just name it
+        if [[ -d "${eager_output_dir}" ]]; then
+            command_string="-resume"
+        else
+            command_string="-name"
+        fi
+        ## Run name is individual ID followed by analysis_type. -resume or -name added as appropriate
+        run_name="${command_string} $(basename ${eager_input} .tsv)_${analysis_type}"
+
         ## If no multiqc_report exists (last step of eager), or TSV is newer than the report, start an eager run.
         #### Always running with resume will ensure runs are only ever resumed instead of restarting.
         if [[ ${eager_input} -nt ${eager_output_dir}/multiqc/multiqc_report.html ]]; then
@@ -42,7 +50,7 @@ for analysis_type in "SG" "TF"; do
                 -w ${eager_output_dir}/work \
                 -with-tower \
                 -ansi-log false \
-                -resume"
+                ${run_name}"
             
             ## Actually run eager now.
                 ## Monitor run in nf tower. Only works if TOWER_ACCESS_TOKEN is set.
@@ -56,7 +64,7 @@ for analysis_type in "SG" "TF"; do
                 -w ${eager_output_dir}/work \
                 -with-tower \
                 -ansi-log false \
-                -resume # ${run_name}
+                ${run_name}
         fi
     done
 done
