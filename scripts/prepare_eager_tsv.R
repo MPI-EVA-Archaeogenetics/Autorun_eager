@@ -149,10 +149,16 @@ results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individua
       TRUE ~ inferred_udg
     ),
     R1=NA,
-    R2=NA
-    ) %>%
+    R2=NA,
+    ## Add `_ss` to sample name for ssDNA libraries. Avoids file name collisions and allows easier merging of genotypes for end users.
+    Sample_Name = case_when(
+      sequencing.Single_Stranded == 'yes' ~ paste0(individual.Full_Individual_Id, "_ss"),
+      TRUE ~ individual.Full_Individual_Id
+    )
+  ) %>%
+  ungroup() %>%
   select(
-    "Sample_Name"=individual.Full_Individual_Id,
+    "Sample_Name",
     "Library_ID"=library.Full_Library_Id,
     "Lane",
     "Colour_Chemistry",
