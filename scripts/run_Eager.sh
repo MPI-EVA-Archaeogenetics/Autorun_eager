@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+## Flood execution. Useful for testing/fast processing of small batches.
+if [[ $1 == "-r" || $1 == "--rush" ]]; then
+    rush="-bg"
+else
+    rush=''
+fi
+
 nxf_path="/mnt/archgen/tools/nextflow/21.04.3.5560"
 eager_version='2.4.4'
 autorun_config='/mnt/archgen/Autorun_eager/conf/Autorun.config' ## Contains specific profiles with params for each analysis type.
@@ -54,7 +61,7 @@ for analysis_type in "SG" "TF"; do
                 -w ${eager_output_dir}/work \
                 -with-tower \
                 -ansi-log false \
-                ${run_name}"
+                ${run_name} ${rush}"
             
             ## Actually run eager now.
                 ## Monitor run in nf tower. Only works if TOWER_ACCESS_TOKEN is set.
@@ -68,7 +75,7 @@ for analysis_type in "SG" "TF"; do
                 -w ${eager_output_dir}/work \
                 -with-tower \
                 -ansi-log false \
-                ${run_name}
+                ${run_name} ${rush}
         fi
     done
 done
