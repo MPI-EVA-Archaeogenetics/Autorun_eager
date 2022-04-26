@@ -52,6 +52,9 @@ for analysis_type in "SG" "TF"; do
         ## If no multiqc_report exists (last step of eager), or TSV is newer than the report, start an eager run.
         #### Always running with resume will ensure runs are only ever resumed instead of restarting.
         if [[ ${eager_input} -nt ${eager_output_dir}/multiqc/multiqc_report.html ]]; then
+
+            ## Change to input directory to run from, to keep one cwd per run.
+            cd $(dirname ${eager_input})
             ## Debugging info.
             echo "Running eager on ${eager_input}:"
             echo "${nxf_path}/nextflow run nf-core/eager \
@@ -78,6 +81,8 @@ for analysis_type in "SG" "TF"; do
                 -with-tower \
                 -ansi-log false \
                 ${run_name} ${rush}
+            
+            cd ${root_input_dir} ## Then back to root dir
         fi
     done
 done
