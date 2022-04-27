@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Dependencies`
 
 - [nf-core/eager](https://github.com/nf-core/eager) `2.4.2` -> `2.4.4`
+
 ### `Deprecated`
 
 ## [0.1.0] - 03/02/2022
