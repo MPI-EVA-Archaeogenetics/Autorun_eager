@@ -8,7 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Added`
 
 - Directory structure now includes a subdirectory with the site ID.
-- Autorun_eager runs now have informative run names. This will make it easier for users to check the progress of their data in the nextflow tower workspace.
 
 ### `Fixed`
 
