@@ -7,3 +7,4 @@ eager_outputs/
 .Rhistory
 .Rproj.user
 .nfs*
+dev/
