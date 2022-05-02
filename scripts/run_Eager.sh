@@ -7,7 +7,7 @@ else
     rush=''
 fi
 
-nxf_path="/mnt/archgen/tools/nextflow/21.04.3.5560"
+nxf_path="/home/srv_autoeager/conda/envs/autoeager/bin/nextflow"
 eager_version='2.4.2'
 autorun_config='/mnt/archgen/Autorun_eager/conf/Autorun.config' ## Contains specific profiles with params for each analysis type.
 root_input_dir='/mnt/archgen/Autorun_eager/eager_inputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each individual.
