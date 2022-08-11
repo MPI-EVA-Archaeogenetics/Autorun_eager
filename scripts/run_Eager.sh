@@ -8,7 +8,7 @@ else
 fi
 
 nxf_path="/home/srv_autoeager/conda/envs/autoeager/bin/"
-eager_version='2.4.2'
+eager_version='2.4.5'
 autorun_config='/mnt/archgen/Autorun_eager/conf/Autorun.config' ## Contains specific profiles with params for each analysis type.
 root_input_dir='/mnt/archgen/Autorun_eager/eager_inputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each individual.
 ####        E.g. /mnt/archgen/Autorun_eager/eager_inputs/SG/GUB001/GUB001.tsv
