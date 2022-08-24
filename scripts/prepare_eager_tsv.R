@@ -154,12 +154,17 @@ results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individua
     Sample_Name = case_when(
       sequencing.Single_Stranded == 'yes' ~ paste0(individual.Full_Individual_Id, "_ss"),
       TRUE ~ individual.Full_Individual_Id
+    ),
+    ## Also add the suffix to the Sample_ID part of the Library_ID. This ensures that in the MultiQC report, the ssDNA libraries will be sorted after the ssDNA sample.
+    Library_ID = case_when(
+      sequencing.Single_Stranded == 'yes' ~ paste0(Sample_Name, ".", stringr::str_split_fixed(library.Full_Library_Id, "\\.", 2)[,2]),
+      TRUE ~ library.Full_Library_Id
     )
   ) %>%
   select(
     individual.Full_Individual_Id, ## Still used for grouping, so ss and ds results of the same sample end up in the same TSV.
     "Sample_Name",
-    "Library_ID"=library.Full_Library_Id,
+    "Library_ID",
     "Lane",
     "Colour_Chemistry",
     "SeqType",
@@ -175,4 +180,4 @@ results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individua
 if ( opts$debug ) { write_tsv(results, file=paste0(sequencing_batch_id, ".", analysis_type, ".results.txt")) }
 
 ## Group by individual IDs and save each chunk as TSV
-results %>% group_by(Sample_Name) %>% group_walk(~save_ind_tsv(., rename=F, output_dir=output_dir), .keep=T)
+results %>% group_by(individual.Full_Individual_Id) %>% group_walk(~save_ind_tsv(., rename=F, output_dir=output_dir), .keep=T)
