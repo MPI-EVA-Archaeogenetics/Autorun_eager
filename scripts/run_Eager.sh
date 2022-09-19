@@ -1,11 +1,22 @@
 #!/usr/bin/env bash
 
-nxf_path="/mnt/archgen/tools/nextflow/21.04.3.5560"
-eager_version='2.4.2'
+## Flood execution. Useful for testing/fast processing of small batches.
+if [[ $1 == "-r" || $1 == "--rush" ]]; then
+    rush="-bg"
+else
+    rush=''
+fi
+
+nxf_path="/home/srv_autoeager/conda/envs/autoeager/bin/"
+eager_version='2.4.5'
 autorun_config='/mnt/archgen/Autorun_eager/conf/Autorun.config' ## Contains specific profiles with params for each analysis type.
 root_input_dir='/mnt/archgen/Autorun_eager/eager_inputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each individual.
 ####        E.g. /mnt/archgen/Autorun_eager/eager_inputs/SG/GUB001/GUB001.tsv
 root_output_dir='/mnt/archgen/Autorun_eager/eager_outputs'
+
+## Testing
+# root_input_dir='/mnt/archgen/Autorun_eager/dev/testing/eager_inputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each individual.
+# root_output_dir='/mnt/archgen/Autorun_eager/dev/testing/eager_outputs'
 
 ## Set base profiles for EVA cluster.
 nextflow_profiles="eva,archgen,medium_data,autorun"
@@ -20,15 +31,30 @@ for analysis_type in "SG" "TF"; do
     # echo ${analysis_type}
     analysis_profiles="${nextflow_profiles},${analysis_type}"
     # echo "${root_input_dir}/${analysis_type}"
-    for eager_input in ${root_input_dir}/${analysis_type}/*/*.tsv; do
+    for eager_input in ${root_input_dir}/${analysis_type}/*/*/*.tsv; do
         ## Set output directory name from eager input name
-        eager_output_dir="${root_output_dir}/${analysis_type}/$(basename ${eager_input} .tsv)"
-        # ## Run name is individual ID followed by analysis_type
-        # run_name="$(basename ${eager_input} .tsv)_${analysis_type}"
-        # echo $run_name
+        ind_id=$(basename ${eager_input} .tsv)
+        site_id="${ind_id:0:3}"
+        eager_output_dir="${root_output_dir}/${analysis_type}/${site_id}/${ind_id}"
+
+        run_name="-resume" ## To be changed once/if a way to give informative run names becomes available
+        
+        ## TODO Give informative run names for easier trackingin tower.nf
+        ##  If the output directory exists, assume you need to resume a run, else just name it
+        # if [[ -d "${eager_output_dir}" ]]; then
+        #     command_string="-resume"
+        # else
+        #     command_string="-name"
+        # fi
+        # ## Run name is individual ID followed by analysis_type. -resume or -name added as appropriate
+        # run_name="${command_string} $(basename ${eager_input} .tsv)_${analysis_type}"
+
         ## If no multiqc_report exists (last step of eager), or TSV is newer than the report, start an eager run.
         #### Always running with resume will ensure runs are only ever resumed instead of restarting.
         if [[ ${eager_input} -nt ${eager_output_dir}/multiqc/multiqc_report.html ]]; then
+
+            ## Change to input directory to run from, to keep one cwd per run.
+            cd $(dirname ${eager_input})
             ## Debugging info.
             echo "Running eager on ${eager_input}:"
             echo "${nxf_path}/nextflow run nf-core/eager \
@@ -40,12 +66,11 @@ for analysis_type in "SG" "TF"; do
                 -w ${eager_output_dir}/work \
                 -with-tower \
                 -ansi-log false \
-                -resume"
+                ${run_name} ${rush}"
             
             ## Actually run eager now.
-                ## Email the submitting user the resulting MultiQC report.
                 ## Monitor run in nf tower. Only works if TOWER_ACCESS_TOKEN is set.
-                ## TODO Maybe an EVA_Autorun account can be made for tower, to monitor runs outside of users?
+                ## Runs show in the Autorun_Eager workspace on tower.nf
             ${nxf_path}/nextflow run nf-core/eager \
                 -r ${eager_version} \
                 -profile ${analysis_profiles} \
@@ -55,7 +80,9 @@ for analysis_type in "SG" "TF"; do
                 -w ${eager_output_dir}/work \
                 -with-tower \
                 -ansi-log false \
-                -resume # ${run_name}
+                ${run_name} ${rush}
+            
+            cd ${root_input_dir} ## Then back to root dir
         fi
     done
 done

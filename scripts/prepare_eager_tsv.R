@@ -20,29 +20,42 @@ require(stringr)
 
 ## Validate analysis type option input
 validate_analysis_type <- function(option, opt_str, value, parser) {
-  valid_entries=c("TF", "SG") ## TODO comment: should this be embedded within the function? You would want to maybe update this over time no? 
+  valid_entries <- c("TF", "SG") ## TODO comment: should this be embedded within the function? You would want to maybe update this over time no? 
   ifelse(value %in% valid_entries, return(value), stop(call.=F, "\n[prepare_eager_tsv.R] error: Invalid analysis type: '", value, 
-                                                       "'\nAccepted values: ", paste(valid_entries,collapse=", "),"\n\n"))
+                                                      "'\nAccepted values: ", paste(valid_entries,collapse=", "),"\n\n"))
 }
 
 ## Save one eager input TSV per individual. Rename if necessary. Input is already subset data.
 save_ind_tsv <- function(data, rename, output_dir, ...) {
 
   ## Infer Individual Id(s) from input.
-  ind_id <- data %>% select(Sample_Name) %>% distinct() %>% pull()
-  
+  ind_id <- data %>% select(individual.Full_Individual_Id) %>% distinct() %>% pull()
+  site_id <- substr(ind_id,1,3)
+
   if (rename) {
     data <- data %>% mutate(Library_ID=str_replace_all(Library_ID, "[.]", "_")) %>% ## Replace dots in the Library_ID to underscores.
       select(Sample_Name, Library_ID,  Lane, Colour_Chemistry, 
-             SeqType, Organism, Strandedness, UDG_Treatment, R1, R2, BAM)
+            SeqType, Organism, Strandedness, UDG_Treatment, R1, R2, BAM)
   }
   
-  ind_dir <- paste0(output_dir,"/",ind_id)
+  ind_dir <- paste0(output_dir, "/", site_id, "/", ind_id)
   
   if (!dir.exists(ind_dir)) {write(paste0("[prepare_eager_tsv.R]: Creating output directory '",ind_dir,"'"), stdout())}
   
   dir.create(ind_dir, showWarnings = F, recursive = T) ## Create output directory and subdirs if they do not exist.
-  readr::write_tsv(data, file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
+ data %>% select(-individual.Full_Individual_Id) %>%  readr::write_tsv(file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
+}
+
+## Correspondance between '-a' analysis type and the name of Kay's pipeline.
+##    Only bams from the output autorun_name will be included in the output
+autorun_name_from_analysis_type <- function(analysis_type) {
+  autorun_name <- case_when(
+    analysis_type == "TF" ~ "HUMAN_1240K",
+    analysis_type == "SG" ~ "HUMAN_SHOTGUN",
+    ## Future analyses can be added here to pull those bams for eager processsing.
+    TRUE ~ NA_character_
+  )
+  return(autorun_name)
 }
 
 ## MAIN ##
@@ -50,32 +63,32 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
 ## Parse arguments ----------------------------
 parser <- OptionParser(usage = "%prog [options] .credentials")
 parser <- add_option(parser, c("-s", "--sequencing_batch_id"), type = 'character', 
-                     action = "store", dest = "sequencing_batch_id", 
-                     help = "The Pandora sequencing batch ID to update eager input for. A TSV file will be prepared
+                    action = "store", dest = "sequencing_batch_id", 
+                    help = "The Pandora sequencing batch ID to update eager input for. A TSV file will be prepared
 			for each individual in this run, containing all relevant processed BAM files
 			from the individual")
 parser <- add_option(parser, c("-a", "--analysis_type"), type = 'character',
-                     action = "callback", dest = "analysis_type",
-                     callback = validate_analysis_type, default=NA,
-                     help = "The analysis type to compile the data from. Should be one of: 'SG', 'TF'.")
+                    action = "callback", dest = "analysis_type",
+                    callback = validate_analysis_type, default=NA,
+                    help = "The analysis type to compile the data from. Should be one of: 'SG', 'TF'.")
 parser <- add_option(parser, c("-r", "--rename"), type = 'logical',
-                     action = 'store_true', dest = 'rename', default=F,
-                     help = "Changes all dots (.) in the Library_ID field of the output to underscores (_).
+                    action = 'store_true', dest = 'rename', default=F,
+                    help = "Changes all dots (.) in the Library_ID field of the output to underscores (_).
 			Some tools used in nf-core/eager will strip everything after the first dot (.)
 			from the name of the input file, which can cause naming conflicts in rare cases."
-                     )
+                    )
 parser <- add_option(parser, c("-o", "--outDir"), type = 'character',
-                     action = "store", dest = "outdir",
-                     help= "The desired output directory. Within this directory, one subdirectory will be 
+                    action = "store", dest = "outdir",
+                    help= "The desired output directory. Within this directory, one subdirectory will be 
 			created per analysis type, within that one subdirectory per individual ID,
 			and one TSV within each of these directory."
-                     )
+                    )
 parser <- add_option(parser, c("-d", "--debug_output"), type = 'logical',
-                     action = "store_true", dest = "debug", default=F,
-                     help= "When provided, the entire result table for the run will be saved as '<seq_batch_ID>.results.txt'.
+                    action = "store_true", dest = "debug", default=F,
+                    help= "When provided, the entire result table for the run will be saved as '<seq_batch_ID>.results.txt'.
 			Helpful to check all the output data in one place."
 )
-                     
+
 arguments <- parse_args(parser, positional_arguments = 1)
 opts <- arguments$options
 
@@ -111,7 +124,7 @@ tibble_input_iids <- complete_pandora_table %>% filter(sequencing.Batch == seque
 
 ## Pull information from pandora, keeping only matching IIDs and requested Sequencing types.
 results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individual.Full_Individual_Id"="individual.Full_Individual_Id")) %>%
-  filter(grepl(paste0("\\.", analysis_type), sequencing.Full_Sequencing_Id)) %>%
+  filter(grepl(paste0("\\.", analysis_type), sequencing.Full_Sequencing_Id), analysis.Analysis_Id == autorun_name_from_analysis_type(analysis_type)) %>%
   select(individual.Full_Individual_Id,individual.Organism,library.Full_Library_Id,library.Protocol,analysis.Result_Directory,sequencing.Sequencing_Id,sequencing.Full_Sequencing_Id,sequencing.Single_Stranded) %>%
   distinct() %>% ## TODO comment: would be worrying if not already unique, maybe consider throwing a warn?
   group_by(individual.Full_Individual_Id) %>%
@@ -136,24 +149,35 @@ results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individua
       TRUE ~ inferred_udg
     ),
     R1=NA,
-    R2=NA
-    ) %>%
-  select(
-     "Sample_Name"=individual.Full_Individual_Id,
-     "Library_ID"=library.Full_Library_Id,
-     "Lane",
-     "Colour_Chemistry",
-     "SeqType",
-     "Organism"=individual.Organism,
-     "Strandedness",
-     "UDG_Treatment",
-     "R1",
-     "R2",
-     "BAM"
+    R2=NA,
+    ## Add `_ss` to sample name for ssDNA libraries. Avoids file name collisions and allows easier merging of genotypes for end users.
+    Sample_Name = case_when(
+      sequencing.Single_Stranded == 'yes' ~ paste0(individual.Full_Individual_Id, "_ss"),
+      TRUE ~ individual.Full_Individual_Id
+    ),
+    ## Also add the suffix to the Sample_ID part of the Library_ID. This ensures that in the MultiQC report, the ssDNA libraries will be sorted after the ssDNA sample.
+    Library_ID = case_when(
+      sequencing.Single_Stranded == 'yes' ~ paste0(Sample_Name, ".", stringr::str_split_fixed(library.Full_Library_Id, "\\.", 2)[,2]),
+      TRUE ~ library.Full_Library_Id
     )
+  ) %>%
+  select(
+    individual.Full_Individual_Id, ## Still used for grouping, so ss and ds results of the same sample end up in the same TSV.
+    "Sample_Name",
+    "Library_ID",
+    "Lane",
+    "Colour_Chemistry",
+    "SeqType",
+    "Organism"=individual.Organism,
+    "Strandedness",
+    "UDG_Treatment",
+    "R1",
+    "R2",
+    "BAM"
+  )
 
 ## Save results into single file for debugging
 if ( opts$debug ) { write_tsv(results, file=paste0(sequencing_batch_id, ".", analysis_type, ".results.txt")) }
 
 ## Group by individual IDs and save each chunk as TSV
-results %>% group_by(Sample_Name) %>% group_walk(~save_ind_tsv(., rename=F, output_dir=output_dir), .keep=T)
+results %>% group_by(individual.Full_Individual_Id) %>% group_walk(~save_ind_tsv(., rename=F, output_dir=output_dir), .keep=T)
