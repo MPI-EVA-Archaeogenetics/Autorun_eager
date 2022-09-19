@@ -88,7 +88,7 @@ eager_inputs
          └── IND002
 ```
 
-## run_eager.sh
+## run_Eager.sh
 
 A wrapper shell script that goes through all TSVs in the `eager_inputs` directory, checks if a completed run exists for a given TSV, and submits/resumes an
 eager run for that individual if necessary.
