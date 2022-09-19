@@ -14,7 +14,7 @@ Automated nf-core/eager processing of Autorun output bams.
 - Run eager with the following script, which then runs on the generated TSV files:
 
     ```bash
-    run_eager.sh
+    run_Eager.sh
     ```
 
 ⚠️ For some library preparation protocols and external libraries, UDG treatment cannot be reliably inferred, and errors will be thrown.
