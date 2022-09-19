@@ -3,18 +3,22 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 25/04/2022
+## [1.0.0] - 19/09/2022
 
 ### `Added`
 
 - Directory structure now includes a subdirectory with the site ID.
+- Jobs are now submitted to `all.q`
 
 ### `Fixed`
 
 - Fixed a bug where the bams of additional Autorun pipelines would be pulled for processing than intended.
 - The sample names for single stranded libraries now include the suffix `_ss` in the Sample Name field. Avoids file name collisions and makes merging of genotypes easier and allows end users to pick between dsDNA and ssDNA genotypes for individuals where both are available.
+- Library names of single stranded libraries also include the suffix `_ss` in the Library Name field. This ensures that rows in the MultiQC report are sorted correctly.
 
 ### `Dependencies`
+
+- nf-core/eager=2.4.5
 
 ### `Deprecated`
 
