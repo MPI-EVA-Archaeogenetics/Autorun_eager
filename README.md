@@ -7,8 +7,8 @@ Automated nf-core/eager processing of Autorun output bams.
 - Run `prepare_eager_tsv.R` for human SG or TF data for a given sequencing batch:
 
     ```bash
-    prepare_eager_tsv.R -s 210429_K00233_0191_AHKJHFBBXY_Jena0014 -a SG -o eager_inputs/ -d .eva_credentials
-    prepare_eager_tsv.R -s 210802_K00233_0212_BHLH3FBBXY_SRdi_JR_BN -a TF -o eager_inputs/ -d .eva_credentials
+    prepare_eager_tsv.R -s <batch_Id> -a SG -o eager_inputs/ -d .eva_credentials
+    prepare_eager_tsv.R -s <batch_Id> -a TF -o eager_inputs/ -d .eva_credentials
     ```
 
 - Run eager with the following script, which then runs on the generated TSV files:
@@ -93,7 +93,7 @@ eager_inputs
 A wrapper shell script that goes through all TSVs in the `eager_inputs` directory, checks if a completed run exists for a given TSV, and submits/resumes an
 eager run for that individual if necessary.
 
-Currently uses eager version `2.4.2` and profiles `eva,archgen,medium_data,autorun` across all runs, with the `SG` or `TF` profiles used for their respective
+Currently uses eager version `2.4.5` and profiles `eva,archgen,medium_data,autorun` across all runs, with the `SG` or `TF` profiles used for their respective
 data types.
 
 The outputs are saved with the same directory structure as the inputs, but in a separate parent directory.
