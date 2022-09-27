@@ -19,7 +19,7 @@ root_output_dir='/mnt/archgen/Autorun_eager/eager_outputs'
 # root_output_dir='/mnt/archgen/Autorun_eager/dev/testing/eager_outputs'
 
 ## Set base profiles for EVA cluster.
-nextflow_profiles="eva,archgen,medium_data,autorun"
+nextflow_profiles="eva,archgen,medium_data,autorun,local_paths"
 
 ## Set colour and face for colour printing
 Red='\033[1;31m'$(tput bold) ## Red bold face
