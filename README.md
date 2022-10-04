@@ -88,12 +88,14 @@ eager_inputs
          └── IND002
 ```
 
+Alongside each created TSV is a file named `autorun_eager_version.txt`, which states the version of Autorun_eager used.
+
 ## run_Eager.sh
 
 A wrapper shell script that goes through all TSVs in the `eager_inputs` directory, checks if a completed run exists for a given TSV, and submits/resumes an
 eager run for that individual if necessary.
 
-Currently uses eager version `2.4.5` and profiles `eva,archgen,medium_data,autorun` across all runs, with the `SG` or `TF` profiles used for their respective
+Currently uses eager version `2.4.5` and profiles `eva,archgen,medium_data,autorun,local_paths` across all runs, with the `SG` or `TF` profiles used for their respective
 data types.
 
 The outputs are saved with the same directory structure as the inputs, but in a separate parent directory.
