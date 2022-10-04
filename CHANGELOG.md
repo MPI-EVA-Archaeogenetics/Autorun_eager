@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added bed file for on-target coverage calculation.
 - `prepare_eager_tsv.R` now also creates a version file within the directory of the TSV.
+- Added github PR template.
 
 ### `Fixed`
 
