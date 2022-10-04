@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added`
 
+- Added bed file for on-target coverage calculation.
+
 ### `Fixed`
 
 - Parameters that require local paths have been moved to their own profile to aid in reproducibility outside of the EVA cluster.
