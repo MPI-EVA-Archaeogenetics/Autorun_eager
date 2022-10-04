@@ -30,6 +30,11 @@ Broader scope options and parameters for use across all processing with autorun.
 
 Turns off automatic cleanup of intermediate files on successful completion of a run to allow resuming of the run when additional data becomes available, without rerunning completed steps.
 
+### local_paths
+
+This is profile contains all paramters provided to BOTH SG and TF runs that are paths to files on the local MPI-EVA filesystem. 
+They are provided in a separate profile to make it clearer to provided added transparency as well as make it easier for third parties to reproduce the processing done with Autorun_eager (e.g. by loading the `SG` or `TF` remote profiles) without getting errors about paths that do not exist on their filesystem.
+
 ### SG
 
 The standardised parameters for processing human shotgun data.
