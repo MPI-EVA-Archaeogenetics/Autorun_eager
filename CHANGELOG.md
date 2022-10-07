@@ -3,6 +3,22 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [dev] - 
+
+### `Added`
+
+- Added bed file for on-target coverage calculation for TF data. In SG this parameter gets overwritten and hence ignored.
+- `prepare_eager_tsv.R` now also creates a version file within the directory of the TSV.
+- Added github PR template.
+
+### `Fixed`
+
+- Parameters that require local paths have been moved to their own profile to aid in reproducibility outside of the EVA cluster.
+
+### `Dependencies`
+
+### `Deprecated`
+
 ## [1.0.0] - 19/09/2022
 
 ### `Added`
