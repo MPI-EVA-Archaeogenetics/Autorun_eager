@@ -39,15 +39,15 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
   }
   
   ind_dir <- paste0(output_dir, "/", site_id, "/", ind_id)
-
-  ## Print Autorun_eager version to file
-  AE_version <- "1.1.0"
-  cat(AE_version, file=paste0(ind_dir,"/autorun_eager_version.txt"), fill=T, append = F)
   
   if (!dir.exists(ind_dir)) {write(paste0("[prepare_eager_tsv.R]: Creating output directory '",ind_dir,"'"), stdout())}
   
   dir.create(ind_dir, showWarnings = F, recursive = T) ## Create output directory and subdirs if they do not exist.
  data %>% select(-individual.Full_Individual_Id) %>%  readr::write_tsv(file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
+
+  ## Print Autorun_eager version to file
+  AE_version <- "1.1.0"
+  cat(AE_version, file=paste0(ind_dir,"/autorun_eager_version.txt"), fill=T, append = F)
 }
 
 ## Correspondance between '-a' analysis type and the name of Kay's pipeline.
