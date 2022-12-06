@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [dev] - 
 
 ### `Added`
+- Add option to create a text file with the run commands for launching Autorun_eager, fo submission as a qsub array.
+- Add array submission script.
 
 ### `Fixed`
 - Fixed pull request template.

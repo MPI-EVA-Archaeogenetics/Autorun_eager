@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
 
+## Defaults
+rush=''
+array=''
+temp_file=''
+
 ## Flood execution. Useful for testing/fast processing of small batches.
 if [[ $1 == "-r" || $1 == "--rush" ]]; then
     rush="-bg"
-else
-    rush=''
+else if [[ $1 == '-a' || $1 == "--array" ]]; then
+    array='TRUE'
+    temp_file="/mnt/archgen/Autorun_eager/$(date +'%y%m%d_%H:%M')_Autorun_eager_queue.txt"
+    ## Create new empty file with the correct naming, or flush contents of file if somehow it exists.
+    echo -n '' > ${temp_file}
 fi
 
 nxf_path="/home/srv_autoeager/conda/envs/autoeager/bin/"
@@ -68,6 +76,22 @@ for analysis_type in "SG" "TF"; do
                 -ansi-log false \
                 ${run_name} ${rush}"
             
+            if [[ ${array} == 'TRUE' ]]; then
+            ## For array submissions, the commands to be run will be added one by one to the temp_file
+            ## Then once all jobs have been added, submit that to qsub with each line being its own job.
+            ## Use `continue` to avoid running eager interactivetly for arrayed jobs.
+                echo "cd $(dirname ${eager_input}) ; ${nxf_path}/nextflow run nf-core/eager \
+                -r ${eager_version} \
+                -profile ${analysis_profiles} \
+                -c ${autorun_config} \
+                --input ${eager_input} \
+                --outdir ${eager_output_dir} \
+                -w ${eager_output_dir}/work \
+                -with-tower \
+                -ansi-log false \
+                ${run_name} ${rush}" >> ${temp_file}
+                continue ## Skip running eager interactively if arrays are requested.
+            fi
             ## Actually run eager now.
                 ## Monitor run in nf tower. Only works if TOWER_ACCESS_TOKEN is set.
                 ## Runs show in the Autorun_Eager workspace on tower.nf
@@ -86,3 +110,10 @@ for analysis_type in "SG" "TF"; do
         fi
     done
 done
+
+## If array is requested submit the created array file to qsub below
+if [[ ${array} == 'TRUE' ]]; then
+    jn=$(wc -l ${temp_file})
+    ## TODO command still needs testing but should be something like this
+    echo "qsub -V -N AE_spawner -cwd -j y -b y -o ~/$(basename ${temp_file} .txt).log -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}"
+fi
