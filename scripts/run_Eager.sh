@@ -61,6 +61,24 @@ for analysis_type in "SG" "TF"; do
         #### Always running with resume will ensure runs are only ever resumed instead of restarting.
         if [[ ${eager_input} -nt ${eager_output_dir}/multiqc/multiqc_report.html ]]; then
 
+            if [[ ${array} == 'TRUE' ]]; then
+            ## For array submissions, the commands to be run will be added one by one to the temp_file
+            ## Then once all jobs have been added, submit that to qsub with each line being its own job.
+            ## Use `continue` to avoid running eager interactivetly for arrayed jobs.
+                echo "cd $(dirname ${eager_input}) ; ${nxf_path}/nextflow run nf-core/eager \
+                -r ${eager_version} \
+                -profile ${analysis_profiles} \
+                -c ${autorun_config} \
+                --input ${eager_input} \
+                --outdir ${eager_output_dir} \
+                -w ${eager_output_dir}/work \
+                -with-tower \
+                -ansi-log false \
+                ${run_name} ${rush}" | tr -s " " >> ${temp_file}
+                continue ## Skip running eager interactively if arrays are requested.
+            fi
+
+            ## NON-ARRAY RUNS
             ## Change to input directory to run from, to keep one cwd per run.
             cd $(dirname ${eager_input})
             ## Debugging info.
@@ -76,22 +94,7 @@ for analysis_type in "SG" "TF"; do
                 -ansi-log false \
                 ${run_name} ${rush}"
             
-            if [[ ${array} == 'TRUE' ]]; then
-            ## For array submissions, the commands to be run will be added one by one to the temp_file
-            ## Then once all jobs have been added, submit that to qsub with each line being its own job.
-            ## Use `continue` to avoid running eager interactivetly for arrayed jobs.
-                echo "cd $(dirname ${eager_input}) ; ${nxf_path}/nextflow run nf-core/eager \
-                -r ${eager_version} \
-                -profile ${analysis_profiles} \
-                -c ${autorun_config} \
-                --input ${eager_input} \
-                --outdir ${eager_output_dir} \
-                -w ${eager_output_dir}/work \
-                -with-tower \
-                -ansi-log false \
-                ${run_name} ${rush}" >> ${temp_file}
-                continue ## Skip running eager interactively if arrays are requested.
-            fi
+
             ## Actually run eager now.
                 ## Monitor run in nf tower. Only works if TOWER_ACCESS_TOKEN is set.
                 ## Runs show in the Autorun_Eager workspace on tower.nf
