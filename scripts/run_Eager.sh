@@ -8,7 +8,7 @@ temp_file=''
 ## Flood execution. Useful for testing/fast processing of small batches.
 if [[ $1 == "-r" || $1 == "--rush" ]]; then
     rush="-bg"
-else if [[ $1 == '-a' || $1 == "--array" ]]; then
+elif [[ $1 == '-a' || $1 == "--array" ]]; then
     array='TRUE'
     temp_file="/mnt/archgen/Autorun_eager/$(date +'%y%m%d_%H:%M')_Autorun_eager_queue.txt"
     ## Create new empty file with the correct naming, or flush contents of file if somehow it exists.
