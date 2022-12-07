@@ -116,7 +116,7 @@ done
 
 ## If array is requested submit the created array file to qsub below
 if [[ ${array} == 'TRUE' ]]; then
-    jn=$(wc -l ${temp_file})
+    jn=$(wc -l ${temp_file} | cut -f 1 -d " ") ## number of jobs equals number of lines
     ## TODO command still needs testing but should be something like this
     echo "qsub -V -N AE_spawner -cwd -j y -b y -o ~/$(basename ${temp_file} .txt).log -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}"
 fi
