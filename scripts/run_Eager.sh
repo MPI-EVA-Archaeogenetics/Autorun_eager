@@ -10,7 +10,7 @@ if [[ $1 == "-r" || $1 == "--rush" ]]; then
     rush="-bg"
 elif [[ $1 == '-a' || $1 == "--array" ]]; then
     array='TRUE'
-    temp_file="/mnt/archgen/Autorun_eager/$(date +'%y%m%d_%H:%M')_Autorun_eager_queue.txt"
+    temp_file="/mnt/archgen/Autorun_eager/$(date +'%y%m%d_%H%M')_Autorun_eager_queue.txt"
     ## Create new empty file with the correct naming, or flush contents of file if somehow it exists.
     echo -n '' > ${temp_file}
 fi
@@ -117,6 +117,19 @@ done
 ## If array is requested submit the created array file to qsub below
 if [[ ${array} == 'TRUE' ]]; then
     jn=$(wc -l ${temp_file} | cut -f 1 -d " ") ## number of jobs equals number of lines
-    ## TODO command still needs testing but should be something like this
-    echo "qsub -V -N AE_spawner -cwd -j y -b y -o ~/$(basename ${temp_file} .txt).log -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}"
+    export NXF_OPTS='-Xms4G -Xmx4G' ## Set 4GB limit to Nextflow VM
+    export JAVA_OPTS='-Xms8G -Xmx8G' ## Set 8GB limit to Java VM
+    ## -V Pass environment to job (includes nxf/java opts)
+    ## -S /bin/bash Use bash
+    ## -l v_hmem=16G ## 16GB memory limit (8 for java +garbage collector)
+    ## -pe smp 2 ## Use two cores. one for nextflow, one for garbage collector
+    ## -n AE_spawner ## Name the job
+    ## -cwd Run in currect run directory (ran commands include a cd anyway, but to find the files at least)
+    ## -j y ## join stderr and stdout into one output log file
+    ## -b y ## Provided command is a binary already (i.e. executable)
+    ## -o /mnt/archgen/Autorun_eager/array_Logs/ ## Keep all log files in one directory.
+    ## -tc 10 ## Number of concurrent spawner jobs (10)
+    ## -t 1-${jn} ## The number of array jobs (from 1 to $jn)
+    qsub -V -S /bin/bash -l h_vmem=16G -pe smp 2 -N AE_spawner_${temp_file} -cwd -j y -b y -o /mnt/archgen/Autorun_eager/array_Logs/ -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}
+    #echo "qsub -V -N AE_spawner -cwd -j y -b y -o ~/$(basename ${temp_file} .txt).log -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}"
 fi
