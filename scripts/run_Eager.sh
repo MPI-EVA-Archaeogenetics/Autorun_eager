@@ -130,6 +130,6 @@ if [[ ${array} == 'TRUE' ]]; then
     ## -o /mnt/archgen/Autorun_eager/array_Logs/ ## Keep all log files in one directory.
     ## -tc 10 ## Number of concurrent spawner jobs (10)
     ## -t 1-${jn} ## The number of array jobs (from 1 to $jn)
-    echo "qsub -V -S /bin/bash -l h_vmem=16G -pe smp 2 -N AE_spawner_${temp_file} -cwd -j y -b y -o /mnt/archgen/Autorun_eager/array_Logs/ -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}"
-    qsub -V -S /bin/bash -l h_vmem=16G -pe smp 2 -N AE_spawner_${temp_file} -cwd -j y -b y -o /mnt/archgen/Autorun_eager/array_Logs/ -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}
+    echo "qsub -V -S /bin/bash -l h_vmem=16G -pe smp 2 -N AE_spawner_$(basename ${temp_file}) -cwd -j y -b y -o /mnt/archgen/Autorun_eager/array_Logs/ -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}"
+    qsub -V -S /bin/bash -l h_vmem=16G -pe smp 2 -N AE_spawner_$(basename ${temp_file}) -cwd -j y -b y -o /mnt/archgen/Autorun_eager/array_Logs/ -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}
 fi
