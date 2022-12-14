@@ -1,0 +1,193 @@
+#!/usr/bin/env Rscript
+
+require(optparse)
+library(magrittr)
+if (!require('eager2poseidon')) {
+  if(!require('remotes')) install.packages('remotes')
+  write("Installing required package 'sidora-tools/eager2poseidon'...", file=stderr())
+  remotes::install_github('sidora-tools/eager2poseidon')
+  # require(eager2poseidon)
+} else {require(eager2poseidon)}
+if (!require('eagerR')) {
+    write("Installing required package 'TCLamnidis/eagerR'...", file=stderr())
+    remotes::install_github('TCLamnidis/eagerR')
+    # require(eagerR)
+} else {require(eagerR)}
+
+## Parse arguments ----------------------------
+parser <- OptionParser()
+parser <- add_option(parser, c("-j", "--input_janno"),
+  type = "character",
+  action = "store", dest = "janno_fn",
+  help = "The input janno file."
+)
+parser <- add_option(parser, c("-i", "--ind_id"),
+  type = "character",
+  action = "store", dest = "ind_id",
+  help = "The individual ID whose package janno should be updated."
+)
+parser <- add_option(parser, c("-c", "--credentials"),
+  type = "character",
+  action = "store", dest = "credentials",
+  help = "Path to a credentials file containing four lines listing the database host, the port of the database server, user and password, respectively."
+)
+parser <- add_option(parser, c("-s", "--contamination_snp_cutoff"),
+  type = "integer",
+  action = "store", default = "100", dest = "snp_cutoff",
+  help = "The snp cutoff for nuclear contamination results. Nuclear contamination results with fewer than this number of SNPs will be ignored when calculating the values for 'Contamination_*' columns. [100]"
+)
+parser <- add_option(parser, c("-p", "--genotypePloidy"),
+  type = 'character',
+  action = "store", dest = "genotype_ploidy",
+  metavar="ploidy",
+  help = "The genotype ploidy of the genotypes produced by eager. This value will be used to fill in all missing entries in the 'Genotype_Ploidy' in the output janno file."
+)
+parser <- add_option(parser, c("-o", "--output_janno"),
+  type = "character",
+  action = "store", dest = "output_fn", default = "",
+  help = "By default, the input janno is overwritten. Providing a path to this option instead writes the new janno file to the specified location."
+)
+
+args <- parse_args(parser)
+
+## DEBUG For debugging ease
+# print(args, file=stderr())
+
+## If no output is provided, output_fn is the input janno path.
+if (args$output_fn == "") {
+  output_fn <- args$janno_fn
+} else {
+  output_fn <- args$output_fn
+}
+
+input_janno_table <- eager2poseidon::standardise_janno(args$janno_fn)
+
+## Create new column `Pandora_ID` that removes the ss_suffix (if present) from the Poseidon ID to infer the Pandora_ID of the individual.
+sample_ids <- dplyr::select(input_janno_table, Poseidon_ID) %>%
+  dplyr::mutate(Pandora_ID=sub(paste0(args$ss_suffix,"$"), '', .data$Poseidon_ID))
+
+## Collect Pandora results for Pandora IDs.
+pandora_results <- eager2poseidon::import_pandora_data(sample_ids %>% dplyr::select(Pandora_ID) %>% dplyr::distinct(), args$credentials, trust_uncalibrated_dates = TRUE) %>%
+  dplyr::full_join(sample_ids, ., by = "Pandora_ID")
+
+## Infer locations of different JSONs to read results in with eagerR. (More flexible than e2p and can pull results from SG runs if present)
+# base_dir <- "/mnt/archgen/Autorun_eager"
+base_dir <- "/Users/lamnidis/mount"
+eager_tsv_fn <- paste0(base_dir, "/eager_inputs/TF/", substr(args$ind_id,0,3), "/", args$ind_id,"/", args$ind_id, ".tsv")
+eager_tf_results_dir <- paste0(base_dir, "/eager_outputs/TF/", substr(args$ind_id,0,3), "/", args$ind_id,"/")
+eager_sg_endorspy_dir <- paste0(base_dir, "/eager_outputs/SG/", substr(args$ind_id,0,3), "/", args$ind_id,"/endorspy/")
+eager_sg_damageprofiler_dir <- paste0(base_dir, "/eager_outputs/SG/", substr(args$ind_id,0,3), "/", args$ind_id,"/damageprofiler/")
+
+## Read eager TSV data
+tsv_dat <- eagerR::read_input_tsv_data(eager_tsv_fn) %>% 
+  eagerR::infer_merged_bam_names(run_trim_bam = T) %>%
+  dplyr::ungroup()
+
+## Add number of libraries, capture type, overall UDG treatment and Strandedness columns
+poseidon_tsv_cols <- tsv_dat %>% dplyr::select(Sample_Name, Library_ID, Strandedness, UDG_Treatment) %>%
+  dplyr::group_by(Sample_Name, Strandedness) %>%
+  dplyr::summarise(.groups='keep',
+    UDG=dplyr::case_when(
+      unique(UDG_Treatment) %>% length(.) > 1 ~ 'mixed',
+      TRUE ~ unique(UDG_Treatment)
+    ),
+    Nr_Libs=dplyr::n(),
+    Capture_Type=paste0(rep("1240K", Nr_Libs), collapse=";"),
+    Library_Built=dplyr::case_when(
+      Strandedness == 'single' ~ 'ss',
+      Strandedness == 'double' ~ 'ds',
+      TRUE ~ NA_character_
+    )
+  )
+
+################
+## TF RESULTS ##
+################
+
+## Collect Sexdet results
+sexdet <- eagerR::read_sexdet_json(paste0(eager_tf_results_dir,"/sex_determination/sexdeterrmine.json")) %>% 
+  dplyr::filter(sexdet_input_bam %in% tsv_dat$sexdet_bam)
+
+## Collect snp_cov results
+## If both ssDNA and dsDNA data exist, collect results from both
+snp_cov_fns <- list.files(path=paste0(eager_tf_results_dir,"/genotyping/"), pattern = "_eigenstrat_coverage_mqc.json", full.names=T)
+snpcov <- purrr::map_dfr(snp_cov_fns, eagerR::read_snp_coverage_json)
+
+## Collect nuclear contamination results
+nuccont <- eagerR::read_angsd_cont_json(paste0(eager_tf_results_dir,"/nuclear_contamination/nuclear_contamination_mqc.json"))
+
+################
+## SG RESULTS ##
+################
+## In some cases, no SG is created, and instead data is directly TF captured. then no endogenous and dmg results will be available.
+
+## Collect damageprofiler output from SG results
+if (file.exists(eager_sg_damageprofiler_dir)) {
+  damageprof <- eagerR::read_damageprofiler_jsons_from_dir(eager_sg_damageprofiler_dir)
+} else {
+  ## If this file doesnt exist, set to NULL, that the compiling function can deal with
+  damageprof <- NULL
+}
+
+## Collect Endogenous DNA results from SG results
+if (file.exists(eager_sg_endorspy_dir)) {
+  endogenous <- eagerR::read_endorspy_jsons_from_dir(eager_sg_endorspy_dir) #%>%
+  #dplyr::filter(endorspy_library_id %in% tsv_dat$Library_ID) ## Might not be needed with the right join function, right?
+} else {
+  ## If this file doesnt exist, set to NULL, that the compiling function can deal with
+  endogenous <- NULL
+}
+
+## Put together the different tables
+updated_columns <- eager2poseidon::compile_eager_result_tables(
+    tsv_table = tsv_dat,
+    sexdet_table = sexdet,
+    snpcov_table = snpcov,
+    dmg_table = damageprof,
+    endogenous_table = endogenous,
+    nuccont_table = nuccont,
+    contamination_method = "1",
+    contamination_algorithm = "ml",
+    XX_cutoffs = c(0.7, 1.2, 0.0, 0.1),
+    XY_cutoffs = c(0.2, 0.6, 0.3, 0.6)
+  ) %>%
+  ## Compile across-library results (weighted sums etc)
+  eager2poseidon::compile_across_lib_results(snp_cutoff = args$snp_cutoff) %>%
+  ## Keep only relevant columns
+  dplyr::select(tidyselect::all_of(c(
+    "Sample_Name",
+    "Genetic_Sex",
+    "Sex_Determination_Note",
+    "Nr_SNPs",
+    "Endogenous",
+    "Contamination",
+    "Contamination_Err",
+    "Contamination_Note",
+    "Contamination_Meas",
+    "Damage",
+    "UDG",
+    "Nr_Libs",
+    "Library_Built",
+    "Capture_Type"
+  )))
+
+## Stitch together the results!
+new_janno <- dplyr::left_join(input_janno_table, updated_columns, by=c("Poseidon_ID"="Sample_Name"), suffix = c(".x", ".y")) %>%
+  ## !! OVERWRITE !! Replace any columns existing in both with the updated column contents
+  dplyr::select(-tidyselect::ends_with(".x")) %>%
+  dplyr::rename_with(.fn=~sub('\\.y$', '', .), .cols=tidyselect::ends_with(".y")) %>%
+  ## Then follow janno standardisation operations
+  ##    First, convert everything to characters
+  dplyr::mutate(
+    dplyr::across(
+      .fn = as.character
+    )
+  ) %>%
+  ##    Now can change NAs to weird janno 'n/a'
+  base::replace(is.na(.), "n/a") %>%
+  ##    And read as a janno table
+  poseidonR::as.janno()
+
+## Finally, save the new janno
+poseidonR::write_janno(output_janno, output_fn)
+
