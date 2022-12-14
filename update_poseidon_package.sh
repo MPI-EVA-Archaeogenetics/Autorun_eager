@@ -1,4 +1,4 @@
-#!/use/bin/env bash
+#!/usr/bin/env bash
 
 VERSION="1.1.2"
 
@@ -33,9 +33,16 @@ while true ; do
   esac
 done
 
-autorun_root_dir='/mnt/archgen/Autorun_eager/'
-root_input_dir='/mnt/archgen/Autorun_eager/eager_outputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each site and individual.
-root_output_dir='/mnt/archgen/Autorun_eager/poseidon_packages' ## Directory that includes data type, site ID and ind ID subdirs.
+# autorun_root_dir='/mnt/archgen/Autorun_eager/'
+# root_input_dir='/mnt/archgen/Autorun_eager/eager_outputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each site and individual.
+# root_output_dir='/mnt/archgen/Autorun_eager/poseidon_packages' ## Directory that includes data type, site ID and ind ID subdirs.
+# input_dir="${root_input_dir}/TF/${ind_id:0:3}/${ind_id}/genotyping/"
+# output_dir="${root_output_dir}/TF/${ind_id:0:3}/${ind_id}/"
+
+## Local Testing
+autorun_root_dir='/Users/lamnidis/'
+root_input_dir='/Users/lamnidis/mount/eager_outputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each site and individual.
+root_output_dir='/Users/lamnidis/Software/github/MPI-EVA-Archaeogenetics/Autorun_eager/test_data/' ## Directory that includes data type, site ID and ind ID subdirs.
 input_dir="${root_input_dir}/TF/${ind_id:0:3}/${ind_id}/genotyping/"
 output_dir="${root_output_dir}/TF/${ind_id:0:3}/${ind_id}/"
 
@@ -44,7 +51,7 @@ if [[ ${ind_id} == '' ]]; then
   errecho "[update_poseidon_package.sh]: No individual ID provided.\n"
   Helptext
   exit 1
-elif [[ -d ${input_dir} ]]; then
+elif [[ ! -d ${input_dir} ]]; then
   errecho "[update_poseidon_package.sh]: Expected eager output directory '${input_dir}' does not exist."
   exit 1
 fi
@@ -63,7 +70,7 @@ if [[ ! -d ${output_dir} ]] && [[ -f ${input_dir}/pileupcaller.single.geno ]] &&
   ## No package, both ds & ss ##
   ###############################
   
-  errecho "Creating new mixed geno package for: ${ind_id}"
+  errecho "[update_poseidon_package.sh]: Creating new mixed geno package for: ${ind_id}"
   ## Create temp dir to put merged genos in
   TEMPDIR=$(mktemp -d ${autorun_root_dir}/.tmp/${ind_id}_XXXXXXXX)
   ## Paste together genos with null delimiter ('\0') to paste the two together
@@ -101,7 +108,7 @@ elif [[ ! -d ${output_dir} ]]; then
   ## No package, one of ds | ss ##
   ################################
 
-  errecho "Creating new package for: ${ind_id}"
+  errecho "[update_poseidon_package.sh]: Creating new package for: ${ind_id}"
   ## Create temp dir to put renamed symlinks in
   TEMPDIR=$(mktemp -d ${autorun_root_dir}/.tmp/${ind_id}_XXXXXXXX)
   
@@ -113,18 +120,23 @@ elif [[ ! -d ${output_dir} ]]; then
   mkdir -p $(dirname ${output_dir})
 
   ## Then create new poseidon pacakge
-  trident init \
+  cmd="trident init \
     --inFormat EIGENSTRAT \
     --snpSet "1240K" \
     --genoFile ${TEMPDIR}/${ind_id}.geno \
     --snpFile ${TEMPDIR}/${ind_id}.snp \
     --indFile ${TEMPDIR}/${ind_id}.ind \
-    --outPackagePath  ${TEMPDIR}/${ind_id}/
+    --outPackagePath  ${TEMPDIR}/${ind_id}"
+
+  echo ${cmd}
+  ${cmd}
 
   ## TODO Populate the janno file
 
   ## TODO Use trident update to get correct md5sums and add log info
-  ## TODO move package dir to live output_dir
+  
+  ## Move package dir to live output_dir
+  mv ${TEMPDIR}/${ind_id}/    ${output_dir}/
 
   ## Then remove temp files
   rm ${TEMPDIR}/${ind_id}.*
@@ -137,7 +149,7 @@ elif [[ -d ${output_dir} ]] && [[ ( -f ${input_dir}/pileupcaller.single.geno && 
   ## Package exists, both ds & ss, either one is newer than package .geno ##
   ##########################################################################
   
-  errecho "Updating mixed-geno package for: ${ind_id}"
+  errecho "[update_poseidon_package.sh]: Updating mixed-geno package for: ${ind_id}"
 
   ## Create temp dir to put package in for updating, so users dont get a half-baked package.
   TEMPDIR=$(mktemp -d ${autorun_root_dir}/.tmp/${ind_id}_XXXXXXXX)
@@ -173,7 +185,7 @@ elif [[ -d ${output_dir} ]] && [[ ( ${input_dir}/pileupcaller.single.geno -nt ${
   ## Package exists, one of ds & ss, either one is newer than package .geno ##
   ############################################################################
 
-  errecho "Updating package for: ${ind_id}"
+  errecho "[update_poseidon_package.sh]: Updating package for: ${ind_id}"
 
   ## Create temp dir to put package in for updating, so users dont get a half-baked package.
   TEMPDIR=$(mktemp -d ${autorun_root_dir}/.tmp/${ind_id}_XXXXXXXX)
@@ -199,3 +211,7 @@ elif [[ -d ${output_dir} ]] && [[ ( ${input_dir}/pileupcaller.single.geno -nt ${
   rm    ${output_dir}/*
   rmdir ${output_dir}
   mv    ${TEMPDIR}/${ind_id}/    ${output_dir}/
+  
+else
+  errecho "[update_poseidon_package.sh]: No changes needed for: ${ind_id}"
+fi
