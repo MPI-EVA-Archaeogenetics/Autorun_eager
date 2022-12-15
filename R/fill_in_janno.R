@@ -36,6 +36,11 @@ parser <- add_option(parser, c("-s", "--contamination_snp_cutoff"),
   action = "store", default = "100", dest = "snp_cutoff",
   help = "The snp cutoff for nuclear contamination results. Nuclear contamination results with fewer than this number of SNPs will be ignored when calculating the values for 'Contamination_*' columns. [100]"
 )
+parser <- add_option(parser, c("-S", "--ss_suffix"),
+  type = "character",
+  action = "store", default = "", dest = "ss_suffix",
+  help = "The suffix appended to the sample name of single_stranded data in the eager TSV. ['']"
+)
 parser <- add_option(parser, c("-p", "--genotypePloidy"),
   type = 'character',
   action = "store", dest = "genotype_ploidy",
@@ -189,5 +194,5 @@ new_janno <- dplyr::left_join(input_janno_table, updated_columns, by=c("Poseidon
   poseidonR::as.janno()
 
 ## Finally, save the new janno
-poseidonR::write_janno(output_janno, output_fn)
+poseidonR::write_janno(new_janno, output_fn)
 
