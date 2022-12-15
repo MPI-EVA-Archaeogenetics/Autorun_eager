@@ -20,15 +20,18 @@ function errecho() { echo $* 1>&2 ;}
 TEMP=`getopt -q -o hv --long help,version -n 'update_poseidon_package.sh' -- "$@"`
 eval set -- "$TEMP"
 
-## parameter default
+## parameter defaults
 ind_id=''
+contamination_snp_cutoff="100"  ## Provided to fill_in_janno.R
+ss_suffix="_ss"                 ## Provided to fill_in_janno.R
+geno_ploidy='haploid'           ## Provided to fill_in_janno.R
 
 ## Read in CLI arguments
 while true ; do
   case "$1" in
     -h|--help) Helptext; exit 0 ;;
     -v|--version) echo ${VERSION}; exit 0;;
-    --) ind_id="${2%_ss}"; break ;; ## Remove the _ss suffix already if provided.
+    --) ind_id="${2%${ss_suffix}}"; break ;; ## Remove the _ss suffix already if provided.
     *) echo -e "invalid option provided: $1.\n"; Helptext; exit 1;;
   esac
 done
@@ -38,13 +41,15 @@ done
 # root_output_dir='/mnt/archgen/Autorun_eager/poseidon_packages' ## Directory that includes data type, site ID and ind ID subdirs.
 # input_dir="${root_input_dir}/TF/${ind_id:0:3}/${ind_id}/genotyping/"
 # output_dir="${root_output_dir}/TF/${ind_id:0:3}/${ind_id}/"
+# cred_file="${autorun_root_dir}/.eva_credentials"
 
 ## Local Testing
-autorun_root_dir='/Users/lamnidis/'
+autorun_root_dir='/Users/lamnidis/Software/github/MPI-EVA-Archaeogenetics/Autorun_eager'
 root_input_dir='/Users/lamnidis/mount/eager_outputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each site and individual.
 root_output_dir='/Users/lamnidis/Software/github/MPI-EVA-Archaeogenetics/Autorun_eager/test_data/' ## Directory that includes data type, site ID and ind ID subdirs.
 input_dir="${root_input_dir}/TF/${ind_id:0:3}/${ind_id}/genotyping/"
 output_dir="${root_output_dir}/TF/${ind_id:0:3}/${ind_id}/"
+cred_file="/Users/lamnidis/Software/github/Schiffels-Popgen/MICROSCOPE-processing-pipeline/.credentials"
 
 ## Ensure an ind_id was provided, and eager results exist.
 if [[ ${ind_id} == '' ]]; then
@@ -86,15 +91,24 @@ if [[ ! -d ${output_dir} ]] && [[ -f ${input_dir}/pileupcaller.single.geno ]] &&
   ## Then create new poseidon pacakge in tempdir (so users dont pick up half-made packages.)
   trident init \
     --inFormat EIGENSTRAT \
-    --snpSet "1240K" \
+    --snpSet '1240K' \
     --genoFile ${TEMPDIR}/${ind_id}.geno \
     --snpFile ${TEMPDIR}/${ind_id}.snp \
     --indFile ${TEMPDIR}/${ind_id}.ind \
-    --outPackagePath ${TEMPDIR}/${ind_id}/
+    --outPackagePath ${TEMPDIR}/${ind_id}
 
-  ## TODO Populate the janno file
+  ## Populate the janno file
+  ${autorun_root_dir}/scripts/fill_in_janno.R \
+    -j ${TEMPDIR}/${ind_id}/${ind_id}.janno \
+    -i ${ind_id} \
+    -c ${cred_file} \
+    -s ${contamination_snp_cutoff} \
+    -p ${geno_ploidy} \
+    -S ${ss_suffix}
 
+  ## TODO Add mirror sex information to ind file.
   ## TODO Use trident update to get correct md5sums and add log info
+  ## TODO Validate package
   ## TODO move package dir to live output_dir
 
   ## Then remove temp files
@@ -122,7 +136,7 @@ elif [[ ! -d ${output_dir} ]]; then
   ## Then create new poseidon pacakge
   cmd="trident init \
     --inFormat EIGENSTRAT \
-    --snpSet "1240K" \
+    --snpSet '1240K' \
     --genoFile ${TEMPDIR}/${ind_id}.geno \
     --snpFile ${TEMPDIR}/${ind_id}.snp \
     --indFile ${TEMPDIR}/${ind_id}.ind \
@@ -131,9 +145,19 @@ elif [[ ! -d ${output_dir} ]]; then
   echo ${cmd}
   ${cmd}
 
-  ## TODO Populate the janno file
+  ## Populate the janno file
+  ${autorun_root_dir}/scripts/fill_in_janno.R \
+    -j ${TEMPDIR}/${ind_id}/${ind_id}.janno \
+    -i ${ind_id} \
+    -c ${cred_file} \
+    -s ${contamination_snp_cutoff} \
+    -p ${geno_ploidy} \
+    -S ${ss_suffix}
+
+  ## TODO Add mirror sex information to ind file.
 
   ## TODO Use trident update to get correct md5sums and add log info
+  ## TODO Validate package
   
   ## Move package dir to live output_dir
   mv ${TEMPDIR}/${ind_id}/    ${output_dir}/
@@ -156,10 +180,10 @@ elif [[ -d ${output_dir} ]] && [[ ( -f ${input_dir}/pileupcaller.single.geno && 
   
   ## Copy over poseidon package files excluding the dataset
   mkdir ${TEMPDIR}/${ind_id}
-  cp ${output_dir}/*.bib        ${TEMPDIR}/${ind_id}/
-  cp ${output_dir}/CHANGELOG.md ${TEMPDIR}/${ind_id}/
-  cp ${output_dir}/*.janno      ${TEMPDIR}/${ind_id}/
-  cp ${output_dir}/POSEIDON.yml ${TEMPDIR}/${ind_id}/
+  cp ${output_dir}/${ind_id}.bib    ${TEMPDIR}/${ind_id}/
+  cp ${output_dir}/CHANGELOG.md     ${TEMPDIR}/${ind_id}/
+  cp ${output_dir}/${ind_id}.janno  ${TEMPDIR}/${ind_id}/
+  cp ${output_dir}/POSEIDON.yml     ${TEMPDIR}/${ind_id}/
 
   ## Paste together genos with null delimiter ('\0') to paste the two together. Output goes in temp poseidon package
   paste -d '\0' ${input_dir}/pileupcaller.double.geno ${input_dir}/pileupcaller.single.geno >${TEMPDIR}/${ind_id}/${ind_id}.geno
@@ -168,9 +192,19 @@ elif [[ -d ${output_dir} ]] && [[ ( -f ${input_dir}/pileupcaller.single.geno && 
   ## Finally concatenate ind files
   cat ${input_dir}/pileupcaller.double.ind ${input_dir}/pileupcaller.single.ind >${TEMPDIR}/${ind_id}/${ind_id}.ind
 
-  ## TODO Populate the janno file
+  ## Populate the janno file
+  ${autorun_root_dir}/scripts/fill_in_janno.R \
+    -j ${TEMPDIR}/${ind_id}/${ind_id}.janno \
+    -i ${ind_id} \
+    -c ${cred_file} \
+    -s ${contamination_snp_cutoff} \
+    -p ${geno_ploidy} \
+    -S ${ss_suffix}
+
+  ## TODO Add mirror sex information to ind file.
 
   ## TODO Use trident update to get correct md5sums and add log info
+  ## TODO Validate package
   ## TODO move package dir to live output_dir
 
   ## Remove live version of poseidon package, and move temp version to live.
@@ -192,26 +226,36 @@ elif [[ -d ${output_dir} ]] && [[ ( ${input_dir}/pileupcaller.single.geno -nt ${
   
   ## Copy over poseidon package files excluding the dataset
   mkdir ${TEMPDIR}/${ind_id}
-  cp ${output_dir}/*.bib        ${TEMPDIR}/${ind_id}/
-  cp ${output_dir}/CHANGELOG.md ${TEMPDIR}/${ind_id}/
-  cp ${output_dir}/*.janno      ${TEMPDIR}/${ind_id}/
-  cp ${output_dir}/POSEIDON.yml ${TEMPDIR}/${ind_id}/
+  cp ${output_dir}/${ind_id}.bib    ${TEMPDIR}/${ind_id}/
+  cp ${output_dir}/CHANGELOG.md     ${TEMPDIR}/${ind_id}/
+  cp ${output_dir}/${ind_id}.janno  ${TEMPDIR}/${ind_id}/
+  cp ${output_dir}/POSEIDON.yml     ${TEMPDIR}/${ind_id}/
 
   ## Copy over new genotype data to poseidon package dir
   cp ${input_dir}/pileupcaller*geno ${TEMPDIR}/${ind_id}/${ind_id}.geno
   cp ${input_dir}/pileupcaller*snp  ${TEMPDIR}/${ind_id}/${ind_id}.snp
   cp ${input_dir}/pileupcaller*ind  ${TEMPDIR}/${ind_id}/${ind_id}.ind
 
-  ## TODO Populate the janno file
+  ## Populate the janno file
+  ${autorun_root_dir}/scripts/fill_in_janno.R \
+    -j ${TEMPDIR}/${ind_id}/${ind_id}.janno \
+    -i ${ind_id} \
+    -c ${cred_file} \
+    -s ${contamination_snp_cutoff} \
+    -p ${geno_ploidy} \
+    -S ${ss_suffix}
+
+  ## TODO Add mirror sex information to ind file.
 
   ## TODO Use trident update to get correct md5sums and add log info
+  ## TODO Validate package
   ## TODO move package dir to live output_dir
 
   ## Remove live version of poseidon package, and move temp version to live.
   rm    ${output_dir}/*
   rmdir ${output_dir}
   mv    ${TEMPDIR}/${ind_id}/    ${output_dir}/
-  
+
 else
   errecho "[update_poseidon_package.sh]: No changes needed for: ${ind_id}"
 fi
