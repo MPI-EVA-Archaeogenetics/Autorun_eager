@@ -71,9 +71,15 @@ input_janno_table <- eager2poseidon::standardise_janno(args$janno_fn)
 sample_ids <- dplyr::select(input_janno_table, Poseidon_ID) %>%
   dplyr::mutate(Pandora_ID=sub(paste0(args$ss_suffix,"$"), '', .data$Poseidon_ID))
 
+##################
+## Pandora info ##
+##################
+
 ## Collect Pandora results for Pandora IDs.
 pandora_results <- eager2poseidon::import_pandora_data(sample_ids %>% dplyr::select(Pandora_ID) %>% dplyr::distinct(), args$credentials, trust_uncalibrated_dates = TRUE) %>%
-  dplyr::full_join(sample_ids, ., by = "Pandora_ID")
+  dplyr::full_join(sample_ids, ., by = "Pandora_ID") %>% 
+  ## drop Pandora_ID column. not needed anymore
+  dplyr::select(-Pandora_ID)
 
 ## Infer locations of different JSONs to read results in with eagerR. (More flexible than e2p and can pull results from SG runs if present)
 # base_dir <- "/mnt/archgen/Autorun_eager"
@@ -82,6 +88,10 @@ eager_tsv_fn <- paste0(base_dir, "/eager_inputs/TF/", substr(args$ind_id,0,3), "
 eager_tf_results_dir <- paste0(base_dir, "/eager_outputs/TF/", substr(args$ind_id,0,3), "/", args$ind_id,"/")
 eager_sg_endorspy_dir <- paste0(base_dir, "/eager_outputs/SG/", substr(args$ind_id,0,3), "/", args$ind_id,"/endorspy/")
 eager_sg_damageprofiler_dir <- paste0(base_dir, "/eager_outputs/SG/", substr(args$ind_id,0,3), "/", args$ind_id,"/damageprofiler/")
+
+##############
+## TSV info ##
+##############
 
 ## Read eager TSV data
 tsv_dat <- eagerR::read_input_tsv_data(eager_tsv_fn) %>% 
@@ -158,7 +168,7 @@ updated_columns <- eager2poseidon::compile_eager_result_tables(
   ) %>%
   ## Compile across-library results (weighted sums etc)
   eager2poseidon::compile_across_lib_results(snp_cutoff = args$snp_cutoff) %>%
-  ## Keep only relevant columns
+  ## Keep only relevant columns from eager results
   dplyr::select(tidyselect::all_of(c(
     "Sample_Name",
     "Genetic_Sex",
@@ -174,7 +184,9 @@ updated_columns <- eager2poseidon::compile_eager_result_tables(
     "Nr_Libs",
     "Library_Built",
     "Capture_Type"
-  )))
+  ))) %>%
+  ## Add pandora columns
+  dplyr::left_join(., pandora_results, by=c("Sample_Name"="Poseidon_ID"))
 
 ## Stitch together the results!
 new_janno <- dplyr::left_join(input_janno_table, updated_columns, by=c("Poseidon_ID"="Sample_Name"), suffix = c(".x", ".y")) %>%
