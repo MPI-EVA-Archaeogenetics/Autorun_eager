@@ -4,6 +4,7 @@ VERSION="1.1.2"
 
 ## Colours for printing to terminal
 Yellow=$(tput sgr0)'\033[1;33m' ## Yellow normal face
+Red=$(tput sgr0)'\033[1;31m' ## Red normal face
 Normal=$(tput sgr0)
 
 ## Helptext function
@@ -12,7 +13,6 @@ function Helptext() {
   echo -ne "This script pulls data and metadata from Autorun_eager for the TF version of the specified individual and creates a poseidon package.\n\n"
   echo -ne "Options:\n"
   echo -ne "-h, --help\t\tPrint this text and exit.\n"
-  echo -ne "-d, --debug\t\tPrint additional debug information during runtime.\n"
   echo -ne "-v, --version \t\tPrint version and exit.\n"
 }
 
@@ -21,22 +21,21 @@ function errecho() { echo -e $* 1>&2 ;}
 
 
 ## Parse CLI args.
-TEMP=`getopt -q -o hdv --long help,debug,version -n 'update_poseidon_package.sh' -- "$@"`
+TEMP=`getopt -q -o hv --long help,version -n 'update_poseidon_package.sh' -- "$@"`
 eval set -- "$TEMP"
 
 ## parameter defaults
 ind_id=''
-debug='FALSE'
 contamination_snp_cutoff="100"  ## Provided to fill_in_janno.R
 ss_suffix="_ss"                 ## Provided to fill_in_janno.R
 geno_ploidy='haploid'           ## Provided to fill_in_janno.R
+date_stamp="$(date +'%D')"
 
 ## Read in CLI arguments
 while true ; do
   case "$1" in
     -h|--help) Helptext; exit 0 ;;
     -v|--version) echo ${VERSION}; exit 0;;
-    -d|--debug) debug='TRUE'; shift 1;;
     --) ind_id="${2%${ss_suffix}}"; break ;; ## Remove the _ss suffix already if provided.
     *) echo -e "invalid option provided: $1.\n"; Helptext; exit 1;;
   esac
@@ -93,71 +92,46 @@ if [[ ! -d ${output_dir} ]] && [[ -f ${input_dir}/pileupcaller.single.geno ]] &&
 
   errecho "${Yellow}## Package Creation ##${Normal}"
   ## Then create new poseidon pacakge in tempdir (so users dont pick up half-made packages.)
-  init_cmd="trident init \
+  trident init \
     --inFormat EIGENSTRAT \
     --snpSet 1240K \
     --genoFile ${TEMPDIR}/${ind_id}.geno \
     --snpFile ${TEMPDIR}/${ind_id}.snp \
     --indFile ${TEMPDIR}/${ind_id}.ind \
-    --outPackagePath ${TEMPDIR}/${ind_id}"
-  
-  ## Print the command ran if debug is activated.
-  if [[ ${debug} == 'TRUE' ]]; then
-    errecho ${init_cmd}
-  fi
-  ${init_cmd}
+    --outPackagePath ${TEMPDIR}/${ind_id}
 
   ## Populate the janno file
   errecho "${Yellow}## Populating janno file ##${Normal}"
-  fill_in_cmd="${autorun_root_dir}/scripts/fill_in_janno.R \
+  ${autorun_root_dir}/scripts/fill_in_janno.R \
     -j ${TEMPDIR}/${ind_id}/${ind_id}.janno \
     -i ${ind_id} \
     -c ${cred_file} \
     -s ${contamination_snp_cutoff} \
     -p ${geno_ploidy} \
-    -S ${ss_suffix}"
-
-  ## Print the command ran if debug is activated.
-  if [[ ${debug} == 'TRUE' ]]; then
-    errecho ${fill_in_cmd}
-  fi
-  ${fill_in_cmd}
+    -S ${ss_suffix}
 
   ## Mirror sex and group_name information to ind file.
   errecho "${Yellow}## Updating indFile ##${Normal}"
-  mirror_janno_cmd="${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml"
-  
-  ## Print the command ran if debug is activated.
-  if [[ ${debug} == 'TRUE' ]]; then
-    errecho ${mirror_janno_cmd}
-  fi
-  ${mirror_janno_cmd}
+  ${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml
 
   ## Use trident update to get correct md5sums and add log info
   ##    Also add TCL and KP as contributors. Can be changed before publishing the package if users want.
   errecho "${Yellow}## Trident update ##${Normal}"
-  update_cmd="trident update \
+  trident update \
     -d ${TEMPDIR}/${ind_id} \
-    --logText \"$(date +'%D') Package creation\" \
+    --logText "${date_stamp} Package creation" \
     --versionComponent Major \
     --newContributors '[Thiseas C. Lamnidis](thiseas_christos_lamnidis@eva.mpg.de)' \
-    --newContributors '[Kay Pruefer](kay_pruefer@eva.mpg.de)'"
-  
-  ## Print the command ran if debug is activated.
-  if [[ ${debug} == 'TRUE' ]]; then
-    errecho ${update_cmd}
+    --newContributors '[Kay Pruefer](kay_pruefer@eva.mpg.de)'
+
+  if [[ $? != 0 ]]; then
+    errecho "${Red}Problem updating package${Normal}"
+    exit 1
   fi
-  ${update_cmd}
 
   ## Validate package to ensure it works
   errecho "${Yellow}## Trident validate ##${Normal}"
-  validate_cmd="trident validate -d ${TEMPDIR}/${ind_id}"
-
-  ## Print the command ran if debug is activated.
-  if [[ ${debug} == 'TRUE' ]]; then
-    errecho ${validate_cmd}
-  fi
-  ${validate_cmd}
+  trident validate -d ${TEMPDIR}/${ind_id}
 
   ## Only move package dir to live output_dir if validation passed
   if [[ $? == 0 ]]; then
@@ -195,71 +169,46 @@ elif [[ ! -d ${output_dir} ]]; then
 
   ## Then create new poseidon pacakge
   errecho "${Yellow}## Package Creation ##${Normal}"
-  init_cmd="trident init \
+  trident init \
     --inFormat EIGENSTRAT \
     --snpSet 1240K \
     --genoFile ${TEMPDIR}/${ind_id}.geno \
     --snpFile ${TEMPDIR}/${ind_id}.snp \
     --indFile ${TEMPDIR}/${ind_id}.ind \
-    --outPackagePath  ${TEMPDIR}/${ind_id}"
-
-  ## Print the command ran if debug is activated.
-  if [[ ${debug} == 'TRUE' ]]; then
-    errecho ${init_cmd}
-  fi
-  ${init_cmd}
+    --outPackagePath  ${TEMPDIR}/${ind_id}
 
   ## Populate the janno file
   errecho "${Yellow}## Populating janno file ##${Normal}"
-  fill_in_cmd="${autorun_root_dir}/scripts/fill_in_janno.R \
+  ${autorun_root_dir}/scripts/fill_in_janno.R \
     -j ${TEMPDIR}/${ind_id}/${ind_id}.janno \
     -i ${ind_id} \
     -c ${cred_file} \
     -s ${contamination_snp_cutoff} \
     -p ${geno_ploidy} \
-    -S ${ss_suffix}"
-
-  ## Print the command ran if debug is activated.
-  if [[ ${debug} == 'TRUE' ]]; then
-    errecho ${fill_in_cmd}
-  fi
-  ${fill_in_cmd}
+    -S ${ss_suffix}
 
   ## Mirror sex and group_name information to ind file.
   errecho "${Yellow}## Updating indFile ##${Normal}"
-  mirror_janno_cmd="${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml"
-
-  ## Print the command ran if debug is activated.
-  if [[ ${debug} == 'TRUE' ]]; then
-    errecho ${mirror_janno_cmd}
-  fi
-  ${mirror_janno_cmd}
+  ${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml
 
   ## Use trident update to get correct md5sums and add log info
   ##    Also add TCL and KP as contributors. Can be changed before publishing the package if users want.
   errecho "${Yellow}## Trident update ##${Normal}"
-  update_cmd="trident update \
+  trident update \
     -d ${TEMPDIR}/${ind_id} \
-    --logText \"$(date +'%D') Package creation\" \
+    --logText "${date_stamp} Package creation" \
     --versionComponent Major \
     --newContributors '[Thiseas C. Lamnidis](thiseas_christos_lamnidis@eva.mpg.de)' \
-    --newContributors '[Kay Pruefer](kay_pruefer@eva.mpg.de)'"
+    --newContributors '[Kay Pruefer](kay_pruefer@eva.mpg.de)'
 
-  ## Print the command ran if debug is activated.
-  if [[ ${debug} == 'TRUE' ]]; then
-    errecho ${update_cmd}
+  if [[ $? != 0 ]]; then
+    errecho "${Red}Problem updating package${Normal}"
+    exit 1
   fi
-  ${update_cmd}
 
   ## Validate package to ensure it works
   errecho "${Yellow}## Trident validate ##${Normal}"
-  validate_cmd="trident validate -d ${TEMPDIR}/${ind_id}"
-
-  ## Print the command ran if debug is activated.
-  if [[ ${debug} == 'TRUE' ]]; then
-    errecho ${validate_cmd}
-  fi
-  ${validate_cmd}
+  trident validate -d ${TEMPDIR}/${ind_id}
 
   ## Only move package dir to live output_dir if validation passed
   if [[ $? == 0 ]]; then
@@ -310,52 +259,33 @@ elif [[ -d ${output_dir} ]] && [[ ( -f ${input_dir}/pileupcaller.single.geno && 
 
   ## Populate the janno file
   errecho "${Yellow}## Populating janno file ##${Normal}"
-  fill_in_cmd="${autorun_root_dir}/scripts/fill_in_janno.R \
+  ${autorun_root_dir}/scripts/fill_in_janno.R \
     -j ${TEMPDIR}/${ind_id}/${ind_id}.janno \
     -i ${ind_id} \
     -c ${cred_file} \
     -s ${contamination_snp_cutoff} \
     -p ${geno_ploidy} \
-    -S ${ss_suffix}"
-
-  ## Print the command ran if debug is activated.
-  if [[ ${debug} == 'TRUE' ]]; then
-    errecho ${fill_in_cmd}
-  fi
-  ${fill_in_cmd}
+    -S ${ss_suffix}
 
   ## Mirror sex and group_name information to ind file.
   errecho "${Yellow}## Updating indFile ##${Normal}"
-  mirror_janno_cmd="${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml"
-
-  ## Print the command ran if debug is activated.
-  if [[ ${debug} == 'TRUE' ]]; then
-    errecho ${mirror_janno_cmd}
-  fi
-  ${mirror_janno_cmd}
+  ${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml
 
   ## Use trident update to get correct md5sums and add log info
   errecho "${Yellow}## Trident update ##${Normal}"
-  update_cmd="trident update \
+  trident update \
     -d ${TEMPDIR}/${ind_id} \
-    --logText \"$(date +'%D') Update genotypes\" \
-    --versionComponent Major"
+    --logText "${date_stamp} Update genotypes" \
+    --versionComponent Major
 
-  ## Print the command ran if debug is activated.
-  if [[ ${debug} == 'TRUE' ]]; then
-    errecho ${update_cmd}
+  if [[ $? != 0 ]]; then
+    errecho "${Red}Problem updating package${Normal}"
+    exit 1
   fi
-  ${update_cmd}
 
   ## Validate package to ensure it works
   errecho "${Yellow}## Trident validate ##${Normal}"
-  validate_cmd="trident validate -d ${TEMPDIR}/${ind_id}"
-
-  ## Print the command ran if debug is activated.
-  if [[ ${debug} == 'TRUE' ]]; then
-    errecho ${validate_cmd}
-  fi
-  ${validate_cmd}
+  trident validate -d ${TEMPDIR}/${ind_id}
 
   ## Only delete live version and replace with temp if validation passed
   if [[ $? == 0 ]]; then
@@ -406,52 +336,33 @@ elif [[ -d ${output_dir} ]] && [[ ( ${input_dir}/pileupcaller.single.geno -nt ${
 
   ## Populate the janno file
   errecho "${Yellow}## Populating janno file ##${Normal}"
-  fill_in_cmd="${autorun_root_dir}/scripts/fill_in_janno.R \
+  ${autorun_root_dir}/scripts/fill_in_janno.R \
     -j ${TEMPDIR}/${ind_id}/${ind_id}.janno \
     -i ${ind_id} \
     -c ${cred_file} \
     -s ${contamination_snp_cutoff} \
     -p ${geno_ploidy} \
-    -S ${ss_suffix}"
-
-  ## Print the command ran if debug is activated.
-  if [[ ${debug} == 'TRUE' ]]; then
-    errecho ${fill_in_cmd}
-  fi
-  ${fill_in_cmd}
+    -S ${ss_suffix}
 
   ## Mirror sex and group_name information to ind file.
   errecho "${Yellow}## Updating indFile ##${Normal}"
-  mirror_janno_cmd="${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml"
-
-  ## Print the command ran if debug is activated.
-  if [[ ${debug} == 'TRUE' ]]; then
-    errecho ${mirror_janno_cmd}
-  fi
-  ${mirror_janno_cmd}
+  ${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml
 
   ## Use trident update to get correct md5sums and add log info
   errecho "${Yellow}## Trident update ##${Normal}"
-  update_cmd="trident update \
+  trident update \
     -d ${TEMPDIR}/${ind_id} \
-    --logText \"$(date +'%D') Update genotypes\" \
-    --versionComponent Major"
+    --logText "${date_stamp} Update genotypes" \
+    --versionComponent Major
 
-  ## Print the command ran if debug is activated.
-  if [[ ${debug} == 'TRUE' ]]; then
-    errecho ${update_cmd}
+  if [[ $? != 0 ]]; then
+    errecho "${Red}Problem updating package${Normal}"
+    exit 1
   fi
-  ${update_cmd}
 
   ## Validate package to ensure it works
   errecho "${Yellow}## Trident validate ##${Normal}"
-  validate_cmd="trident validate -d ${TEMPDIR}/${ind_id}"
-
-  ## Print the command ran if debug is activated.
-  if [[ ${debug} == 'TRUE' ]]; then
-    errecho ${validate_cmd}
-  fi
-  ${validate_cmd}
+  trident validate -d ${TEMPDIR}/${ind_id}
 
   ## Only delete live version and replace with temp if validation passed
   if [[ $? == 0 ]]; then
