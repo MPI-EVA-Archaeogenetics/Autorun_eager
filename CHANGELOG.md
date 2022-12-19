@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Added`
 - Add option to create a text file with the run commands for launching Autorun_eager, fo submission as a qsub array.
 - Add array submission script.
+- Add script to create and update poseidon packages from eager output.
+  - Includes script to collate eager results and overwrite the janno of a poseidon pacakge.
+  - Includes script to update poseidon indFile from janno files.
 
 ### `Fixed`
 - Fixed pull request template.
