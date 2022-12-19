@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add script to create and update poseidon packages from eager output.
   - Includes script to collate eager results and overwrite the janno of a poseidon pacakge.
   - Includes script to update poseidon indFile from janno files.
+  - Each poseidon package contains a file named `AE_version.txt` with the version used for the last package creation/update.
 
 ### `Fixed`
 - Fixed pull request template.
