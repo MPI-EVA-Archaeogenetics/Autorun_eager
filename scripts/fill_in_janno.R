@@ -13,6 +13,11 @@ if (!require('eagerR')) {
     remotes::install_github('TCLamnidis/eagerR')
     # require(eagerR)
 } else {require(eagerR)}
+if (!require('poseidonR')) {
+    write("Installing required package 'poseidon-framework/poseidonR'...", file=stderr())
+    remotes::install_github('poseidon-framework/poseidonR')
+    # require(poseidonR)
+} else {require(poseidonR)}
 
 ## Parse arguments ----------------------------
 parser <- OptionParser()
@@ -113,7 +118,8 @@ poseidon_tsv_cols <- tsv_dat %>% dplyr::select(Sample_Name, Library_ID, Stranded
       Strandedness == 'double' ~ 'ds',
       TRUE ~ NA_character_
     )
-  )
+  ) %>%
+  dplyr::distinct() ## This is at sample level, so only keep one entry per sample ID
 
 ################
 ## TF RESULTS ##
@@ -164,7 +170,8 @@ updated_columns <- eager2poseidon::compile_eager_result_tables(
     contamination_method = "1",
     contamination_algorithm = "ml",
     XX_cutoffs = c(0.7, 1.2, 0.0, 0.1),
-    XY_cutoffs = c(0.2, 0.6, 0.3, 0.6)
+    XY_cutoffs = c(0.2, 0.6, 0.3, 0.6),
+    capture_type = "1240K"
   ) %>%
   ## Compile across-library results (weighted sums etc)
   eager2poseidon::compile_across_lib_results(snp_cutoff = args$snp_cutoff) %>%
@@ -182,9 +189,16 @@ updated_columns <- eager2poseidon::compile_eager_result_tables(
     "Damage",
     "UDG",
     "Nr_Libs",
+    "Library_Names", ## Column including all the Library_IDs merged into these genotypes
     "Library_Built",
     "Capture_Type"
   ))) %>%
+  ## Remove ss_suffix from library names, so they match Pandora Library IDs
+  dplyr::mutate(
+    Library_Names=gsub('_ss','',.data$Library_Names)
+  ) %>%
+  ## Keep distinct rows, now that Library_ID has been dropped
+  dplyr::distinct() %>%
   ## Add pandora columns
   dplyr::left_join(., pandora_results, by=c("Sample_Name"="Poseidon_ID"))
 
