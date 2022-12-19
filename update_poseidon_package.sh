@@ -138,8 +138,8 @@ if [[ ! -d ${output_dir} ]] && [[ -f ${input_dir}/pileupcaller.single.geno ]] &&
 
   ## Then remove temp files
   errecho "${Yellow}## Removing temp directory ##${Normal}"
+  ## Playing it safe by avoiding rm -r
   rm ${TEMPDIR}/${ind_id}.*
-  ## Playing extra safe by avoiding rm -r
   rmdir ${TEMPDIR}
 
 ## If no package exists, but only one of the two genos exists create pacakge without pasting
@@ -219,18 +219,20 @@ elif [[ -d ${output_dir} ]] && [[ ( -f ${input_dir}/pileupcaller.single.geno && 
   ## Package exists, both ds & ss, either one is newer than package .geno ##
   ##########################################################################
   
-  errecho "[update_poseidon_package.sh]: Updating mixed-geno package for: ${ind_id}"
+  errecho "${Yellow}[update_poseidon_package.sh]: Updating mixed-geno package for: ${ind_id}${Normal}"
 
   ## Create temp dir to put package in for updating, so users dont get a half-baked package.
   TEMPDIR=$(mktemp -d ${autorun_root_dir}/.tmp/${ind_id}_XXXXXXXX)
   
   ## Copy over poseidon package files excluding the dataset
+  errecho "${Yellow}## Copying package backbone ##${Normal}"
   mkdir ${TEMPDIR}/${ind_id}
   cp ${output_dir}/${ind_id}.bib    ${TEMPDIR}/${ind_id}/
   cp ${output_dir}/CHANGELOG.md     ${TEMPDIR}/${ind_id}/
   cp ${output_dir}/${ind_id}.janno  ${TEMPDIR}/${ind_id}/
   cp ${output_dir}/POSEIDON.yml     ${TEMPDIR}/${ind_id}/
 
+  errecho "${Yellow}## Pulling new dataset ##${Normal}"
   ## Paste together genos with null delimiter ('\0') to paste the two together. Output goes in temp poseidon package
   paste -d '\0' ${input_dir}/pileupcaller.double.geno ${input_dir}/pileupcaller.single.geno >${TEMPDIR}/${ind_id}/${ind_id}.geno
   ## snp file is the same, so just copy the dsDNA one
@@ -239,6 +241,7 @@ elif [[ -d ${output_dir} ]] && [[ ( -f ${input_dir}/pileupcaller.single.geno && 
   cat ${input_dir}/pileupcaller.double.ind ${input_dir}/pileupcaller.single.ind >${TEMPDIR}/${ind_id}/${ind_id}.ind
 
   ## Populate the janno file
+  errecho "${Yellow}## Populating janno file ##${Normal}"
   ${autorun_root_dir}/scripts/fill_in_janno.R \
     -j ${TEMPDIR}/${ind_id}/${ind_id}.janno \
     -i ${ind_id} \
@@ -248,16 +251,37 @@ elif [[ -d ${output_dir} ]] && [[ ( -f ${input_dir}/pileupcaller.single.geno && 
     -S ${ss_suffix}
 
   ## Mirror sex and group_name information to ind file.
+  errecho "${Yellow}## Updating indFile ##${Normal}"
   ${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml
 
-  ## TODO Use trident update to get correct md5sums and add log info
-  ## TODO Validate package
-  ## TODO move package dir to live output_dir
+  ## Use trident update to get correct md5sums and add log info
+  errecho "${Yellow}## Trident update ##${Normal}"
+  trident update \
+    -d ${TEMPDIR}/${ind_id} \
+    --logText "$(date +'%D') Update genotypes" \
+    --versionComponent Major
 
-  ## Remove live version of poseidon package, and move temp version to live.
-  rm    ${output_dir}/*
-  rmdir ${output_dir}
-  mv    ${TEMPDIR}/${ind_id}/    ${output_dir}/
+  ## Validate package to ensure it works
+  errecho "${Yellow}## Trident validate ##${Normal}"
+  trident validate -d ${TEMPDIR}/${ind_id}
+
+  ## Only delete live version and replace with temp if validation passed
+  if [[ $? == 0 ]]; then
+    errecho "${Yellow}## Deleting live package ##${Normal}"
+    ## Playing it safe by avoiding rm -r
+    rm ${output_dir}/*
+    rmdir ${output_dir}
+
+    ## Move package dir to live output_dir
+    errecho "${Yellow}## Moving temp package to live ##${Normal}"
+    mv    ${TEMPDIR}/${ind_id}/    ${output_dir}/
+  fi
+
+  ## Then remove temp files
+  errecho "${Yellow}## Removing temp directory ##${Normal}"
+  ## Playing it safe by avoiding rm -r
+  rm ${TEMPDIR}/${ind_id}.*
+  rmdir ${TEMPDIR}
 
 ## The test -nt checks that file 1 is NEWER THAN file 2. non existing files are considered older than existing files. 
 ## If either genotype file is newer than the package, update. The file that does not exist will not be newer than the poseidon pacakge. If both exist, the previous conditional chunk ran.
@@ -266,12 +290,13 @@ elif [[ -d ${output_dir} ]] && [[ ( ${input_dir}/pileupcaller.single.geno -nt ${
   ## Package exists, one of ds & ss, either one is newer than package .geno ##
   ############################################################################
 
-  errecho "[update_poseidon_package.sh]: Updating package for: ${ind_id}"
+  errecho "${Yellow}[update_poseidon_package.sh]: Updating package for: ${ind_id}${Normal}"
 
   ## Create temp dir to put package in for updating, so users dont get a half-baked package.
   TEMPDIR=$(mktemp -d ${autorun_root_dir}/.tmp/${ind_id}_XXXXXXXX)
   
   ## Copy over poseidon package files excluding the dataset
+  errecho "${Yellow}## Copying package backbone ##${Normal}"
   mkdir ${TEMPDIR}/${ind_id}
   cp ${output_dir}/${ind_id}.bib    ${TEMPDIR}/${ind_id}/
   cp ${output_dir}/CHANGELOG.md     ${TEMPDIR}/${ind_id}/
@@ -279,11 +304,13 @@ elif [[ -d ${output_dir} ]] && [[ ( ${input_dir}/pileupcaller.single.geno -nt ${
   cp ${output_dir}/POSEIDON.yml     ${TEMPDIR}/${ind_id}/
 
   ## Copy over new genotype data to poseidon package dir
+  errecho "${Yellow}## Pulling new dataset ##${Normal}"
   cp ${input_dir}/pileupcaller*geno ${TEMPDIR}/${ind_id}/${ind_id}.geno
   cp ${input_dir}/pileupcaller*snp  ${TEMPDIR}/${ind_id}/${ind_id}.snp
   cp ${input_dir}/pileupcaller*ind  ${TEMPDIR}/${ind_id}/${ind_id}.ind
 
   ## Populate the janno file
+  errecho "${Yellow}## Populating janno file ##${Normal}"
   ${autorun_root_dir}/scripts/fill_in_janno.R \
     -j ${TEMPDIR}/${ind_id}/${ind_id}.janno \
     -i ${ind_id} \
@@ -293,16 +320,37 @@ elif [[ -d ${output_dir} ]] && [[ ( ${input_dir}/pileupcaller.single.geno -nt ${
     -S ${ss_suffix}
 
   ## Mirror sex and group_name information to ind file.
+  errecho "${Yellow}## Updating indFile ##${Normal}"
   ${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml
 
-  ## TODO Use trident update to get correct md5sums and add log info
-  ## TODO Validate package
-  ## TODO move package dir to live output_dir
+  ## Use trident update to get correct md5sums and add log info
+  errecho "${Yellow}## Trident update ##${Normal}"
+  trident update \
+    -d ${TEMPDIR}/${ind_id} \
+    --logText "$(date +'%D') Update genotypes" \
+    --versionComponent Major
 
-  ## Remove live version of poseidon package, and move temp version to live.
-  rm    ${output_dir}/*
-  rmdir ${output_dir}
-  mv    ${TEMPDIR}/${ind_id}/    ${output_dir}/
+  ## Validate package to ensure it works
+  errecho "${Yellow}## Trident validate ##${Normal}"
+  trident validate -d ${TEMPDIR}/${ind_id}
+
+  ## Only delete live version and replace with temp if validation passed
+  if [[ $? == 0 ]]; then
+    errecho "${Yellow}## Deleting live package ##${Normal}"
+    ## Playing it safe by avoiding rm -r
+    rm ${output_dir}/*
+    rmdir ${output_dir}
+
+    ## Move package dir to live output_dir
+    errecho "${Yellow}## Moving temp package to live ##${Normal}"
+    mv    ${TEMPDIR}/${ind_id}/    ${output_dir}/
+  fi
+
+  ## Then remove temp files
+  errecho "${Yellow}## Removing temp directory ##${Normal}"
+  ## Playing it safe by avoiding rm -r
+  rm ${TEMPDIR}/${ind_id}.*
+  rmdir ${TEMPDIR}
 
 else
   errecho "[update_poseidon_package.sh]: No changes needed for: ${ind_id}"
