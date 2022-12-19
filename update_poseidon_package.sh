@@ -145,13 +145,13 @@ if [[ ! -d ${output_dir} ]] && [[ -f ${input_dir}/pileupcaller.single.geno ]] &&
 
     ## Move package to live
     mv ${TEMPDIR}/${ind_id}/    ${output_dir}/
-  fi
 
-  ## Then remove temp files
-  errecho "${Yellow}## Removing temp directory ##${Normal}"
-  ## Playing it safe by avoiding rm -r
-  rm ${TEMPDIR}/${ind_id}.*
-  rmdir ${TEMPDIR}
+    ## Then remove temp files
+    errecho "${Yellow}## Removing temp directory ##${Normal}"
+    ## Playing it safe by avoiding rm -r
+    rm ${TEMPDIR}/${ind_id}.*
+    rmdir ${TEMPDIR}
+  fi
 
 ## If no package exists, but only one of the two genos exists create pacakge without pasting
 elif [[ ! -d ${output_dir} ]]; then
@@ -222,13 +222,13 @@ elif [[ ! -d ${output_dir} ]]; then
 
     ## Move package to live
     mv ${TEMPDIR}/${ind_id}/    ${output_dir}/
-  fi
 
-  ## Then remove temp files
-  errecho "${Yellow}## Removing temp directory ##${Normal}"
-  rm ${TEMPDIR}/${ind_id}.*
-  ## Playing extra safe by avoiding rm -r
-  rmdir ${TEMPDIR}
+    ## Then remove temp files
+    errecho "${Yellow}## Removing temp directory ##${Normal}"
+    rm ${TEMPDIR}/${ind_id}.*
+    ## Playing extra safe by avoiding rm -r
+    rmdir ${TEMPDIR}
+  fi
 
 ## The test -nt checks that file 1 is NEWER THAN file 2. non existing files are considered older than existing files.
 elif [[ -d ${output_dir} ]] && [[ ( -f ${input_dir}/pileupcaller.single.geno && -f ${input_dir}/pileupcaller.double.geno ) ]] && [[ ( ${input_dir}/pileupcaller.single.geno -nt ${output_dir}/${ind_id}.geno || ${input_dir}/pileupcaller.double.geno -nt ${output_dir}/${ind_id}.geno ) ]] ; then
@@ -300,13 +300,13 @@ elif [[ -d ${output_dir} ]] && [[ ( -f ${input_dir}/pileupcaller.single.geno && 
     ## Move package dir to live output_dir
     errecho "${Yellow}## Moving temp package to live ##${Normal}"
     mv    ${TEMPDIR}/${ind_id}/    ${output_dir}/
+    
+    ## Then remove temp files
+    errecho "${Yellow}## Removing temp directory ##${Normal}"
+    ## Playing it safe by avoiding rm -r
+    rm ${TEMPDIR}/${ind_id}.*
+    rmdir ${TEMPDIR}
   fi
-
-  ## Then remove temp files
-  errecho "${Yellow}## Removing temp directory ##${Normal}"
-  ## Playing it safe by avoiding rm -r
-  rm ${TEMPDIR}/${ind_id}.*
-  rmdir ${TEMPDIR}
 
 ## The test -nt checks that file 1 is NEWER THAN file 2. non existing files are considered older than existing files. 
 ## If either genotype file is newer than the package, update. The file that does not exist will not be newer than the poseidon pacakge. If both exist, the previous conditional chunk ran.
@@ -377,13 +377,13 @@ elif [[ -d ${output_dir} ]] && [[ ( ${input_dir}/pileupcaller.single.geno -nt ${
     ## Move package dir to live output_dir
     errecho "${Yellow}## Moving temp package to live ##${Normal}"
     mv    ${TEMPDIR}/${ind_id}/    ${output_dir}/
+    
+    ## Then remove temp files
+    errecho "${Yellow}## Removing temp directory ##${Normal}"
+    ## Playing it safe by avoiding rm -r
+    rm ${TEMPDIR}/${ind_id}.*
+    rmdir ${TEMPDIR}
   fi
-
-  ## Then remove temp files
-  errecho "${Yellow}## Removing temp directory ##${Normal}"
-  ## Playing it safe by avoiding rm -r
-  rm ${TEMPDIR}/${ind_id}.*
-  rmdir ${TEMPDIR}
 
 else
   errecho "[update_poseidon_package.sh]: No changes needed for: ${ind_id}"
