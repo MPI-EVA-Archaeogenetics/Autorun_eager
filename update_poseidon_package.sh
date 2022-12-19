@@ -2,6 +2,9 @@
 
 VERSION="1.1.2"
 
+## Colours for printing to terminal
+Yellow=$(tput sgr0)'\033[1;33m' ## Yellow normal face
+Normal=$(tput sgr0)
 
 ## Helptext function
 function Helptext() {
@@ -13,7 +16,7 @@ function Helptext() {
 }
 
 ## Print messages to stderr
-function errecho() { echo $* 1>&2 ;}
+function errecho() { echo -e $* 1>&2 ;}
 
 
 ## Parse CLI args.
@@ -75,7 +78,7 @@ if [[ ! -d ${output_dir} ]] && [[ -f ${input_dir}/pileupcaller.single.geno ]] &&
   ## No package, both ds & ss ##
   ###############################
   
-  errecho "[update_poseidon_package.sh]: Creating new mixed geno package for: ${ind_id}"
+  errecho "${Yellow}[update_poseidon_package.sh]: Creating new mixed geno package for: ${ind_id}${Normal}"
   ## Create temp dir to put merged genos in
   TEMPDIR=$(mktemp -d ${autorun_root_dir}/.tmp/${ind_id}_XXXXXXXX)
   ## Paste together genos with null delimiter ('\0') to paste the two together
@@ -85,19 +88,18 @@ if [[ ! -d ${output_dir} ]] && [[ -f ${input_dir}/pileupcaller.single.geno ]] &&
   ## Finally concatenate ind files
   cat ${input_dir}/pileupcaller.double.ind ${input_dir}/pileupcaller.single.ind >${TEMPDIR}/${ind_id}.ind
 
-  ## Create directory for poseidon package if necessary (used to be trident could not create multiple dirs deep structure)
-  mkdir -p $(dirname ${output_dir})
-
+  errecho "${Yellow}## Package Creation ##${Normal}"
   ## Then create new poseidon pacakge in tempdir (so users dont pick up half-made packages.)
   trident init \
     --inFormat EIGENSTRAT \
-    --snpSet '1240K' \
+    --snpSet 1240K \
     --genoFile ${TEMPDIR}/${ind_id}.geno \
     --snpFile ${TEMPDIR}/${ind_id}.snp \
     --indFile ${TEMPDIR}/${ind_id}.ind \
     --outPackagePath ${TEMPDIR}/${ind_id}
 
   ## Populate the janno file
+  errecho "${Yellow}## Populating janno file ##${Normal}"
   ${autorun_root_dir}/scripts/fill_in_janno.R \
     -j ${TEMPDIR}/${ind_id}/${ind_id}.janno \
     -i ${ind_id} \
@@ -106,12 +108,36 @@ if [[ ! -d ${output_dir} ]] && [[ -f ${input_dir}/pileupcaller.single.geno ]] &&
     -p ${geno_ploidy} \
     -S ${ss_suffix}
 
-  ## TODO Add mirror sex information to ind file.
-  ## TODO Use trident update to get correct md5sums and add log info
-  ## TODO Validate package
-  ## TODO move package dir to live output_dir
+  ## Mirror sex and group_name information to ind file.
+  errecho "${Yellow}## Updating indFile ##${Normal}"
+  ${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml
+
+  ## Use trident update to get correct md5sums and add log info
+  ##    Also add TCL and KP as contributors. Can be changed before publishing the package if users want.
+  errecho "${Yellow}## Trident update ##${Normal}"
+  trident update \
+    -d ${TEMPDIR}/${ind_id} \
+    --logText "$(date +'%D') Package creation" \
+    --versionComponent Major \
+    --newContributors "[Thiseas C. Lamnidis](thiseas_christos_lamnidis@eva.mpg.de)" \
+    --newContributors "[Kay Pruefer](kay_pruefer@eva.mpg.de)"
+  
+  ## Validate package to ensure it works
+  errecho "${Yellow}## Trident validate ##${Normal}"
+  trident validate -d ${TEMPDIR}/${ind_id}
+
+  ## Only move package dir to live output_dir if validation passed
+  if [[ $? == 0 ]]; then
+    errecho "${Yellow}## Moving temp package to live ##${Normal}"
+    ## Create directory for poseidon package if necessary (used to be trident could not create multiple dirs deep structure)
+    ##  Only created now to not trip up the script if execution did not run through fully.
+    mkdir -p $(dirname ${output_dir})
+
+    mv ${TEMPDIR}/${ind_id}/    ${output_dir}/
+  fi
 
   ## Then remove temp files
+  errecho "${Yellow}## Removing temp directory ##${Normal}"
   rm ${TEMPDIR}/${ind_id}.*
   ## Playing extra safe by avoiding rm -r
   rmdir ${TEMPDIR}
@@ -122,7 +148,7 @@ elif [[ ! -d ${output_dir} ]]; then
   ## No package, one of ds | ss ##
   ################################
 
-  errecho "[update_poseidon_package.sh]: Creating new package for: ${ind_id}"
+  errecho "${Yellow}[update_poseidon_package.sh]: Creating new package for: ${ind_id}${Normal}"
   ## Create temp dir to put renamed symlinks in
   TEMPDIR=$(mktemp -d ${autorun_root_dir}/.tmp/${ind_id}_XXXXXXXX)
   
@@ -130,13 +156,11 @@ elif [[ ! -d ${output_dir} ]]; then
   ln -s ${input_dir}/pileupcaller*snp  ${TEMPDIR}/${ind_id}.snp
   ln -s ${input_dir}/pileupcaller*ind  ${TEMPDIR}/${ind_id}.ind
 
-  ## Create directory for poseidon package if necessary (used to be trident could not create multiple dirs deep structure)
-  mkdir -p $(dirname ${output_dir})
-
   ## Then create new poseidon pacakge
+  errecho "${Yellow}## Package Creation ##${Normal}"
   cmd="trident init \
     --inFormat EIGENSTRAT \
-    --snpSet '1240K' \
+    --snpSet 1240K \
     --genoFile ${TEMPDIR}/${ind_id}.geno \
     --snpFile ${TEMPDIR}/${ind_id}.snp \
     --indFile ${TEMPDIR}/${ind_id}.ind \
@@ -146,6 +170,7 @@ elif [[ ! -d ${output_dir} ]]; then
   ${cmd}
 
   ## Populate the janno file
+  errecho "${Yellow}## Populating janno file ##${Normal}"
   ${autorun_root_dir}/scripts/fill_in_janno.R \
     -j ${TEMPDIR}/${ind_id}/${ind_id}.janno \
     -i ${ind_id} \
@@ -154,15 +179,36 @@ elif [[ ! -d ${output_dir} ]]; then
     -p ${geno_ploidy} \
     -S ${ss_suffix}
 
-  ## TODO Add mirror sex information to ind file.
+  ## Mirror sex and group_name information to ind file.
+  errecho "${Yellow}## Updating indFile ##${Normal}"
+  ${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml
 
-  ## TODO Use trident update to get correct md5sums and add log info
-  ## TODO Validate package
-  
-  ## Move package dir to live output_dir
-  mv ${TEMPDIR}/${ind_id}/    ${output_dir}/
+  ## Use trident update to get correct md5sums and add log info
+  ##    Also add TCL and KP as contributors. Can be changed before publishing the package if users want.
+  errecho "${Yellow}## Trident update ##${Normal}"
+  trident update \
+    -d ${TEMPDIR}/${ind_id} \
+    --logText "$(date +'%D') Package creation" \
+    --versionComponent Major \
+    --newContributors "[Thiseas C. Lamnidis](thiseas_christos_lamnidis@eva.mpg.de)" \
+    --newContributors "[Kay Pruefer](kay_pruefer@eva.mpg.de)"
+
+  ## Validate package to ensure it works
+  errecho "${Yellow}## Trident validate ##${Normal}"
+  trident validate -d ${TEMPDIR}/${ind_id}
+
+  ## Only move package dir to live output_dir if validation passed
+  if [[ $? == 0 ]]; then
+    errecho "${Yellow}## Moving temp package to live ##${Normal}"
+    ## Create directory for poseidon package if necessary (used to be trident could not create multiple dirs deep structure)
+    ##  Only created now to not trip up the script if execution did not run through fully.
+    mkdir -p $(dirname ${output_dir})
+
+    mv ${TEMPDIR}/${ind_id}/    ${output_dir}/
+  fi
 
   ## Then remove temp files
+  errecho "${Yellow}## Removing temp directory ##${Normal}"
   rm ${TEMPDIR}/${ind_id}.*
   ## Playing extra safe by avoiding rm -r
   rmdir ${TEMPDIR}
@@ -201,7 +247,8 @@ elif [[ -d ${output_dir} ]] && [[ ( -f ${input_dir}/pileupcaller.single.geno && 
     -p ${geno_ploidy} \
     -S ${ss_suffix}
 
-  ## TODO Add mirror sex information to ind file.
+  ## Mirror sex and group_name information to ind file.
+  ${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml
 
   ## TODO Use trident update to get correct md5sums and add log info
   ## TODO Validate package
@@ -245,7 +292,8 @@ elif [[ -d ${output_dir} ]] && [[ ( ${input_dir}/pileupcaller.single.geno -nt ${
     -p ${geno_ploidy} \
     -S ${ss_suffix}
 
-  ## TODO Add mirror sex information to ind file.
+  ## Mirror sex and group_name information to ind file.
+  ${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml
 
   ## TODO Use trident update to get correct md5sums and add log info
   ## TODO Validate package
