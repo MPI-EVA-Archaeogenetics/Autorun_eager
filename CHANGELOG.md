@@ -8,9 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Added`
 - Add option to create a text file with the run commands for launching Autorun_eager, fo submission as a qsub array.
 - Add array submission script.
+- Add script to create and update poseidon packages from eager output.
+  - Includes script to collate eager results and overwrite the janno of a poseidon pacakge.
+  - Includes script to update poseidon indFile from janno files.
+  - Each poseidon package contains a file named `AE_version.txt` with the version used for the last package creation/update.
 
 ### `Fixed`
 - Fixed pull request template.
+- Fixed a bug where sequencing runs were considered updated if the `Results.txt` was updated without changing the data. Now only changes to the output bams constitute an update trigger.
 
 ### `Dependencies`
 
