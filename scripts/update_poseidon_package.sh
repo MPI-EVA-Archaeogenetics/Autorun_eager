@@ -47,6 +47,7 @@ root_output_dir='/mnt/archgen/Autorun_eager/dev/poseidon_packages' ## Directory 
 input_dir="${root_input_dir}/TF/${ind_id:0:3}/${ind_id}/genotyping/"
 output_dir="${root_output_dir}/TF/${ind_id:0:3}/${ind_id}/"
 cred_file="${autorun_root_dir}/.eva_credentials"
+trident_path="/r1/people/srv_autoeager/bin/trident-1.1.4.2"
 
 ## Local Testing
 # autorun_root_dir='/Users/lamnidis/Software/github/MPI-EVA-Archaeogenetics/Autorun_eager'
@@ -55,6 +56,7 @@ cred_file="${autorun_root_dir}/.eva_credentials"
 # input_dir="${root_input_dir}/TF/${ind_id:0:3}/${ind_id}/genotyping/"
 # output_dir="${root_output_dir}/TF/${ind_id:0:3}/${ind_id}/"
 # cred_file="/Users/lamnidis/Software/github/Schiffels-Popgen/MICROSCOPE-processing-pipeline/.credentials"
+# trident_path=$(which trident)
 
 ## Ensure an ind_id was provided, and eager results exist.
 if [[ ${ind_id} == '' ]]; then
@@ -92,7 +94,7 @@ if [[ ! -d ${output_dir} ]] && [[ -f ${input_dir}/pileupcaller.single.geno ]] &&
 
   errecho "${Yellow}## Package Creation ##${Normal}"
   ## Then create new poseidon pacakge in tempdir (so users dont pick up half-made packages.)
-  trident init \
+  ${trident_path} init \
     --inFormat EIGENSTRAT \
     --snpSet 1240K \
     --genoFile ${TEMPDIR}/${ind_id}.geno \
@@ -117,7 +119,7 @@ if [[ ! -d ${output_dir} ]] && [[ -f ${input_dir}/pileupcaller.single.geno ]] &&
   ## Use trident update to get correct md5sums and add log info
   ##    Also add TCL and KP as contributors. Can be changed before publishing the package if users want.
   errecho "${Yellow}## Trident update ##${Normal}"
-  trident update \
+  ${trident_path} update \
     -d ${TEMPDIR}/${ind_id} \
     --logText "${date_stamp} Package creation" \
     --versionComponent Major \
@@ -131,7 +133,7 @@ if [[ ! -d ${output_dir} ]] && [[ -f ${input_dir}/pileupcaller.single.geno ]] &&
 
   ## Validate package to ensure it works
   errecho "${Yellow}## Trident validate ##${Normal}"
-  trident validate -d ${TEMPDIR}/${ind_id}
+  ${trident_path} validate -d ${TEMPDIR}/${ind_id}
 
   ## Only move package dir to live output_dir if validation passed
   if [[ $? == 0 ]]; then
@@ -169,7 +171,7 @@ elif [[ ! -d ${output_dir} ]]; then
 
   ## Then create new poseidon pacakge
   errecho "${Yellow}## Package Creation ##${Normal}"
-  trident init \
+  ${trident_path} init \
     --inFormat EIGENSTRAT \
     --snpSet 1240K \
     --genoFile ${TEMPDIR}/${ind_id}.geno \
@@ -194,7 +196,7 @@ elif [[ ! -d ${output_dir} ]]; then
   ## Use trident update to get correct md5sums and add log info
   ##    Also add TCL and KP as contributors. Can be changed before publishing the package if users want.
   errecho "${Yellow}## Trident update ##${Normal}"
-  trident update \
+  ${trident_path} update \
     -d ${TEMPDIR}/${ind_id} \
     --logText "${date_stamp} Package creation" \
     --versionComponent Major \
@@ -208,7 +210,7 @@ elif [[ ! -d ${output_dir} ]]; then
 
   ## Validate package to ensure it works
   errecho "${Yellow}## Trident validate ##${Normal}"
-  trident validate -d ${TEMPDIR}/${ind_id}
+  ${trident_path} validate -d ${TEMPDIR}/${ind_id}
 
   ## Only move package dir to live output_dir if validation passed
   if [[ $? == 0 ]]; then
@@ -273,7 +275,7 @@ elif [[ -d ${output_dir} ]] && [[ ( -f ${input_dir}/pileupcaller.single.geno && 
 
   ## Use trident update to get correct md5sums and add log info
   errecho "${Yellow}## Trident update ##${Normal}"
-  trident update \
+  ${trident_path} update \
     -d ${TEMPDIR}/${ind_id} \
     --logText "${date_stamp} Update genotypes" \
     --versionComponent Major
@@ -285,7 +287,7 @@ elif [[ -d ${output_dir} ]] && [[ ( -f ${input_dir}/pileupcaller.single.geno && 
 
   ## Validate package to ensure it works
   errecho "${Yellow}## Trident validate ##${Normal}"
-  trident validate -d ${TEMPDIR}/${ind_id}
+  ${trident_path} validate -d ${TEMPDIR}/${ind_id}
 
   ## Only delete live version and replace with temp if validation passed
   if [[ $? == 0 ]]; then
@@ -350,7 +352,7 @@ elif [[ -d ${output_dir} ]] && [[ ( ${input_dir}/pileupcaller.single.geno -nt ${
 
   ## Use trident update to get correct md5sums and add log info
   errecho "${Yellow}## Trident update ##${Normal}"
-  trident update \
+  ${trident_path} update \
     -d ${TEMPDIR}/${ind_id} \
     --logText "${date_stamp} Update genotypes" \
     --versionComponent Major
@@ -362,7 +364,7 @@ elif [[ -d ${output_dir} ]] && [[ ( ${input_dir}/pileupcaller.single.geno -nt ${
 
   ## Validate package to ensure it works
   errecho "${Yellow}## Trident validate ##${Normal}"
-  trident validate -d ${TEMPDIR}/${ind_id}
+  ${trident_path} validate -d ${TEMPDIR}/${ind_id}
 
   ## Only delete live version and replace with temp if validation passed
   if [[ $? == 0 ]]; then
