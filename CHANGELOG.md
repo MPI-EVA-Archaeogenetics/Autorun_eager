@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Fixed`
 - Fixed pull request template.
+- Fixed a bug where sequencing runs were considered updated if the `Results.txt` was updated without changing the data. Now only changes to the output bams constitute an update trigger.
 
 ### `Dependencies`
 
