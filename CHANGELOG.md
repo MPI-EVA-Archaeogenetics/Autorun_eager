@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Includes script to collate eager results and overwrite the janno of a poseidon pacakge.
   - Includes script to update poseidon indFile from janno files.
   - Each poseidon package contains a file named `AE_version.txt` with the version used for the last package creation/update.
+- Added conda environment yaml file `autoeager_env.yml`
 
 ### `Fixed`
 - Fixed pull request template.
