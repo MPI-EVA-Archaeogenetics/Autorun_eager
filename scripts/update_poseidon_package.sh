@@ -43,7 +43,7 @@ done
 
 autorun_root_dir='/mnt/archgen/Autorun_eager/'
 root_input_dir='/mnt/archgen/Autorun_eager/eager_outputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each site and individual.
-root_output_dir='/mnt/archgen/Autorun_eager/dev/poseidon_packages' ## Directory that includes data type, site ID and ind ID subdirs.
+root_output_dir='/mnt/archgen/Autorun_eager/poseidon_packages' ## Directory that includes data type, site ID and ind ID subdirs.
 input_dir="${root_input_dir}/TF/${ind_id:0:3}/${ind_id}/genotyping/"
 output_dir="${root_output_dir}/TF/${ind_id:0:3}/${ind_id}/"
 cred_file="${autorun_root_dir}/.eva_credentials"
