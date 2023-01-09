@@ -117,8 +117,8 @@ done
 ## If array is requested submit the created array file to qsub below
 if [[ ${array} == 'TRUE' ]]; then
     jn=$(wc -l ${temp_file} | cut -f 1 -d " ") ## number of jobs equals number of lines
-    export NXF_OPTS='-Xms4G -Xmx4G' ## Set 4GB limit to Nextflow VM
-    export JAVA_OPTS='-Xms8G -Xmx8G' ## Set 8GB limit to Java VM
+    export NXF_OPTS='-Xms6G -Xmx6G' ## Set 4GB limit to Nextflow VM
+    export JAVA_OPTS='-Xms12G -Xmx12G' ## Set 8GB limit to Java VM
     ## -V Pass environment to job (includes nxf/java opts)
     ## -S /bin/bash Use bash
     ## -l v_hmem=16G ## 16GB memory limit (8 for java +garbage collector)
@@ -130,6 +130,6 @@ if [[ ${array} == 'TRUE' ]]; then
     ## -o /mnt/archgen/Autorun_eager/array_Logs/ ## Keep all log files in one directory.
     ## -tc 10 ## Number of concurrent spawner jobs (10)
     ## -t 1-${jn} ## The number of array jobs (from 1 to $jn)
-    echo "qsub -V -S /bin/bash -l h_vmem=16G -pe smp 2 -N AE_spawner_$(basename ${temp_file}) -cwd -j y -b y -o /mnt/archgen/Autorun_eager/array_Logs/ -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}"
-    qsub -V -S /bin/bash -l h_vmem=16G -pe smp 2 -N AE_spawner_$(basename ${temp_file}) -cwd -j y -b y -o /mnt/archgen/Autorun_eager/array_Logs/ -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}
+    echo "qsub -V -S /bin/bash -l h_vmem=24G -pe smp 2 -N AE_spawner_$(basename ${temp_file}) -cwd -j y -b y -o /mnt/archgen/Autorun_eager/array_Logs/ -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}"
+    qsub -V -S /bin/bash -l h_vmem=24G -pe smp 2 -N AE_spawner_$(basename ${temp_file}) -cwd -j y -b y -o /mnt/archgen/Autorun_eager/array_Logs/ -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}
 fi
