@@ -117,11 +117,11 @@ done
 ## If array is requested submit the created array file to qsub below
 if [[ ${array} == 'TRUE' ]]; then
     jn=$(wc -l ${temp_file} | cut -f 1 -d " ") ## number of jobs equals number of lines
-    export NXF_OPTS='-Xms6G -Xmx6G' ## Set 4GB limit to Nextflow VM
-    export JAVA_OPTS='-Xms12G -Xmx12G' ## Set 8GB limit to Java VM
+    export NXF_OPTS='-Xms4G -Xmx4G' ## Set 4GB limit to Nextflow VM
+    export JAVA_OPTS='-Xms8G -Xmx8G' ## Set 8GB limit to Java VM
     ## -V Pass environment to job (includes nxf/java opts)
     ## -S /bin/bash Use bash
-    ## -l v_hmem=16G ## 16GB memory limit (8 for java +garbage collector)
+    ## -l v_hmem=24G ## 24GB memory limit (8 for java + the rest for garbage collector)
     ## -pe smp 2 ## Use two cores. one for nextflow, one for garbage collector
     ## -n AE_spawner ## Name the job
     ## -cwd Run in currect run directory (ran commands include a cd anyway, but to find the files at least)
