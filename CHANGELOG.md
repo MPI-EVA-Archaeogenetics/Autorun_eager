@@ -3,7 +3,7 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [dev] - 
+## [1.1.2] - 02/01/2023
 
 ### `Added`
 - Add option to create a text file with the run commands for launching Autorun_eager, fo submission as a qsub array.
@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Includes script to collate eager results and overwrite the janno of a poseidon pacakge.
   - Includes script to update poseidon indFile from janno files.
   - Each poseidon package contains a file named `AE_version.txt` with the version used for the last package creation/update.
+- Added conda environment yaml file `autoeager_env.yml`
 
 ### `Fixed`
 - Fixed pull request template.
