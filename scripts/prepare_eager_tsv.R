@@ -124,7 +124,7 @@ complete_pandora_table <- join_pandora_tables(
   convert_all_ids_to_values(., con = con) %>%
   filter(sample.Ethically_culturally_sensitive == FALSE) ## Exclude ethically/culturally sensitive data. Conservative since it excludes NAs
 
-tibble_input_iids <- complete_pandora_table %>% filter(sequencing.Batch == sequencing_batch_id) %>% select(individual.Full_Individual_Id)
+tibble_input_iids <- complete_pandora_table %>% filter(sequencing.Run_Id == sequencing_batch_id) %>% select(individual.Full_Individual_Id)
 
 ## Pull information from pandora, keeping only matching IIDs and requested Sequencing types.
 results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individual.Full_Individual_Id"="individual.Full_Individual_Id")) %>%
