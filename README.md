@@ -116,3 +116,29 @@ eager_outputs
          ├── IND001
          └── IND002
 ```
+
+This script recognises the `-a/--array` option. When this is provided, instead of running eager jobs in sequence, a temporary file is created named `$(date +'%y%m%d_%H%M')_Autorun_eager_queue.txt` that includes the command line of all eager jobs to-be-ran, one per line. An "Autorun_eager spawner" (`AE_spawner`) array job is then submitted using `qsub`, which uses a secondary script named `scripts/submit_as_array.sh` to submit the command in each line of the temporary file as a separate task. In this manner, 10 eager runs can be ran in parallel. Logs for these jobs will then be added to a directory named `array_Logs/<temp_file_name>/`.
+
+## update_poseidon_package.sh
+
+A shell script that will check the available TF genotype datasets for a given individual and create/update a poseidon package with the data of that individual.
+
+```
+	 usage: ./scripts/update_poseidon_package.sh [options] <ind_id>
+
+This script pulls data and metadata from Autorun_eager for the TF version of the specified individual and creates a poseidon package.
+
+Options:
+-h, --help		Print this text and exit.
+-v, --version 		Print version and exit.
+```
+
+Comparing the timestamp of the Autorun_eager genotypes and those in the poseidon package for the individual (if one exists already) this script will create/update a poseidon package where necessary by doing the following:
+1. Check if a package creation/update is needed. If not, exit happily.
+2. Create a bare poseidon package from the available Autorun_eager genotypes **in a temporary directory**.
+    - Paste together dsDNA and ssDNA genotypes before creating bare package, if necessary.
+3. Pull information from Pandora and Autorun_eager to populate the package janno files, using `scripts/fill_in_janno.R`. This also updates the Genetic_Sex field.
+4. Update the genetic sex in the package ind file, so it matches the updated janno, using `scripts/update_dataset_from_janno.R`.
+5. Use `trident update` to bump the package version (`1.0.0` if the package is newly created), and create a Changelog.
+6. Validate the resulting package.
+7. If validation passes, publish the (updated) version of the package to the central repository in `poseidon_packages/` and remove any temporary files created.
