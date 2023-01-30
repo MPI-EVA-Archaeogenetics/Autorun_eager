@@ -8,3 +8,4 @@ eager_outputs/
 .Rproj.user
 .nfs*
 dev/
+test_data/
