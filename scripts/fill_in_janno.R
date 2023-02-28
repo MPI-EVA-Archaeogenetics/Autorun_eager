@@ -111,8 +111,8 @@ poseidon_tsv_cols <- tsv_dat %>% dplyr::select(Sample_Name, Library_ID, Stranded
       unique(UDG_Treatment) %>% length(.) > 1 ~ 'mixed',
       TRUE ~ unique(UDG_Treatment)
     ),
-    Nr_Libs=dplyr::n(),
-    Capture_Type=paste0(rep("1240K", Nr_Libs), collapse=";"),
+    Nr_Libraries=dplyr::n(),
+    Capture_Type=paste0(rep("1240K", Nr_Libraries), collapse=";"),
     Library_Built=dplyr::case_when(
       Strandedness == 'single' ~ 'ss',
       Strandedness == 'double' ~ 'ds',
