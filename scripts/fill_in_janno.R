@@ -87,8 +87,8 @@ pandora_results <- eager2poseidon::import_pandora_data(sample_ids %>% dplyr::sel
   dplyr::select(-Pandora_ID)
 
 ## Infer locations of different JSONs to read results in with eagerR. (More flexible than e2p and can pull results from SG runs if present)
-base_dir <- "/mnt/archgen/Autorun_eager"
-# base_dir <- "/Users/lamnidis/mount"
+# base_dir <- "/mnt/archgen/Autorun_eager"
+base_dir <- "/Users/lamnidis/mount"
 eager_tsv_fn <- paste0(base_dir, "/eager_inputs/TF/", substr(args$ind_id,0,3), "/", args$ind_id,"/", args$ind_id, ".tsv")
 eager_tf_results_dir <- paste0(base_dir, "/eager_outputs/TF/", substr(args$ind_id,0,3), "/", args$ind_id,"/")
 eager_sg_endorspy_dir <- paste0(base_dir, "/eager_outputs/SG/", substr(args$ind_id,0,3), "/", args$ind_id,"/endorspy/")
@@ -188,7 +188,7 @@ updated_columns <- eager2poseidon::compile_eager_result_tables(
     "Contamination_Meas",
     "Damage",
     "UDG",
-    "Nr_Libs",
+    "Nr_Libraries",
     "Library_Names", ## Column including all the Library_IDs merged into these genotypes
     "Library_Built",
     "Capture_Type"
