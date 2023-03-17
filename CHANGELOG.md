@@ -3,7 +3,7 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.2dev] - dd/mm/yyyy
+## [1.1.3] - 17/03/2023
 
 ### `Added`
 
