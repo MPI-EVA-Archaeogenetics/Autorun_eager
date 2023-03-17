@@ -3,6 +3,19 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 17/03/2023
+
+### `Added`
+
+### `Fixed`
+ - Column naming in `fill_in_janno.R`. `Nr_Libs` -> `Nr_Libraries`.
+ - `prepare_eager_tsv.R` no longer joins with non-unique iids. Optimised performance and less likely to kill the TSV maker.
+ - Increased memory given to eager spawner array jobs.
+
+### `Dependencies`
+
+### `Deprecated`
+
 ## [1.1.2] - 02/01/2023
 
 ### `Added`

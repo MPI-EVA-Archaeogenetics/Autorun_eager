@@ -43,10 +43,10 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
   if (!dir.exists(ind_dir)) {write(paste0("[prepare_eager_tsv.R]: Creating output directory '",ind_dir,"'"), stdout())}
   
   dir.create(ind_dir, showWarnings = F, recursive = T) ## Create output directory and subdirs if they do not exist.
- data %>% select(-individual.Full_Individual_Id) %>%  readr::write_tsv(file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
+  data %>% select(-individual.Full_Individual_Id) %>%  readr::write_tsv(file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
 
   ## Print Autorun_eager version to file
-  AE_version <- "1.1.2"
+  AE_version <- "1.1.3"
   cat(AE_version, file=paste0(ind_dir,"/autorun_eager_version.txt"), fill=T, append = F)
 }
 
@@ -124,13 +124,13 @@ complete_pandora_table <- join_pandora_tables(
   convert_all_ids_to_values(., con = con) %>%
   filter(sample.Ethically_culturally_sensitive == FALSE) ## Exclude ethically/culturally sensitive data. Conservative since it excludes NAs
 
-tibble_input_iids <- complete_pandora_table %>% filter(sequencing.Run_Id == sequencing_batch_id) %>% select(individual.Full_Individual_Id)
+tibble_input_iids <- complete_pandora_table %>% filter(sequencing.Run_Id == sequencing_batch_id) %>% select(individual.Full_Individual_Id) %>% distinct()
 
 ## Pull information from pandora, keeping only matching IIDs and requested Sequencing types.
 results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individual.Full_Individual_Id"="individual.Full_Individual_Id")) %>%
   filter(grepl(paste0("\\.", analysis_type), sequencing.Full_Sequencing_Id), analysis.Analysis_Id == autorun_name_from_analysis_type(analysis_type)) %>%
   select(individual.Full_Individual_Id,individual.Organism,library.Full_Library_Id,library.Protocol,analysis.Result_Directory,sequencing.Sequencing_Id,sequencing.Full_Sequencing_Id,sequencing.Single_Stranded) %>%
-  distinct() %>% ## TODO comment: would be worrying if not already unique, maybe consider throwing a warn?
+  distinct() %>% ## Need distinct() call because of hoe analysis tab is read in, which created one copy of each row per analysis field.
   group_by(individual.Full_Individual_Id) %>%
   filter(!is.na(analysis.Result_Directory)) %>% ## Exclude individuals with no results directory (seem to mostly be controls)
   mutate(
