@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Fixed`
  - Column naming in `fill_in_janno.R`. `Nr_Libs` -> `Nr_Libraries`.
  - `prepare_eager_tsv.R` no longer joins with non-unique iids. Optimised performance and less likely to kill the TSV maker.
+ - Increased memory given to eager spawner array jobs.
 
 ### `Dependencies`
 
