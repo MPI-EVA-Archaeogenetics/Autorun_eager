@@ -9,3 +9,9 @@ eager_outputs/
 .nfs*
 dev/
 test_data/
+*.*.results.txt
+*Autorun_eager_queue.txt
+.tmp/
+eager_inputs_old/
+eager_outputs_old/
+array_Logs/
