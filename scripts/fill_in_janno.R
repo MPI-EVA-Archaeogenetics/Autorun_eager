@@ -195,7 +195,7 @@ updated_columns <- eager2poseidon::compile_eager_result_tables(
   ))) %>%
   ## Remove ss_suffix from library names, so they match Pandora Library IDs
   dplyr::mutate(
-    Library_Names=gsub('_ss','',.data$Library_Names)
+    Library_Names=gsub('_ss','',.data$Library_Names) %>% vctrs::vec_unique()
   ) %>%
   ## Keep distinct rows, now that Library_ID has been dropped
   dplyr::distinct() %>%
