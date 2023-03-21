@@ -67,6 +67,10 @@ Options:
             Some tools used in nf-core/eager will strip everything after the first dot (.)
             from the name of the input file, which can cause naming conflicts in rare cases.
 
+    -w WHITELIST, --whitelist=WHITELIST
+            An optional file that includes the IDs of whitelisted individuals,
+                    one per line. Only the TSVs for these individuals will be updated.
+
     -o OUTDIR/, --outDir=OUTDIR/
         The desired output directory. Within this directory, one subdirectory will be 
             created per analysis type, within that one subdirectory per individual ID,
