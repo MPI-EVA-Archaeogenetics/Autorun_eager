@@ -46,20 +46,20 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
   data %>% select(-individual.Full_Individual_Id) %>%  readr::write_tsv(file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
 
   ## Print Autorun_eager version to file
-  AE_version <- "1.1.3"
+  AE_version <- "1.2.0"
   cat(AE_version, file=paste0(ind_dir,"/autorun_eager_version.txt"), fill=T, append = F)
 }
 
 ## Correspondance between '-a' analysis type and the name of Kay's pipeline.
 ##    Only bams from the output autorun_name will be included in the output
-autorun_name_from_analysis_type <- function(analysis_type) {
-  autorun_name <- case_when(
-    analysis_type == "TF" ~ "HUMAN_1240K",
-    analysis_type == "SG" ~ "HUMAN_SHOTGUN",
+autorun_names_from_analysis_type <- function(analysis_type) {
+  autorun_names <- case_when(
+    analysis_type == "TF" ~ c( "HUMAN_1240K", "Human_1240k" ), 
+    analysis_type == "SG" ~ c( "HUMAN_SHOTGUN", "Human_Shotgun" ),
     ## Future analyses can be added here to pull those bams for eager processsing.
     TRUE ~ NA_character_
   )
-  return(autorun_name)
+  return(autorun_names)
 }
 
 ## MAIN ##
@@ -81,6 +81,11 @@ parser <- add_option(parser, c("-r", "--rename"), type = 'logical',
 			Some tools used in nf-core/eager will strip everything after the first dot (.)
 			from the name of the input file, which can cause naming conflicts in rare cases."
                     )
+parser <- add_option(parser, c("-w", "--whitelist"), type = 'character',
+                    action = 'store', dest = 'whitelist_fn', default=NA_character_,
+                    help = "An optional file that includes the IDs of whitelisted individuals,
+			one per line. Only the TSVs for these individuals will be updated."
+                    )
 parser <- add_option(parser, c("-o", "--outDir"), type = 'character',
                     action = "store", dest = "outdir",
                     help= "The desired output directory. Within this directory, one subdirectory will be 
@@ -99,6 +104,7 @@ opts <- arguments$options
 cred_file <- arguments$args
 sequencing_batch_id <- opts$sequencing_batch_id
 analysis_type <- opts$analysis_type
+whitelist_fn <- opts$whitelist_fn
 
 if (is.na(analysis_type)) {
   stop(call.=F, "\n[prepare_eager_tsv.R] error: No analysis type provided with -a. Please see --help for more information.\n")
@@ -128,9 +134,9 @@ tibble_input_iids <- complete_pandora_table %>% filter(sequencing.Run_Id == sequ
 
 ## Pull information from pandora, keeping only matching IIDs and requested Sequencing types.
 results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individual.Full_Individual_Id"="individual.Full_Individual_Id")) %>%
-  filter(grepl(paste0("\\.", analysis_type), sequencing.Full_Sequencing_Id), analysis.Analysis_Id == autorun_name_from_analysis_type(analysis_type)) %>%
+  filter(grepl(paste0("\\.", analysis_type), sequencing.Full_Sequencing_Id), analysis.Analysis_Id %in% autorun_names_from_analysis_type(analysis_type)) %>%
   select(individual.Full_Individual_Id,individual.Organism,library.Full_Library_Id,library.Protocol,analysis.Result_Directory,sequencing.Sequencing_Id,sequencing.Full_Sequencing_Id,sequencing.Single_Stranded) %>%
-  distinct() %>% ## Need distinct() call because of hoe analysis tab is read in, which created one copy of each row per analysis field.
+  distinct() %>% ## Need distinct() call because of how analysis tab is read in, which created one copy of each row per analysis field.
   group_by(individual.Full_Individual_Id) %>%
   filter(!is.na(analysis.Result_Directory)) %>% ## Exclude individuals with no results directory (seem to mostly be controls)
   mutate(
@@ -182,6 +188,14 @@ results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individua
 
 ## Save results into single file for debugging
 if ( opts$debug ) { write_tsv(results, file=paste0(sequencing_batch_id, ".", analysis_type, ".results.txt")) }
+
+## Read in the whitelist if any, and filter the results table
+if (! is.na(whitelist_fn) ){
+  whitelist <- read_tsv(whitelist_fn, col_types='c', col_names='Pandora_ID')
+  
+  results <- results %>% filter(individual.Full_Individual_Id %in% whitelist$Pandora_ID)
+  # write_tsv(results, file=paste0(sequencing_batch_id, ".", analysis_type, ".whitelist.results.txt"))
+}
 
 ## Group by individual IDs and save each chunk as TSV
 results %>% group_by(individual.Full_Individual_Id) %>% group_walk(~save_ind_tsv(., rename=F, output_dir=output_dir), .keep=T)
