@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Added`
 
 ### `Fixed`
+ - `update_poseidon_packages.sh`: `Library_Names` field now includes only unique library names.
 
 ### `Dependencies`
 
