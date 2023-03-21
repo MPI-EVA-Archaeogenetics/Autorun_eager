@@ -41,22 +41,22 @@ while true ; do
   esac
 done
 
-# autorun_root_dir='/mnt/archgen/Autorun_eager/'
-# root_input_dir='/mnt/archgen/Autorun_eager/eager_outputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each site and individual.
-# root_output_dir='/mnt/archgen/Autorun_eager/dev/poseidon_packages' ## Directory that includes data type, site ID and ind ID subdirs.
-# input_dir="${root_input_dir}/TF/${ind_id:0:3}/${ind_id}/genotyping/"
-# output_dir="${root_output_dir}/TF/${ind_id:0:3}/${ind_id}/"
-# cred_file="${autorun_root_dir}/.eva_credentials"
-# trident_path="/r1/people/srv_autoeager/bin/trident-1.1.4.2"
-
-## Local Testing
-autorun_root_dir='/Users/lamnidis/Software/github/MPI-EVA-Archaeogenetics/Autorun_eager'
-root_input_dir='/Users/lamnidis/mount/eager_outputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each site and individual.
-root_output_dir='/Users/lamnidis/Software/github/MPI-EVA-Archaeogenetics/Autorun_eager/test_data/' ## Directory that includes data type, site ID and ind ID subdirs.
+autorun_root_dir='/mnt/archgen/Autorun_eager/'
+root_input_dir='/mnt/archgen/Autorun_eager/eager_outputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each site and individual.
+root_output_dir='/mnt/archgen/Autorun_eager/dev/poseidon_packages' ## Directory that includes data type, site ID and ind ID subdirs.
 input_dir="${root_input_dir}/TF/${ind_id:0:3}/${ind_id}/genotyping/"
 output_dir="${root_output_dir}/TF/${ind_id:0:3}/${ind_id}/"
-cred_file="/Users/lamnidis/Software/github/Schiffels-Popgen/MICROSCOPE-processing-pipeline/.credentials"
-trident_path=$(which trident)
+cred_file="${autorun_root_dir}/.eva_credentials"
+trident_path="/r1/people/srv_autoeager/bin/trident-1.1.4.2"
+
+## Local Testing
+# autorun_root_dir='/Users/lamnidis/Software/github/MPI-EVA-Archaeogenetics/Autorun_eager'
+# root_input_dir='/Users/lamnidis/mount/eager_outputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each site and individual.
+# root_output_dir='/Users/lamnidis/Software/github/MPI-EVA-Archaeogenetics/Autorun_eager/test_data/' ## Directory that includes data type, site ID and ind ID subdirs.
+# input_dir="${root_input_dir}/TF/${ind_id:0:3}/${ind_id}/genotyping/"
+# output_dir="${root_output_dir}/TF/${ind_id:0:3}/${ind_id}/"
+# cred_file="/Users/lamnidis/Software/github/Schiffels-Popgen/MICROSCOPE-processing-pipeline/.credentials"
+# trident_path=$(which trident)
 
 ## Ensure an ind_id was provided, and eager results exist.
 if [[ ${ind_id} == '' ]]; then
