@@ -6,9 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.3dev] - dd/mm/yy
 
 ### `Added`
+ - `prepare_eager_tsv.R`: Added ``-w/--whitelist` option. A whitelist of Pandora Individual IDs can be provided. Only the TSVs of individuals in the whitelist will be updated.
 
 ### `Fixed`
  - `update_poseidon_packages.sh`: `Library_Names` field now includes only unique library names.
+ - `prepare_eager_tsv.R`: Camel_Case versions of Pandora Analysis IDs are no longer filtered out.
 
 ### `Dependencies`
 
