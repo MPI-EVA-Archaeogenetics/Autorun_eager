@@ -6,9 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0dev] - dd/mm/yyyy
 
 ### `Added`
+ - `scripts/ethical_sample_scrub.sh`: A script to remove eager input/outputs for samples that were marked as ethically sensitive after the pipelines picked them up.
+ - `scripts/cron_thical_scrub.sh`: A cron-able script to run `ethical_sample_scrub.sh` daily.
 
 ### `Fixed`
-
+ - `scripts/cron_daily_prepare.sh`: Silenced permission errors due to ethical sample scrubbing.
 ### `Dependencies`
 
 ### `Deprecated`
