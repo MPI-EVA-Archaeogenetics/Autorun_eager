@@ -71,16 +71,16 @@ else
       if [[ -f ${eager_input_tsv} ]]; then
         old_name=$(dirname ${eager_input_tsv})
         new_name=$(dirname ${old_name})/.${raw_iid}
-        mv -vi ${old_name} ${new_name} ## Hide the input directory
-        chmod 0700 ${new_name}      ## Restrict the directory contents
+        mv -v ${old_name} ${new_name} ## Hide the input directory
+        chmod 0700 ${new_name}        ## Restrict the directory contents
       fi
 
       ## EAGER_OUTPUTS
       eager_output_dir="${root_output_dir}/${analysis_type}/${site_id}/${raw_iid}/"
       if [[ -d ${eager_output_dir} ]]; then
         new_outdir_name=$(dirname ${eager_output_dir})/.${raw_iid}
-        mv -vi ${eager_output_dir} ${new_outdir_name} ## Hide the output directory
-        chmod 0700 ${new_outdir_name}             ## Restrict the directory contents
+        mv -v ${eager_output_dir} ${new_outdir_name} ## Hide the output directory
+        chmod 0700 ${new_outdir_name}                ## Restrict the directory contents
       fi
     done
   done
