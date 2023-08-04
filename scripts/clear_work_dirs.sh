@@ -14,7 +14,7 @@ function Helptext() {
 function errecho() { echo -e $* 1>&2 ;}
 
 ## Parse CLI args.
-TEMP=`getopt -q -o hv --long help,version -n 'update_poseidon_package.sh' -- "$@"`
+TEMP=`getopt -q -o h --long help -n 'clean_work_dirs.sh' -- "$@"`
 eval set -- "$TEMP"
 
 ind_id_list_fn=''

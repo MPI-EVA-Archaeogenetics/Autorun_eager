@@ -31,7 +31,7 @@ function errecho() {
 }
 
 ## Parse CLI args.
-TEMP=`getopt -q -o hv --long help,version -n 'update_poseidon_package.sh' -- "$@"`
+TEMP=`getopt -q -o h --long help -n 'ethical_sample_scrub.sh' -- "$@"`
 eval set -- "$TEMP"
 
 ## Read in CLI arguments
