@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+## This script removes the results for an individiaul while maintaining the nextflow process cache for them.
+##    It is intended as a way to refresh the results directories of an individual. This can be useful either
+##    to remove older files after additional libraries appear and are therefore merged, or to remove results
+##    with misleading names in cases where Pandora entries get updated (e.g. protocol mixup leading to changes
+##    in strandedness for a library).
+
 ## Helptext function
 function Helptext() {
   echo -ne "\t usage: $0 [options] <ind_id_list>\n\n"
