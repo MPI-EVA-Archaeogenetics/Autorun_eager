@@ -12,6 +12,7 @@ function Helptext() {
   echo -ne "This script removes all output directory contents for the provided individuals, without clearing out caching, allowing for the results to be re-published.\n    This enables refreshing of result directories when changes to the input might have changes merging of libraries, thus making the directory structure inconsistent.\n\n"
   echo -ne "Options:\n"
   echo -ne "-h, --help\t\tPrint this text and exit.\n"
+  echo -ne "-a, --analysis_type\t\tSet the analysis type. Options: TF, SG.\n"
 }
 
 ## Print messages to stderr, optionally with colours
