@@ -5,7 +5,7 @@
 ## Helptext function
 function Helptext() {
   echo -ne "\t usage: $0 [options] <ind_id_list>\n\n"
-  echo -ne "This script pulls data and metadata from Autorun_eager for the TF version of the specified individual and creates a poseidon package.\n\n"
+  echo -ne "This script clears the work directories of individuals in a specified individual ID list from both the SG and TF results directories.\n\n"
   echo -ne "Options:\n"
   echo -ne "-h, --help\t\tPrint this text and exit.\n"
 }
