@@ -146,3 +146,46 @@ Comparing the timestamp of the Autorun_eager genotypes and those in the poseidon
 5. Use `trident update` to bump the package version (`1.0.0` if the package is newly created), and create a Changelog.
 6. Validate the resulting package.
 7. If validation passes, publish the (updated) version of the package to the central repository in `poseidon_packages/` and remove any temporary files created.
+
+## ethical_sample_scrub.sh
+
+A shell script that scrubs the Autorun_eager input and output directories of all individuals in a specified list of sensitive sequencing IDs. This is used daily with the most up-to-date list of sensitive sequencing IDs to ensure that no results are available even if marking samples as sensitive was done late.
+
+```
+     usage: ethical_sample_scrub.sh [options] <sensitive_seqIds_list>
+
+This script pulls the Pandora individual IDs from the list of sensitive sequencing IDs, and
+    removes all Autorun_eager input and outputs from those individuals (if any).
+    This ensures that no results are available even if marking samples as sensitive was done late.
+
+Options:
+-h, --help		Print this text and exit.
+```
+
+## clear_work_dirs.sh
+
+A shell script that will clear the work directories of individuals in a specified individual ID list from both the SG and TF results directories.
+
+```
+     usage: clear_work_dirs.sh [options] <ind_id_list>
+
+This script clears the work directories of individuals in a specified individual ID list from both the SG and TF results directories.
+
+Options:
+-h, --help		Print this text and exit.
+```
+
+## clear_results.sh
+
+A shell script that clears the results directories of all individuals in a specified list While maintaining nextflow's caching of already-ran processes. This is useful for refreshing the results directories of individuals when changes to the input might have changes merging of libraries, thus making the directory structure inconsistent.
+
+```
+     usage: clear_results.sh [options] <ind_id_list>
+
+This script removes all output directory contents for the provided individuals, without clearing out caching, allowing for the results to be re-published.
+    This enables refreshing of result directories when changes to the input might have changes merging of libraries, thus making the directory structure inconsistent.
+
+Options:
+-h, --help		Print this text and exit.
+-a, --analysis_type		Set the analysis type. Options: TF, SG.
+```
