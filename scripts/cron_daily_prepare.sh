@@ -19,3 +19,10 @@ find /mnt/archgen/Autorun/Results/Human_Shotgun/2* -name '*.bam' -mtime -1 2>/de
     echo "Processing SG data from run: ${RUN}"
     scripts/prepare_eager_tsv.R -s $RUN -a SG -o eager_inputs/ -d .eva_credentials
 done 
+
+# Twist
+# Note: this find only checks runs starting from 2020.  Silence stderr to avoid 'permission denied'.
+find /mnt/archgen/Autorun/Results/Human_RP/2* -name '*.bam' -mtime -1 2>/dev/null | cut -f 7 -d "/" | sort -u | while read RUN ; do
+    echo "Processing RP data from run: ${RUN}"
+    scripts/prepare_eager_tsv.R -s $RUN -a RP -o eager_inputs/ -d .eva_credentials
+done 
