@@ -3,16 +3,37 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 12/07/2023
+
+### `Added`
+
+- Processing of RP data. (Twist capture)
+  - `conf/Autorun.config`: Add RP profile for processing twist capture results. Identical to TF for now.
+  - `scripts/prepare_eager_tsv.R`: Add RP analysis type for twist capture results
+  - `scripts/run_Eager.sh`: Run for RP TSVs.
+  - `scripts/cron_daily_prepare.sh`: Create RP analysis TSVs daily.
+
+### `Fixed`
+
+### `Dependencies`
+
+<!-- - nf-core/eager=2.5.0 -->
+
+### `Deprecated`
+
 ## [1.3.0] - 12/07/2023
 
 ### `Added`
- - `scripts/ethical_sample_scrub.sh`: A script to remove eager input/outputs for samples that were marked as ethically sensitive after the pipelines picked them up.
- - `scripts/cron_ethical_scrub.sh`: A cron-able script to run `ethical_sample_scrub.sh` daily.
- - `scripts/clear_work_dirs.sh`: A bash script to `rm -r` the work directories of an individual ID for both `SG` and `TF` processing.
- - `scripts/clear_results.sh`: A bash script that deletes the results for an individual while maintaining the nextflow process cache for them.
+
+- `scripts/ethical_sample_scrub.sh`: A script to remove eager input/outputs for samples that were marked as ethically sensitive after the pipelines picked them up.
+- `scripts/cron_ethical_scrub.sh`: A cron-able script to run `ethical_sample_scrub.sh` daily.
+- `scripts/clear_work_dirs.sh`: A bash script to `rm -r` the work directories of an individual ID for both `SG` and `TF` processing.
+- `scripts/clear_results.sh`: A bash script that deletes the results for an individual while maintaining the nextflow process cache for them.
 
 ### `Fixed`
- - `scripts/cron_daily_prepare.sh`: Silenced permission errors due to ethical sample scrubbing.
+
+- `scripts/cron_daily_prepare.sh`: Silenced permission errors due to ethical sample scrubbing.
+
 ### `Dependencies`
 
 ### `Deprecated`
@@ -20,11 +41,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] - 21/03/2023
 
 ### `Added`
- - `prepare_eager_tsv.R`: Added `-w/--whitelist` option. A whitelist of Pandora Individual IDs can be provided. Only the TSVs of individuals in the whitelist will be updated.
+
+- `prepare_eager_tsv.R`: Added `-w/--whitelist` option. A whitelist of Pandora Individual IDs can be provided. Only the TSVs of individuals in the whitelist will be updated.
 
 ### `Fixed`
- - `update_poseidon_packages.sh`: `Library_Names` field now includes only unique library names.
- - `prepare_eager_tsv.R`: Camel_Case versions of Pandora Analysis IDs are no longer filtered out.
+
+- `update_poseidon_packages.sh`: `Library_Names` field now includes only unique library names.
+- `prepare_eager_tsv.R`: Camel_Case versions of Pandora Analysis IDs are no longer filtered out.
 
 ### `Dependencies`
 
@@ -35,9 +58,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Added`
 
 ### `Fixed`
- - Column naming in `fill_in_janno.R`. `Nr_Libs` -> `Nr_Libraries`.
- - `prepare_eager_tsv.R` no longer joins with non-unique iids. Optimised performance and less likely to kill the TSV maker.
- - Increased memory given to eager spawner array jobs.
+
+- Column naming in `fill_in_janno.R`. `Nr_Libs` -> `Nr_Libraries`.
+- `prepare_eager_tsv.R` no longer joins with non-unique iids. Optimised performance and less likely to kill the TSV maker.
+- Increased memory given to eager spawner array jobs.
 
 ### `Dependencies`
 
@@ -46,6 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.2] - 02/01/2023
 
 ### `Added`
+
 - Add `-a` option to `run_Eager.sh` to create a text file with the run commands for launching Autorun_eager, for submission as a qsub array.
 - Add array submission script.
 - Add script to create and update poseidon packages from eager output.
@@ -55,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added conda environment yaml file `autoeager_env.yml`
 
 ### `Fixed`
+
 - Fixed pull request template.
 - Fixed a bug where sequencing runs were considered updated if the `Results.txt` was updated without changing the data. Now only changes to the output bams constitute an update trigger.
 - Fixed a bug where TSV creation would try to match the sequencing ID to the sequencing batch ID, instead of the run ID.
@@ -70,6 +96,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Fixed`
 
 - An error was thrown when trying to create the version file in non existing directories. now fixed.
+
 ### `Dependencies`
 
 ### `Deprecated`
