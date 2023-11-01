@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Processing of RP data. (Twist capture)
   - `conf/Autorun.config`: Add RP profile for processing twist capture results. Identical to TF for now.
+  - `conf/Autorun.config`: Use mapdamage for damage calculation. Limit to 100000 reads, to lower runtime.
   - `scripts/prepare_eager_tsv.R`: Add RP analysis type for twist capture results
   - `scripts/run_Eager.sh`: Run for RP TSVs.
   - `scripts/cron_daily_prepare.sh`: Create RP analysis TSVs daily.
@@ -17,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Dependencies`
 
-<!-- - nf-core/eager=2.5.0 -->
+- nf-core/eager=2.5.0
 
 ### `Deprecated`
 
