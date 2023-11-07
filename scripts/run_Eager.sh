@@ -16,7 +16,7 @@ elif [[ $1 == '-a' || $1 == "--array" ]]; then
 fi
 
 nxf_path="/home/srv_autoeager/conda/envs/autoeager/bin/"
-eager_version='2.4.5'
+eager_version='2.5.0'
 autorun_config='/mnt/archgen/Autorun_eager/conf/Autorun.config' ## Contains specific profiles with params for each analysis type.
 root_input_dir='/mnt/archgen/Autorun_eager/eager_inputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each individual.
 ####        E.g. /mnt/archgen/Autorun_eager/eager_inputs/SG/GUB001/GUB001.tsv
@@ -35,7 +35,7 @@ Yellow=$(tput sgr0)'\033[1;33m' ## Yellow normal face
 
 ## Since I'm running through all data every time, the runtime of the script will increase marginally over time. 
 ## Maybe create a list of eager inputs that are newer than the MQC reports and use that to loop over?
-for analysis_type in "SG" "TF"; do
+for analysis_type in "SG" "TF" "RP"; do
     # echo ${analysis_type}
     analysis_profiles="${nextflow_profiles},${analysis_type}"
     # echo "${root_input_dir}/${analysis_type}"

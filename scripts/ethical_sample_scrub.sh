@@ -63,7 +63,7 @@ else
 
   ## If the individuals were flagged as sensitive AFTER processing started, both the inputs and outputs should be made inaccessible.
   for raw_iid in ${scrub_me[@]}; do
-    for analysis_type in "SG" "TF"; do
+    for analysis_type in "SG" "TF" "RP"; do
       ## EAGER_INPUTS
       site_id="${raw_iid:0:3}"
       eager_input_tsv="${root_input_dir}/${analysis_type}/${site_id}/${raw_iid}/${raw_iid}.tsv"
