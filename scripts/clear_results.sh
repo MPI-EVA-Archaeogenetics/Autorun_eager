@@ -65,8 +65,8 @@ fi
 if [[ ${analysis_type} == '' ]]; then
   errecho "No --analysis_type was provided.\n"
   Helptext
-elif [[ ${analysis_type} != "SG" && ${analysis_type} != "TF" ]]; then
-  errecho "analysis_type must be SG or TF. You provided: ${analysis_type}\n"
+elif [[ ${analysis_type} != "SG" && ${analysis_type} != "TF" && ${analysis_type} != "RP" ]]; then
+  errecho "analysis_type must be SG, TF, or RP. You provided: ${analysis_type}\n"
   Helptext
 fi
 
