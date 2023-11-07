@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `scripts/prepare_eager_tsv.R`: Add RP analysis type for twist capture results
   - `scripts/run_Eager.sh`: Run for RP TSVs.
   - `scripts/cron_daily_prepare.sh`: Create RP analysis TSVs daily.
+  - `scripts/ethical_sample_scrub.sh`: Add RP analysis type for ethical sample scrubbing.
+  - `scripts/clear_work_dirs.sh`: Add RP analysis type for work directory clearing.
+  - `scripts/clear_results.sh`: Add RP analysis type for results directory clearing.
 
 ### `Fixed`
 
