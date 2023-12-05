@@ -116,7 +116,7 @@ done
 
 ## If array is requested submit the created array file to qsub below
 if [[ ${array} == 'TRUE' ]]; then
-    mkdir -p array_Logs/$(basename ${temp_file}) ## Create new directory for the logs for more traversable structure
+    mkdir -p /mnt/archgen/Autorun_eager/array_Logs/$(basename ${temp_file}) ## Create new directory for the logs for more traversable structure
     jn=$(wc -l ${temp_file} | cut -f 1 -d " ") ## number of jobs equals number of lines
     export NXF_OPTS='-Xms6G -Xmx6G' ## Set 4GB limit to Nextflow VM
     export JAVA_OPTS='-Xms12G -Xmx12G' ## Set 8GB limit to Java VM
