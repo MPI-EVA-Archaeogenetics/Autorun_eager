@@ -30,6 +30,6 @@ done
 # Twist + mtDNA
 # Note: this find only checks runs starting from 2020.  Silence stderr to avoid 'permission denied'.
 find /mnt/archgen/Autorun/Results/Human_RM/2* -name '*.bam' -mtime -1 2>/dev/null | cut -f 7 -d "/" | sort -u | while read RUN ; do
-    echo "Processing RP data from run: ${RUN}"
-    scripts/prepare_eager_tsv.R -s $RUN -a RP -o eager_inputs/ -d .eva_credentials
+    echo "Processing RM data from run: ${RUN}"
+    scripts/prepare_eager_tsv.R -s $RUN -a RM -o eager_inputs/ -d .eva_credentials
 done
