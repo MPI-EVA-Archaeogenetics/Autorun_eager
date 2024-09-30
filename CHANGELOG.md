@@ -3,6 +3,25 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 30/09/2024
+
+### `Added`
+
+- Processing of RM data. (Twist capture + mtDNA)
+  - `conf/Autorun.config`: Add RP profile for processing twist capture results. Identical to TF for now.
+  - `scripts/prepare_eager_tsv.R`: Add RP analysis type for twist capture results
+  - `scripts/run_Eager.sh`: Run for RP TSVs.
+  - `scripts/cron_daily_prepare.sh`: Create RP analysis TSVs daily.
+  - `scripts/ethical_sample_scrub.sh`: Add RP analysis type for ethical sample scrubbing.
+  - `scripts/clear_work_dirs.sh`: Add RP analysis type for work directory clearing.
+  - `scripts/clear_results.sh`: Add RP analysis type for results directory clearing.
+
+### `Fixed`
+
+### `Dependencies`
+
+### `Deprecated`
+
 ## [1.4.0] - 12/07/2023
 
 ### `Added`
