@@ -4,17 +4,19 @@ Automated nf-core/eager processing of Autorun output bams.
 
 ## Quickstart
 
-- Run `prepare_eager_tsv.R` for human SG or TF data for a given sequencing batch:
+- Run `prepare_eager_tsv.R` for human SG, TF, RP, or RM data for a given sequencing batch:
 
     ```bash
     prepare_eager_tsv.R -s <batch_Id> -a SG -o eager_inputs/ -d .eva_credentials
     prepare_eager_tsv.R -s <batch_Id> -a TF -o eager_inputs/ -d .eva_credentials
+    prepare_eager_tsv.R -s <batch_Id> -a RP -o eager_inputs/ -d .eva_credentials
+    prepare_eager_tsv.R -s <batch_Id> -a RM -o eager_inputs/ -d .eva_credentials
     ```
 
 - Run eager with the following script, which then runs on the generated TSV files:
 
     ```bash
-    run_Eager.sh
+    run_Eager.sh -a
     ```
 
 ⚠️ For some library preparation protocols and external libraries, UDG treatment cannot be reliably inferred, and errors will be thrown.
@@ -22,7 +24,7 @@ In such cases, an eager input TSV will still be created, but UDG treatment for a
 
 ## Autorun.config
 
-Contains the `autorun`, `SG` and `TF` profiles.
+Contains the `autorun`, `local_paths`, `SG`, `TF`, `RP`, and `RM`  profiles.
 
 ### autorun
 
@@ -43,43 +45,51 @@ The standardised parameters for processing human shotgun data.
 
 The standardised parameters for processing human 1240k capture data.
 
+### RP
+
+The standardised parameters for processing human Twist capture data.
+
+### RM
+
+The standardised parameters for processing human Twist+MT capture data.
+
 ## prepare_eager_tsv.R
 
 An R script that when given a sequencing batch ID, Autorun Analysis type and PANDORA credentials will create/update eager input TSV files for further processing.
 
 ```bash
-Usage: ./prepare_eager_tsv.R [options] .credentials
+Usage: ./scripts/prepare_eager_tsv.R [options] .credentials
+
 
 Options:
-    -h, --help
-        Show this help message and exit
+	-h, --help
+		Show this help message and exit
 
-    -s SEQUENCING_BATCH_ID, --sequencing_batch_id=SEQUENCING_BATCH_ID
-        The Pandora sequencing batch ID to update eager input for. A TSV file will be prepared
-            for each individual in this run, containing all relevant processed BAM files
-            from the individual
+	-s SEQUENCING_BATCH_ID, --sequencing_batch_id=SEQUENCING_BATCH_ID
+		The Pandora sequencing batch ID to update eager input for. A TSV file will be prepared
+			for each individual in this run, containing all relevant processed BAM files
+			from the individual
 
-    -a ANALYSIS_TYPE, --analysis_type=ANALYSIS_TYPE
-        The analysis type to compile the data from. Should be one of: 'SG', 'TF'.
+	-a ANALYSIS_TYPE, --analysis_type=ANALYSIS_TYPE
+		The analysis type to compile the data from. Should be one of: 'SG', 'TF', 'RP', 'RM'.
 
-    -r, --rename
-        Changes all dots (.) in the Library_ID field of the output to underscores (_).
-            Some tools used in nf-core/eager will strip everything after the first dot (.)
-            from the name of the input file, which can cause naming conflicts in rare cases.
+	-r, --rename
+		Changes all dots (.) in the Library_ID field of the output to underscores (_).
+			Some tools used in nf-core/eager will strip everything after the first dot (.)
+			from the name of the input file, which can cause naming conflicts in rare cases.
 
-    -w WHITELIST, --whitelist=WHITELIST
-            An optional file that includes the IDs of whitelisted individuals,
-                    one per line. Only the TSVs for these individuals will be updated.
+	-w WHITELIST, --whitelist=WHITELIST
+		An optional file that includes the IDs of whitelisted individuals,
+			one per line. Only the TSVs for these individuals will be updated.
 
-    -o OUTDIR/, --outDir=OUTDIR/
-        The desired output directory. Within this directory, one subdirectory will be 
-            created per analysis type, within that one subdirectory per individual ID,
-            and one TSV within each of these directory.
+	-o OUTDIR, --outDir=OUTDIR
+		The desired output directory. Within this directory, one subdirectory will be 
+			created per analysis type, within that one subdirectory per individual ID,
+			and one TSV within each of these directory.
 
-    -d, --debug_output
-        When provided, the entire result table for the run will be saved as '<seq_batch_ID>.results.txt'.
-            Helpful to check all the output data in one place.
-
+	-d, --debug_output
+		When provided, the entire result table for the run will be saved as '<seq_batch_ID>.results.txt'.
+			Helpful to check all the output data in one place.
 Note: a valid sidora .credentials file is required. Contact the Pandora/Sidora team for details.
 ```
 
@@ -88,13 +98,21 @@ The eager input TSVs will be created in the following directory structure, given
 ```text
 eager_inputs
 ├── SG
-│   └──IND
-│       ├── IND001
-│       └── IND002
-└── TF
-    └──IND
-         ├── IND001
-         └── IND002
+│   └──ABC
+│       ├── ABC001
+│       └── ABC002
+├── TF
+│   └──ABC
+│       ├── ABC001
+│       └── ABC002
+├── RP
+│   └──ABC
+│       ├── ABC001
+│       └── ABC002
+└── RM
+    └──ABC
+         ├── ABC001
+         └── ABC002
 ```
 
 Alongside each created TSV is a file named `autorun_eager_version.txt`, which states the version of Autorun_eager used.
@@ -112,13 +130,21 @@ The outputs are saved with the same directory structure as the inputs, but in a 
 ```text
 eager_outputs
 ├── SG
-│   └──IND
-│       ├── IND001
-│       └── IND002
-└── TF
-    └──IND
-         ├── IND001
-         └── IND002
+│   └──ABC
+│       ├── ABC001
+│       └── ABC002
+├── TF
+│   └──ABC
+│       ├── ABC001
+│       └── ABC002
+├── RP
+│   └──ABC
+│       ├── ABC001
+│       └── ABC002
+└── RM
+    └──ABC
+         ├── ABC001
+         └── ABC002
 ```
 
 This script recognises the `-a/--array` option. When this is provided, instead of running eager jobs in sequence, a temporary file is created named `$(date +'%y%m%d_%H%M')_Autorun_eager_queue.txt` that includes the command line of all eager jobs to-be-ran, one per line. An "Autorun_eager spawner" (`AE_spawner`) array job is then submitted using `qsub`, which uses a secondary script named `scripts/submit_as_array.sh` to submit the command in each line of the temporary file as a separate task. In this manner, 10 eager runs can be ran in parallel. Logs for these jobs will then be added to a directory named `array_Logs/<temp_file_name>/`.
