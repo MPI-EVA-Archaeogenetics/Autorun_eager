@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION="1.4.0"
+VERSION="1.5.0"
 
 ## Colours for printing to terminal
 Yellow=$(tput sgr0)'\033[1;33m' ## Yellow normal face

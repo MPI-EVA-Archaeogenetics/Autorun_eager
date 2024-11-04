@@ -20,7 +20,7 @@ require(stringr)
 
 ## Validate analysis type option input
 validate_analysis_type <- function(option, opt_str, value, parser) {
-  valid_entries <- c("TF", "SG", "RP") ## TODO comment: should this be embedded within the function? You would want to maybe update this over time no? 
+  valid_entries <- c("TF", "SG", "RP", "RM") ## TODO comment: should this be embedded within the function? You would want to maybe update this over time no? 
   ifelse(value %in% valid_entries, return(value), stop(call.=F, "\n[prepare_eager_tsv.R] error: Invalid analysis type: '", value, 
                                                       "'\nAccepted values: ", paste(valid_entries,collapse=", "),"\n\n"))
 }
@@ -46,7 +46,7 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
   data %>% select(-individual.Full_Individual_Id) %>%  readr::write_tsv(file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
 
   ## Print Autorun_eager version to file
-  AE_version <- "1.4.0"
+  AE_version <- "1.5.0"
   cat(AE_version, file=paste0(ind_dir,"/autorun_eager_version.txt"), fill=T, append = F)
 }
 
@@ -57,6 +57,7 @@ autorun_names_from_analysis_type <- function(analysis_type) {
     analysis_type == "TF" ~ c( "HUMAN_1240K", "Human_1240k" ),
     analysis_type == "SG" ~ c( "HUMAN_SHOTGUN", "Human_Shotgun" ),
     analysis_type == "RP" ~ c( "HUMAN_RP", "Human_RP" ),
+    analysis_type == "RM" ~ c( "HUMAN_RM", "Human_RM" ),
     ## Future analyses can be added here to pull those bams for eager processsing.
     TRUE ~ NA_character_
   )
@@ -75,7 +76,7 @@ parser <- add_option(parser, c("-s", "--sequencing_batch_id"), type = 'character
 parser <- add_option(parser, c("-a", "--analysis_type"), type = 'character',
                     action = "callback", dest = "analysis_type",
                     callback = validate_analysis_type, default=NA,
-                    help = "The analysis type to compile the data from. Should be one of: 'SG', 'TF'.")
+                    help = "The analysis type to compile the data from. Should be one of: 'SG', 'TF', 'RP', 'RM'.")
 parser <- add_option(parser, c("-r", "--rename"), type = 'logical',
                     action = 'store_true', dest = 'rename', default=F,
                     help = "Changes all dots (.) in the Library_ID field of the output to underscores (_).

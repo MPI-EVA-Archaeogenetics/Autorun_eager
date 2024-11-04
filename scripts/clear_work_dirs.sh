@@ -42,7 +42,7 @@ input_iids=($(cat ${ind_id_list_fn}))
 for ind_id in ${input_iids[@]}; do
   site_id=${ind_id:0:3} ## Site id is the first three characters of the individual ID
   errecho -ne "Clearing work directories for ${ind_id}..."
-  for analysis_type in "SG" "TF" "RP"; do
+  for analysis_type in "SG" "TF" "RP" "RM"; do
     if [[ -d ${root_eager_dir}/${analysis_type}/${site_id}/${ind_id}/work ]]; then
       errecho -ne " ${analysis_type}..."
       # ls -d ${root_eager_dir}/${analysis_type}/${site_id}/${ind_id}/work

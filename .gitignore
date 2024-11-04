@@ -17,3 +17,4 @@ eager_outputs_old/
 array_Logs/
 poseidon_packages/
 debug_tables/
+*.txt
