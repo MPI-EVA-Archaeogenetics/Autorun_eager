@@ -3,6 +3,19 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - XX/XX/XXXX
+
+### `Added`
+
+- `conf/Autorun.config`: Use hard links when publishing results, instead of copying files.
+- `scripts/create_poseidon_release.sh`: New script to create large releases of the entire TF processed data in Poseidon format.
+
+### `Fixed`
+
+### `Dependencies`
+
+### `Deprecated`
+
 ## [1.5.0] - 30/09/2024
 
 ### `Added`
