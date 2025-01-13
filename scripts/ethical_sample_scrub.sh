@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+## DEPENDENCY
+pandora_helper="/mnt/archgen/tools/helper_scripts/py_helpers/pyPandoraHelper/pyPandoraHelper.py"
+
 ## Helptext function
 function Helptext() {
   echo -ne "\t usage: $0 [options] <sensitive_seqIds_list>\n\n"
@@ -65,7 +68,7 @@ else
   for raw_iid in ${scrub_me[@]}; do
     for analysis_type in "SG" "TF" "RP" "RM"; do
       ## EAGER_INPUTS
-      site_id="${raw_iid:0:3}"
+      site_id=`${pandora_helper} -g site_id ${ind_id}` ## Site inferred by pyPandoraHelper
       eager_input_tsv="${root_input_dir}/${analysis_type}/${site_id}/${raw_iid}/${raw_iid}.tsv"
       ## If the eager inpput exists, hide the entire directory and make it inaccessible
       if [[ -f ${eager_input_tsv} ]]; then

@@ -9,10 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `conf/Autorun.config`: Use hard links when publishing results, instead of copying files.
 - `scripts/create_poseidon_release.sh`: New script to create large releases of the entire TF processed data in Poseidon format.
+- `scripts/clear_results.sh`: Now uses pyPandoraHelper to infer Site_ID from Ind_ID.
+- `scripts/clear_work_dirs.sh`: Now uses pyPandoraHelper to infer Site_ID from Ind_ID.
+- `scripts/ethical_sample_scrub.sh`: Now uses pyPandoraHelper to infer Site_ID from Ind_ID.
+- `scripts/run_Eager.sh`: Now uses pyPandoraHelper to infer Site_ID from Ind_ID.
+- `scripts/update_poseidon_packages.sh`: Now uses pyPandoraHelper to infer Site_ID from Ind_ID.
 
 ### `Fixed`
 
 ### `Dependencies`
+
+- pyPandoraHelper=0.1.0
 
 ### `Deprecated`
 

@@ -2,6 +2,9 @@
 
 ## This script accepts a list of individual IDs and clears the nextflow work directories for both SG and TF data processing of each ID.
 
+## DEPENDENCY
+pandora_helper="/mnt/archgen/tools/helper_scripts/py_helpers/pyPandoraHelper/pyPandoraHelper.py"
+
 ## Helptext function
 function Helptext() {
   echo -ne "\t usage: $0 [options] <ind_id_list>\n\n"
@@ -40,7 +43,7 @@ root_eager_dir='/mnt/archgen/Autorun_eager/eager_outputs' ## Directory should in
 input_iids=($(cat ${ind_id_list_fn}))
 
 for ind_id in ${input_iids[@]}; do
-  site_id=${ind_id:0:3} ## Site id is the first three characters of the individual ID
+  site_id=`${pandora_helper} -g site_id ${ind_id}` ## Site inferred by pyPandoraHelper
   errecho -ne "Clearing work directories for ${ind_id}..."
   for analysis_type in "SG" "TF" "RP" "RM"; do
     if [[ -d ${root_eager_dir}/${analysis_type}/${site_id}/${ind_id}/work ]]; then

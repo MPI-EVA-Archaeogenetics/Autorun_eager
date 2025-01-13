@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+## DEPENDENCY
+pandora_helper="/mnt/archgen/tools/helper_scripts/py_helpers/pyPandoraHelper/pyPandoraHelper.py"
+
 ## This script removes the results for an individiaul while maintaining the nextflow process cache for them.
 ##    It is intended as a way to refresh the results directories of an individual. This can be useful either
 ##    to remove older files after additional libraries appear and are therefore merged, or to remove results
@@ -79,7 +82,7 @@ input_iids=($(cat ${ind_id_list_fn}))
 ##    Both needed for caching. 
 ##    Also leave '1240k.imputed' and 'GTL_output' alone.
 for ind_id in ${input_iids[@]}; do
-  site_id=${ind_id:0:3} ## Site id is the first three characters of the individual ID
+  site_id=`${pandora_helper} -g site_id ${ind_id}` ## Site inferred by pyPandoraHelper
   dirs_to_delete=$(ls -1 -d ${root_eager_dir}/${analysis_type}/${site_id}/${ind_id}/* | grep -vw -e 'work' -e '1240k.imputed' -e 'GTL_output' -e 'pipeline_info')
   for dir in ${dirs_to_delete}; do
     errecho "Deleting results in: ${dir}"
