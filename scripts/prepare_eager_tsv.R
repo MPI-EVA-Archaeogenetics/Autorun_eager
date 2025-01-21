@@ -12,6 +12,13 @@ if (!require('pandora2eager')) {
   remotes::install_github('sidora-tools/pandora2eager', quiet=T)
 } else {library(pandora2eager)}
 
+## Need rPandoraHelper
+if (!require('rPandoraHelper')) {
+    write("Installing required local package 'rPandoraHelper'...", file=stderr())
+    install.packages("/mnt/archgen/tools/helper_scripts/r_helpers/rPandoraHelper/", repos = NULL, type = "source")
+    # require(rPandoraHelper)
+} else {require(rPandoraHelper)}
+
 require(purrr)
 require(dplyr, warn.conflicts = F)
 require(optparse)
@@ -30,7 +37,7 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
 
   ## Infer Individual Id(s) from input.
   ind_id <- data %>% select(individual.Full_Individual_Id) %>% distinct() %>% pull()
-  site_id <- substr(ind_id,1,3)
+  site_id <- rPandoraHelper::get_site_id(ind_id)
 
   if (rename) {
     data <- data %>% mutate(Library_ID=str_replace_all(Library_ID, "[.]", "_")) %>% ## Replace dots in the Library_ID to underscores.
