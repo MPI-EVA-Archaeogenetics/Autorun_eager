@@ -15,12 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `scripts/ethical_sample_scrub.sh`
   - `scripts/run_Eager.sh`
   - `scripts/update_poseidon_packages.sh`
+- The following scripts now use rPandoraHelper to infer Site_ID from Ind_ID:
+  - `scripts/prepare_eager_tsv.R`
+  - `scripts/fill_in_janno.R`
+- Now compatible with Pandora Site IDs longer than 3 letters.
 
 ### `Fixed`
 
 ### `Dependencies`
 
-- pyPandoraHelper=0.1.0
+- pyPandoraHelper=0.2.1
+- rPandoraHelper=0.2.0
 
 ### `Deprecated`
 
