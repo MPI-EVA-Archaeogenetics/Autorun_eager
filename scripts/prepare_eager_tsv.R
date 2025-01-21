@@ -61,10 +61,11 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
 ##    Only bams from the output autorun_name will be included in the output
 autorun_names_from_analysis_type <- function(analysis_type) {
   autorun_names <- case_when(
-    analysis_type == "TF" ~ c( "HUMAN_1240K", "Human_1240k" ),
+    analysis_type == "TF" ~ c( "HUMAN_1240K",   "Human_1240k" ),
     analysis_type == "SG" ~ c( "HUMAN_SHOTGUN", "Human_Shotgun" ),
-    analysis_type == "RP" ~ c( "HUMAN_RP", "Human_RP" ),
-    analysis_type == "RM" ~ c( "HUMAN_RM", "Human_RM" ),
+    analysis_type == "RP" ~ c( "HUMAN_RP",      "Human_RP" ),
+    analysis_type == "RM" ~ c( "HUMAN_RM",      "Human_RM" ),
+    analysis_type == "YC" ~ c( "HUMAN_Y",       "Human_Y" ),
     ## Future analyses can be added here to pull those bams for eager processsing.
     TRUE ~ NA_character_
   )
