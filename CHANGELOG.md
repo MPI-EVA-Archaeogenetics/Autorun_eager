@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added`
 
+- Processing of YC data. (Y + mtDNA capture (YMCA))
 - `conf/Autorun.config`: Use hard links when publishing results, instead of copying files.
 - `scripts/create_poseidon_release.sh`: New script to create large releases of the entire TF processed data in Poseidon format.
 - Now compatible with Pandora Site IDs longer than 3 letters.
