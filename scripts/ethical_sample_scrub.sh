@@ -3,6 +3,8 @@
 ## DEPENDENCY
 pandora_helper="/mnt/archgen/tools/helper_scripts/py_helpers/pyPandoraHelper/pyPandoraHelper.py"
 
+valid_analysis_types=("TF" "SG" "RP" "RM" "IM" "YC")
+
 ## Helptext function
 function Helptext() {
   echo -ne "\t usage: $0 [options] <sensitive_seqIds_list>\n\n"
@@ -66,7 +68,7 @@ else
 
   ## If the individuals were flagged as sensitive AFTER processing started, both the inputs and outputs should be made inaccessible.
   for raw_iid in ${scrub_me[@]}; do
-    for analysis_type in "SG" "TF" "RP" "RM"; do
+    for analysis_type in ${valid_analysis_types[@]}; do
       ## EAGER_INPUTS
       site_id=`${pandora_helper} -g site_id ${raw_iid}` ## Site inferred by pyPandoraHelper
       eager_input_tsv="${root_input_dir}/${analysis_type}/${site_id}/${raw_iid}/${raw_iid}.tsv"

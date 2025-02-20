@@ -40,3 +40,10 @@ find /mnt/archgen/Autorun/Results/Human_Y/2* -name '*.bam' -mtime -1 2>/dev/null
     echo "Processing YC data from run: ${RUN}"
     scripts/prepare_eager_tsv.R -s $RUN -a YC -o eager_inputs/ -d .eva_credentials
 done
+
+# Immunocapture
+# Note: this find only checks runs starting from 2020.  Silence stderr to avoid 'permission denied'.
+find /mnt/archgen/Autorun/Results/Human_IM/2* -name '*.bam' -mtime -1 2>/dev/null | cut -f 7 -d "/" | sort -u | while read RUN ; do
+    echo "Processing IM data from run: ${RUN}"
+    scripts/prepare_eager_tsv.R -s $RUN -a IM -o eager_inputs/ -d .eva_credentials
+done

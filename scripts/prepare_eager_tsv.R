@@ -27,7 +27,7 @@ require(stringr)
 
 ## Validate analysis type option input
 validate_analysis_type <- function(option, opt_str, value, parser) {
-  valid_entries <- c("TF", "SG", "RP", "RM", "YC") ## TODO comment: should this be embedded within the function? You would want to maybe update this over time no? 
+  valid_entries <- c("TF", "SG", "RP", "RM", "YC", "IM") ## TODO comment: should this be embedded within the function? You would want to maybe update this over time no? 
   ifelse(value %in% valid_entries, return(value), stop(call.=F, "\n[prepare_eager_tsv.R] error: Invalid analysis type: '", value, 
                                                       "'\nAccepted values: ", paste(valid_entries,collapse=", "),"\n\n"))
 }
@@ -66,6 +66,7 @@ autorun_names_from_analysis_type <- function(analysis_type) {
     analysis_type == "RP" ~ c( "HUMAN_RP",      "Human_RP" ),
     analysis_type == "RM" ~ c( "HUMAN_RM",      "Human_RM" ),
     analysis_type == "YC" ~ c( "HUMAN_Y",       "Human_Y" ),
+    analysis_type == "IM" ~ c( "HUMAN_IM",      "Human_IM" ),
     ## Future analyses can be added here to pull those bams for eager processsing.
     TRUE ~ NA_character_
   )
@@ -84,7 +85,7 @@ parser <- add_option(parser, c("-s", "--sequencing_batch_id"), type = 'character
 parser <- add_option(parser, c("-a", "--analysis_type"), type = 'character',
                     action = "callback", dest = "analysis_type",
                     callback = validate_analysis_type, default=NA,
-                    help = "The analysis type to compile the data from. Should be one of: 'SG', 'TF', 'RP', 'RM', 'YC'.")
+                    help = "The analysis type to compile the data from. Should be one of: 'SG', 'TF', 'RP', 'RM', 'YC', 'IM'.")
 parser <- add_option(parser, c("-r", "--rename"), type = 'logical',
                     action = 'store_true', dest = 'rename', default=F,
                     help = "Changes all dots (.) in the Library_ID field of the output to underscores (_).

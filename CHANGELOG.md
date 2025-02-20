@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Added`
 
 - Processing of YC data. (Y + mtDNA capture (YMCA))
+- Processing of IM data. (Immunocapture)
 - `conf/Autorun.config`: 
   - Use hard links when publishing results, instead of copying files.
   - Add YC profile for processing YMCA data.
@@ -23,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - The following scripts can now infer Site_ID of varied lengths from the Ind_ID (rPandoraHelper):
     - `scripts/prepare_eager_tsv.R`
     - `scripts/fill_in_janno.R`
+- Refactor how valid analysis types are determined in shell scripts, to make more easily extendable.
 
 ### `Fixed`
 

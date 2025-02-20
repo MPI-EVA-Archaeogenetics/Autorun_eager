@@ -5,10 +5,12 @@
 ## DEPENDENCY
 pandora_helper="/mnt/archgen/tools/helper_scripts/py_helpers/pyPandoraHelper/pyPandoraHelper.py"
 
+valid_analysis_types=("TF" "SG" "RP" "RM" "IM" "YC")
+
 ## Helptext function
 function Helptext() {
   echo -ne "\t usage: $0 [options] <ind_id_list>\n\n"
-  echo -ne "This script clears the work directories of individuals in a specified individual ID list from both the SG and TF results directories.\n\n"
+  echo -ne "This script clears the work directories of individuals in a specified individual ID list from all results directories.\n\n"
   echo -ne "Options:\n"
   echo -ne "-h, --help\t\tPrint this text and exit.\n"
 }
@@ -45,7 +47,7 @@ input_iids=($(cat ${ind_id_list_fn}))
 for ind_id in ${input_iids[@]}; do
   site_id=`${pandora_helper} -g site_id ${ind_id}` ## Site inferred by pyPandoraHelper
   errecho -ne "Clearing work directories for ${ind_id}..."
-  for analysis_type in "SG" "TF" "RP" "RM"; do
+  for analysis_type in ${valid_analysis_types[@]}; do
     if [[ -d ${root_eager_dir}/${analysis_type}/${site_id}/${ind_id}/work ]]; then
       errecho -ne " ${analysis_type}..."
       # ls -d ${root_eager_dir}/${analysis_type}/${site_id}/${ind_id}/work
