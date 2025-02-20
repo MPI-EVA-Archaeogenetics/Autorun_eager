@@ -8,7 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Added`
 
 - Processing of YC data. (Y + mtDNA capture (YMCA))
-- `conf/Autorun.config`: Use hard links when publishing results, instead of copying files.
+- `conf/Autorun.config`: 
+  - Use hard links when publishing results, instead of copying files.
+  - Add YC profile for processing YMCA data.
+  - Add IM profile for processing Immunocapture data.
 - `scripts/create_poseidon_release.sh`: New script to create large releases of the entire TF processed data in Poseidon format.
 - Now compatible with Pandora Site IDs longer than 3 letters.
   - The following scripts can now infer Site_ID of varied lengths from the Ind_ID (pyPandoraHelper):
