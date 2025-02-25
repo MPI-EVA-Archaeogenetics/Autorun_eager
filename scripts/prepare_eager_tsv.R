@@ -53,7 +53,7 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
   data %>% select(-individual.Full_Individual_Id) %>%  readr::write_tsv(file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
 
   ## Print Autorun_eager version to file
-  AE_version <- "1.6.0"
+  AE_version <- "1.6.1"
   cat(AE_version, file=paste0(ind_dir,"/autorun_eager_version.txt"), fill=T, append = F)
 }
 
@@ -139,7 +139,12 @@ complete_pandora_table <- join_pandora_tables(
   )
 ) %>% 
   convert_all_ids_to_values(., con = con) %>%
-  filter(sample.Ethically_culturally_sensitive == FALSE) ## Exclude ethically/culturally sensitive data. Conservative since it excludes NAs
+  filter(
+      ## Exclude ethically/culturally sensitive data. Conservative since it excludes NAs
+      sample.Ethically_culturally_sensitive == FALSE,
+      ## Exclude marked sequencing entities
+      sequencing.Exclude == FALSE
+    )
 
 tibble_input_iids <- complete_pandora_table %>% filter(sequencing.Run_Id == sequencing_batch_id) %>% select(individual.Full_Individual_Id) %>% distinct()
 
