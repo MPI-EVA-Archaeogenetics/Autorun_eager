@@ -146,7 +146,13 @@ complete_pandora_table <- join_pandora_tables(
       sequencing.Exclude == FALSE
     )
 
-tibble_input_iids <- complete_pandora_table %>% filter(sequencing.Run_Id == sequencing_batch_id) %>% select(individual.Full_Individual_Id) %>% distinct()
+## Any individuals with a Main_Individual_ID set in Pandora need to be included in the list of individuals to process.
+## First get the list of Full_Individual_IDs in the sequencing run
+fiid_list <- complete_pandora_table %>% filter(sequencing.Run_Id == sequencing_batch_id) %>% select(individual.Full_Individual_Id) %>% distinct()
+## Then get the list of non-missing Main_Individual_IDs in the sequencing run. Change the column name to match the Full_individual_Id column name.
+miid_list <- complete_pandora_table %>% filter(sequencing.Run_Id == sequencing_batch_id, individual.Main_Individual_Id != "") %>% select(individual.Full_Individual_Id=individual.Main_Individual_Id) %>% distinct()
+## Combine the two lists and remove duplicates
+tibble_input_iids <- bind_rows(fiid_list, miid_list) %>% distinct()
 
 ## Get protocol tab with udg and strandedness info for each library protocol
   pandora_library_protocol_info <- pandora2eager:::load_library_protocol_info(con)
