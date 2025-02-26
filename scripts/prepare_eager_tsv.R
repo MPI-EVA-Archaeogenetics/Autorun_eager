@@ -36,7 +36,7 @@ validate_analysis_type <- function(option, opt_str, value, parser) {
 save_ind_tsv <- function(data, rename, output_dir, ...) {
 
   ## Infer Individual Id(s) from input.
-  ind_id <- data %>% select(individual.Full_Individual_Id) %>% distinct() %>% pull()
+  ind_id <- data %>% select(target_ind) %>% distinct() %>% pull()
   site_id <- rPandoraHelper::get_site_id(ind_id)
 
   if (rename) {
@@ -50,7 +50,7 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
   if (!dir.exists(ind_dir)) {write(paste0("[prepare_eager_tsv.R]: Creating output directory '",ind_dir,"'"), stdout())}
   
   dir.create(ind_dir, showWarnings = F, recursive = T) ## Create output directory and subdirs if they do not exist.
-  data %>% select(-individual.Full_Individual_Id) %>%  readr::write_tsv(file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
+  data %>% ungroup() %>% select(-target_ind) %>%  readr::write_tsv(file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
 
   ## Print Autorun_eager version to file
   AE_version <- "1.6.1"
@@ -95,7 +95,9 @@ parser <- add_option(parser, c("-r", "--rename"), type = 'logical',
 parser <- add_option(parser, c("-w", "--whitelist"), type = 'character',
                     action = 'store', dest = 'whitelist_fn', default=NA_character_,
                     help = "An optional file that includes the IDs of whitelisted individuals,
-			one per line. Only the TSVs for these individuals will be updated."
+			one per line. Only the TSVs for these individuals will be updated.
+			Please note that the whitelist should contain the Main_Individual_ID of an individual,
+			not its Full_Individual_ID, if you want to include it in the output."
                     )
 parser <- add_option(parser, c("-o", "--outDir"), type = 'character',
                     action = "store", dest = "outdir",
@@ -155,14 +157,21 @@ miid_list <- complete_pandora_table %>% filter(sequencing.Run_Id == sequencing_b
 tibble_input_iids <- bind_rows(fiid_list, miid_list) %>% distinct()
 
 ## Get protocol tab with udg and strandedness info for each library protocol
-  pandora_library_protocol_info <- pandora2eager:::load_library_protocol_info(con)
+pandora_library_protocol_info <- pandora2eager:::load_library_protocol_info(con)
 
 ## Pull information from pandora, keeping only matching IIDs and requested Sequencing types.
 results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individual.Full_Individual_Id"="individual.Full_Individual_Id")) %>%
   filter(grepl(paste0("\\.", analysis_type), sequencing.Full_Sequencing_Id), analysis.Analysis_Id %in% autorun_names_from_analysis_type(analysis_type)) %>%
-  select(individual.Full_Individual_Id,individual.Organism,library.Full_Library_Id,library.Protocol,analysis.Result_Directory,sequencing.Sequencing_Id,sequencing.Full_Sequencing_Id,sequencing.Single_Stranded) %>%
+  select(individual.Full_Individual_Id,individual.Main_Individual_Id,individual.Organism,library.Full_Library_Id,library.Protocol,analysis.Result_Directory,sequencing.Sequencing_Id,sequencing.Full_Sequencing_Id,sequencing.Single_Stranded) %>%
   distinct() %>% ## Need distinct() call because of how analysis tab is read in, which created one copy of each row per analysis field.
-  group_by(individual.Full_Individual_Id) %>%
+  mutate(
+    target_ind = case_when(
+      individual.Main_Individual_Id == "" ~ individual.Full_Individual_Id,
+      TRUE ~ individual.Main_Individual_Id
+    )
+  ) %>%
+  ## Grouping by target_ind needed so the Lane counter restarts per target_ind.
+  group_by(target_ind) %>%
   filter(!is.na(analysis.Result_Directory)) %>% ## Exclude individuals with no results directory (seem to mostly be controls)
   mutate(
     ## Older entries have analysis directories pointing to projects1. These are in /mnt/archgen in EVA. 
@@ -187,17 +196,17 @@ results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individua
     R2=NA,
     ## Add `_ss` to sample name for ssDNA libraries. Avoids file name collisions and allows easier merging of genotypes for end users.
     Sample_Name = case_when(
-      sequencing.Single_Stranded == 'yes' ~ paste0(individual.Full_Individual_Id, "_ss"),
-      TRUE ~ individual.Full_Individual_Id
+      sequencing.Single_Stranded == 'yes' ~ paste0(target_ind, "_ss"),
+      TRUE ~ target_ind
     ),
     ## Also add the suffix to the Sample_ID part of the Library_ID. This ensures that in the MultiQC report, the ssDNA libraries will be sorted after the ssDNA sample.
     Library_ID = case_when(
-      sequencing.Single_Stranded == 'yes' ~ paste0(Sample_Name, ".", stringr::str_split_fixed(library.Full_Library_Id, "\\.", 2)[,2]),
+      sequencing.Single_Stranded == 'yes' ~ sub("\\.", "_ss.", library.Full_Library_Id),
       TRUE ~ library.Full_Library_Id
     )
   ) %>%
   select(
-    individual.Full_Individual_Id, ## Still used for grouping, so ss and ds results of the same sample end up in the same TSV.
+    target_ind, ## Still used for grouping, so ss and ds results of the same sample end up in the same TSV.
     "Sample_Name",
     "Library_ID",
     "Lane",
@@ -218,9 +227,9 @@ if ( opts$debug ) { write_tsv(results, file=paste0(sequencing_batch_id, ".", ana
 if (! is.na(whitelist_fn) ){
   whitelist <- read_tsv(whitelist_fn, col_types='c', col_names='Pandora_ID')
   
-  results <- results %>% filter(individual.Full_Individual_Id %in% whitelist$Pandora_ID)
+  results <- results %>% filter(target_ind %in% whitelist$Pandora_ID)
   # write_tsv(results, file=paste0(sequencing_batch_id, ".", analysis_type, ".whitelist.results.txt"))
 }
 
 ## Group by individual IDs and save each chunk as TSV
-results %>% group_by(individual.Full_Individual_Id) %>% group_walk(~save_ind_tsv(., rename=F, output_dir=output_dir), .keep=T)
+results %>% group_by(target_ind) %>% group_walk(~save_ind_tsv(., rename=F, output_dir=output_dir), .keep=T)
