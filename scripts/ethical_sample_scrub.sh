@@ -74,6 +74,8 @@ else
       eager_input_tsv="${root_input_dir}/${analysis_type}/${site_id}/${raw_iid}/${raw_iid}.tsv"
       ## If the eager inpput exists, hide the entire directory and make it inaccessible
       if [[ -f ${eager_input_tsv} ]]; then
+        errecho "Scrubbing ${raw_iid} from ${analysis_type}"
+        errecho "    ${raw_iid} ${eager_input_tsv}"
         old_name=$(dirname ${eager_input_tsv})
         new_name=$(dirname ${old_name})/.${raw_iid}
         mv -v ${old_name} ${new_name} ## Hide the input directory
@@ -83,6 +85,7 @@ else
       ## EAGER_OUTPUTS
       eager_output_dir="${root_output_dir}/${analysis_type}/${site_id}/${raw_iid}/"
       if [[ -d ${eager_output_dir} ]]; then
+        errecho "    ${rawiid} ${eager_output_dir}"
         new_outdir_name=$(dirname ${eager_output_dir})/.${raw_iid}
         mv -v ${eager_output_dir} ${new_outdir_name} ## Hide the output directory
         chmod 0700 ${new_outdir_name}                ## Restrict the directory contents
