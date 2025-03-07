@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
+## DEPENDENCY
+pandora_helper="/mnt/archgen/tools/helper_scripts/py_helpers/pyPandoraHelper/pyPandoraHelper.py"
+
 ## Defaults
+valid_analysis_types=("TF" "SG" "RP" "RM" "IM" "YC")
 rush=''
 array=''
 temp_file=''
@@ -35,27 +39,17 @@ Yellow=$(tput sgr0)'\033[1;33m' ## Yellow normal face
 
 ## Since I'm running through all data every time, the runtime of the script will increase marginally over time. 
 ## Maybe create a list of eager inputs that are newer than the MQC reports and use that to loop over?
-for analysis_type in "SG" "TF" "RP" "RM"; do
+for analysis_type in ${valid_analysis_types[@]}; do
     # echo ${analysis_type}
     analysis_profiles="${nextflow_profiles},${analysis_type}"
     # echo "${root_input_dir}/${analysis_type}"
     for eager_input in ${root_input_dir}/${analysis_type}/*/*/*.tsv; do
         ## Set output directory name from eager input name
         ind_id=$(basename ${eager_input} .tsv)
-        site_id="${ind_id:0:3}"
+        site_id=`${pandora_helper} -g site_id ${ind_id}` ## Site inferred by pyPandoraHelper
         eager_output_dir="${root_output_dir}/${analysis_type}/${site_id}/${ind_id}"
 
         run_name="-resume" ## To be changed once/if a way to give informative run names becomes available
-        
-        ## TODO Give informative run names for easier trackingin tower.nf
-        ##  If the output directory exists, assume you need to resume a run, else just name it
-        # if [[ -d "${eager_output_dir}" ]]; then
-        #     command_string="-resume"
-        # else
-        #     command_string="-name"
-        # fi
-        # ## Run name is individual ID followed by analysis_type. -resume or -name added as appropriate
-        # run_name="${command_string} $(basename ${eager_input} .tsv)_${analysis_type}"
 
         ## If no multiqc_report exists (last step of eager), or TSV is newer than the report, start an eager run.
         #### Always running with resume will ensure runs are only ever resumed instead of restarting.
@@ -119,7 +113,7 @@ if [[ ${array} == 'TRUE' ]]; then
     mkdir -p /mnt/archgen/Autorun_eager/array_Logs/$(basename ${temp_file}) ## Create new directory for the logs for more traversable structure
     jn=$(wc -l ${temp_file} | cut -f 1 -d " ") ## number of jobs equals number of lines
     export NXF_OPTS='-Xms6G -Xmx6G' ## Set 4GB limit to Nextflow VM
-    export JAVA_OPTS='-Xms12G -Xmx12G' ## Set 8GB limit to Java VM
+    export JAVA_OPTS='-Xms12G -Xmx12G -XX:ParallelGCThreads=1' ## Set 8GB limit to Java VM. Single GarbageCollecteor thread
     ## -V Pass environment to job (includes nxf/java opts)
     ## -S /bin/bash Use bash
     ## -l v_hmem=40G ## 40GB memory limit (8 for java + the rest for garbage collector)

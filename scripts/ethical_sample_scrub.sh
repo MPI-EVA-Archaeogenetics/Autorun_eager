@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+## DEPENDENCY
+pandora_helper="/mnt/archgen/tools/helper_scripts/py_helpers/pyPandoraHelper/pyPandoraHelper.py"
+
+valid_analysis_types=("TF" "SG" "RP" "RM" "IM" "YC")
+
 ## Helptext function
 function Helptext() {
   echo -ne "\t usage: $0 [options] <sensitive_seqIds_list>\n\n"
@@ -63,12 +68,14 @@ else
 
   ## If the individuals were flagged as sensitive AFTER processing started, both the inputs and outputs should be made inaccessible.
   for raw_iid in ${scrub_me[@]}; do
-    for analysis_type in "SG" "TF" "RP" "RM"; do
+    for analysis_type in ${valid_analysis_types[@]}; do
       ## EAGER_INPUTS
-      site_id="${raw_iid:0:3}"
+      site_id=`${pandora_helper} -g site_id ${raw_iid}` ## Site inferred by pyPandoraHelper
       eager_input_tsv="${root_input_dir}/${analysis_type}/${site_id}/${raw_iid}/${raw_iid}.tsv"
       ## If the eager inpput exists, hide the entire directory and make it inaccessible
       if [[ -f ${eager_input_tsv} ]]; then
+        errecho "Scrubbing ${raw_iid} from ${analysis_type}"
+        errecho "    ${raw_iid} ${eager_input_tsv}"
         old_name=$(dirname ${eager_input_tsv})
         new_name=$(dirname ${old_name})/.${raw_iid}
         mv -v ${old_name} ${new_name} ## Hide the input directory
@@ -78,6 +85,7 @@ else
       ## EAGER_OUTPUTS
       eager_output_dir="${root_output_dir}/${analysis_type}/${site_id}/${raw_iid}/"
       if [[ -d ${eager_output_dir} ]]; then
+        errecho "    ${rawiid} ${eager_output_dir}"
         new_outdir_name=$(dirname ${eager_output_dir})/.${raw_iid}
         mv -v ${eager_output_dir} ${new_outdir_name} ## Hide the output directory
         chmod 0700 ${new_outdir_name}                ## Restrict the directory contents

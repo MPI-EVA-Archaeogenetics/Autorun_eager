@@ -3,6 +3,43 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 07/03/2025
+
+### `Added`
+
+- Processing of YC data. (Y + mtDNA capture (YMCA))
+- Processing of IM data. (Immunocapture)
+- `conf/Autorun.config`: 
+  - Use hard links when publishing results, instead of copying files.
+  - Add YC profile for processing YMCA data.
+  - Add IM profile for processing Immunocapture data.
+- `scripts/create_poseidon_release.sh`: New script to create large releases of the entire TF processed data in Poseidon format.
+- Now compatible with Pandora Site IDs longer than 3 letters.
+  - The following scripts can now infer Site_ID of varied lengths from the Ind_ID (pyPandoraHelper):
+    - `scripts/clear_results.sh`
+    - `scripts/clear_work_dirs.sh`
+    - `scripts/ethical_sample_scrub.sh`
+    - `scripts/run_Eager.sh`
+    - `scripts/update_poseidon_packages.sh`
+  - The following scripts can now infer Site_ID of varied lengths from the Ind_ID (rPandoraHelper):
+    - `scripts/prepare_eager_tsv.R`
+    - `scripts/fill_in_janno.R`
+- Refactor how valid analysis types are determined in shell scripts, to make more easily extendable.
+- `scripts/prepare_eager_tsv.R`: 
+  - Now uses Main_Individual_ID instead of Full_Individual_ID as the Sample_Name when one is provided.
+  - Now excludes sequencing entries with the `Exclude` flag set to `Yes`.
+- `scripts/create_processed_ind_list.sh`: Script to create a list of processed individuals across all analysis types, and a count of individuals in each analysis type.
+
+### `Fixed`
+- `scripts/run_Eager.sh`: Java garbage collector now limited to one thread to avoid memory issues and hanging spawner jobs.
+
+### `Dependencies`
+
+- pyPandoraHelper=0.2.1
+- rPandoraHelper=0.2.0
+
+### `Deprecated`
+
 ## [1.5.0] - 30/09/2024
 
 ### `Added`
@@ -15,6 +52,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `scripts/ethical_sample_scrub.sh`: Add RP analysis type for ethical sample scrubbing.
   - `scripts/clear_work_dirs.sh`: Add RP analysis type for work directory clearing.
   - `scripts/clear_results.sh`: Add RP analysis type for results directory clearing.
+- `scripts/update_poseidon_packages.sh`: Bump version for new release.
+- `README.md`: Updated to list new state of the pipeline.
 
 ### `Fixed`
 

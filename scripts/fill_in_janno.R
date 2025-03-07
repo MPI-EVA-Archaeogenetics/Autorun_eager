@@ -18,6 +18,11 @@ if (!require('poseidonR')) {
     remotes::install_github('poseidon-framework/poseidonR')
     # require(poseidonR)
 } else {require(poseidonR)}
+if (!require('rPandoraHelper')) {
+    write("Installing required local package 'rPandoraHelper'...", file=stderr())
+    install.packages("/mnt/archgen/tools/helper_scripts/r_helpers/rPandoraHelper/", repos = NULL, type = "source")
+    # require(rPandoraHelper)
+} else {require(rPandoraHelper)}
 
 ## Parse arguments ----------------------------
 parser <- OptionParser()
@@ -73,8 +78,11 @@ if (args$output_fn == "") {
 input_janno_table <- eager2poseidon::standardise_janno(args$janno_fn)
 
 ## Create new column `Pandora_ID` that removes the ss_suffix (if present) from the Poseidon ID to infer the Pandora_ID of the individual.
+## Uses rParndoraHelper::get_ind_id to infer the Pandora ID of the individual.
 sample_ids <- dplyr::select(input_janno_table, Poseidon_ID) %>%
-  dplyr::mutate(Pandora_ID=sub(paste0(args$ss_suffix,"$"), '', .data$Poseidon_ID))
+  rowwise() %>%
+  dplyr::mutate(Pandora_ID=rPandoraHelper::get_ind_id(Poseidon_ID, keep_ss_suffix=F )) %>%
+  ungroup()
 
 ##################
 ## Pandora info ##
@@ -86,13 +94,16 @@ pandora_results <- eager2poseidon::import_pandora_data(sample_ids %>% dplyr::sel
   ## drop Pandora_ID column. not needed anymore
   dplyr::select(-Pandora_ID)
 
+## Use rPandoraHelper to infer Pandora IDs from input ind_id
+pandora_site_id <- rPandoraHelper::get_site_id(args$ind_id, keep_ss_suffix=F)
+pandora_ind_id  <- rPandoraHelper::get_ind_id(args$ind_id, keep_ss_suffix=F)
 ## Infer locations of different JSONs to read results in with eagerR. (More flexible than e2p and can pull results from SG runs if present)
 base_dir <- "/mnt/archgen/Autorun_eager"
 # base_dir <- "/Users/lamnidis/mount"
-eager_tsv_fn <- paste0(base_dir, "/eager_inputs/TF/", substr(args$ind_id,0,3), "/", args$ind_id,"/", args$ind_id, ".tsv")
-eager_tf_results_dir <- paste0(base_dir, "/eager_outputs/TF/", substr(args$ind_id,0,3), "/", args$ind_id,"/")
-eager_sg_endorspy_dir <- paste0(base_dir, "/eager_outputs/SG/", substr(args$ind_id,0,3), "/", args$ind_id,"/endorspy/")
-eager_sg_damageprofiler_dir <- paste0(base_dir, "/eager_outputs/SG/", substr(args$ind_id,0,3), "/", args$ind_id,"/damageprofiler/")
+eager_tsv_fn <- paste0(base_dir, "/eager_inputs/TF/", pandora_site_id, "/", pandora_ind_id,"/", pandora_ind_id, ".tsv")
+eager_tf_results_dir <- paste0(base_dir, "/eager_outputs/TF/", pandora_site_id, "/", pandora_ind_id,"/")
+eager_sg_endorspy_dir <- paste0(base_dir, "/eager_outputs/SG/", pandora_site_id, "/", pandora_ind_id,"/endorspy/")
+eager_sg_damageprofiler_dir <- paste0(base_dir, "/eager_outputs/SG/", pandora_site_id, "/", pandora_ind_id,"/damageprofiler/")
 
 ##############
 ## TSV info ##
@@ -194,6 +205,7 @@ updated_columns <- eager2poseidon::compile_eager_result_tables(
     "Capture_Type"
   ))) %>%
   ## Remove ss_suffix from library names, so they match Pandora Library IDs
+  ## NOTE: Should this be changed to use rPandoraHelper? Would require some tweaking to work with list columns, as it currently expects a single ID.
   dplyr::mutate(
     Library_Names=gsub('_ss','',.data$Library_Names) %>% vctrs::vec_unique()
   ) %>%
