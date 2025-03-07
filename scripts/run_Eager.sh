@@ -113,7 +113,7 @@ if [[ ${array} == 'TRUE' ]]; then
     mkdir -p array_Logs/$(basename ${temp_file}) ## Create new directory for the logs for more traversable structure
     jn=$(wc -l ${temp_file} | cut -f 1 -d " ") ## number of jobs equals number of lines
     export NXF_OPTS='-Xms4G -Xmx4G' ## Set 4GB limit to Nextflow VM
-    export JAVA_OPTS='-Xms8G -Xmx8G' ## Set 8GB limit to Java VM
+    export JAVA_OPTS='-Xms8G -Xmx8G -XX:ParallelGCThreads=1' ## Set 8GB limit to Java VM. Single GarbageCollecteor thread
     ## -V Pass environment to job (includes nxf/java opts)
     ## -S /bin/bash Use bash
     ## -l v_hmem=40G ## 40GB memory limit (8 for java + the rest for garbage collector)
