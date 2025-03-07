@@ -28,9 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `scripts/prepare_eager_tsv.R`: 
   - Now uses Main_Individual_ID instead of Full_Individual_ID as the Sample_Name when one is provided.
   - Now excludes sequencing entries with the `Exclude` flag set to `Yes`.
-- `scripts/run_Eager.sh`: Java garbage collector now limited to one thread to avoid memory issues and hanging spawner jobs.
+- `scripts/create_processed_ind_list.sh`: Script to create a list of processed individuals across all analysis types, and a count of individuals in each analysis type.
 
 ### `Fixed`
+- `scripts/run_Eager.sh`: Java garbage collector now limited to one thread to avoid memory issues and hanging spawner jobs.
 
 ### `Dependencies`
 
