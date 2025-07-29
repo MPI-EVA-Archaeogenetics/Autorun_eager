@@ -148,7 +148,7 @@ if [[ ! -d ${output_dir} ]] && [[ -f ${input_dir}/pileupcaller.single.geno ]] &&
     ##  Only created now to not trip up the script if execution did not run through fully.
     mkdir -p $(dirname ${output_dir})
 
-    ## Add AE version file to package
+    ## Add packager version file to package (wrongly called this AE version, but will leave as is to avoid confusion.)
     echo "${VERSION}" > ${TEMPDIR}/${ind_id}/AE_version.txt
 
     ## Move package to live

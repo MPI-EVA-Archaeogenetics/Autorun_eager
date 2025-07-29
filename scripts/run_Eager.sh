@@ -4,7 +4,7 @@
 pandora_helper="/mnt/archgen/tools/helper_scripts/py_helpers/pyPandoraHelper/pyPandoraHelper.py"
 
 ## Defaults
-valid_analysis_types=("TF" "SG" "RP" "RM" "IM" "YC")
+valid_analysis_types=("TF" "TM" "SG" "RP" "RM" "IM" "YC")
 rush=''
 array=''
 temp_file=''
@@ -112,7 +112,7 @@ done
 if [[ ${array} == 'TRUE' ]]; then
     mkdir -p /mnt/archgen/Autorun_eager/array_Logs/$(basename ${temp_file}) ## Create new directory for the logs for more traversable structure
     jn=$(wc -l ${temp_file} | cut -f 1 -d " ") ## number of jobs equals number of lines
-    export NXF_OPTS='-Xms6G -Xmx6G' ## Set 4GB limit to Nextflow VM
+    export NXF_OPTS='-Xms6G -Xmx6G -XX:ParallelGCThreads=1' ## Set 4GB limit to Nextflow VM
     export JAVA_OPTS='-Xms12G -Xmx12G -XX:ParallelGCThreads=1' ## Set 8GB limit to Java VM. Single GarbageCollecteor thread
     ## -V Pass environment to job (includes nxf/java opts)
     ## -S /bin/bash Use bash

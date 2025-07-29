@@ -27,7 +27,7 @@ require(stringr)
 
 ## Validate analysis type option input
 validate_analysis_type <- function(option, opt_str, value, parser) {
-  valid_entries <- c("TF", "SG", "RP", "RM", "YC", "IM") ## TODO comment: should this be embedded within the function? You would want to maybe update this over time no? 
+  valid_entries <- c("TF", "TM", "SG", "RP", "RM", "YC", "IM") ## TODO comment: should this be embedded within the function? You would want to maybe update this over time no? 
   ifelse(value %in% valid_entries, return(value), stop(call.=F, "\n[prepare_eager_tsv.R] error: Invalid analysis type: '", value, 
                                                       "'\nAccepted values: ", paste(valid_entries,collapse=", "),"\n\n"))
 }
@@ -53,7 +53,7 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
   data %>% ungroup() %>% select(-target_ind) %>%  readr::write_tsv(file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
 
   ## Print Autorun_eager version to file
-  AE_version <- "1.6.1"
+  AE_version <- "1.6.2"
   cat(AE_version, file=paste0(ind_dir,"/autorun_eager_version.txt"), fill=T, append = F)
 }
 
@@ -62,6 +62,7 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
 autorun_names_from_analysis_type <- function(analysis_type) {
   autorun_names <- case_when(
     analysis_type == "TF" ~ c( "HUMAN_1240K",   "Human_1240k" ),
+    analysis_type == "TM" ~ c( "HUMAN_TM",      "Human_TM" ),
     analysis_type == "SG" ~ c( "HUMAN_SHOTGUN", "Human_Shotgun" ),
     analysis_type == "RP" ~ c( "HUMAN_RP",      "Human_RP" ),
     analysis_type == "RM" ~ c( "HUMAN_RM",      "Human_RM" ),

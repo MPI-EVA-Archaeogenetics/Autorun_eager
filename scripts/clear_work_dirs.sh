@@ -5,7 +5,7 @@
 ## DEPENDENCY
 pandora_helper="/mnt/archgen/tools/helper_scripts/py_helpers/pyPandoraHelper/pyPandoraHelper.py"
 
-valid_analysis_types=("TF" "SG" "RP" "RM" "IM" "YC")
+valid_analysis_types=("TF" "TM" "SG" "RP" "RM" "IM" "YC")
 
 ## Helptext function
 function Helptext() {

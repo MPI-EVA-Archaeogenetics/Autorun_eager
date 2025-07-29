@@ -4,13 +4,16 @@ Automated nf-core/eager processing of Autorun output bams.
 
 ## Quickstart
 
-- Run `prepare_eager_tsv.R` for human SG, TF, RP, or RM data for a given sequencing batch:
+- Run `prepare_eager_tsv.R` for human SG, TF, TM, RP, RM, IM, or YC data for a given sequencing batch:
 
     ```bash
     prepare_eager_tsv.R -s <batch_Id> -a SG -o eager_inputs/ -d .eva_credentials
     prepare_eager_tsv.R -s <batch_Id> -a TF -o eager_inputs/ -d .eva_credentials
+    prepare_eager_tsv.R -s <batch_Id> -a TM -o eager_inputs/ -d .eva_credentials
     prepare_eager_tsv.R -s <batch_Id> -a RP -o eager_inputs/ -d .eva_credentials
     prepare_eager_tsv.R -s <batch_Id> -a RM -o eager_inputs/ -d .eva_credentials
+    prepare_eager_tsv.R -s <batch_Id> -a IM -o eager_inputs/ -d .eva_credentials
+    prepare_eager_tsv.R -s <batch_Id> -a YC -o eager_inputs/ -d .eva_credentials
     ```
 
 - Run eager with the following script, which then runs on the generated TSV files:
@@ -24,7 +27,7 @@ In such cases, an eager input TSV will still be created, but UDG treatment for a
 
 ## Autorun.config
 
-Contains the `autorun`, `local_paths`, `SG`, `TF`, `RP`, and `RM`  profiles.
+Contains the `autorun`, `local_paths`, `SG`, `TF`, `TM`, `RP`, `RM`, `IM`, and `YC`  profiles.
 
 ### autorun
 
@@ -45,6 +48,10 @@ The standardised parameters for processing human shotgun data.
 
 The standardised parameters for processing human 1240k capture data.
 
+### TM
+
+The standardised parameters for processing human 1240k+MT capture data.
+
 ### RP
 
 The standardised parameters for processing human Twist capture data.
@@ -52,6 +59,14 @@ The standardised parameters for processing human Twist capture data.
 ### RM
 
 The standardised parameters for processing human Twist+MT capture data.
+
+### IM
+
+The standardised parameters for processing human Immuno-capture data.
+
+### YC
+
+The standardised parameters for processing human Y+MT (YMCA) capture data.
 
 ## prepare_eager_tsv.R
 
@@ -71,7 +86,7 @@ Options:
 			from the individual
 
 	-a ANALYSIS_TYPE, --analysis_type=ANALYSIS_TYPE
-		The analysis type to compile the data from. Should be one of: 'SG', 'TF', 'RP', 'RM'.
+		The analysis type to compile the data from. Should be one of: 'SG', 'TF', 'RP', 'RM', 'YC', 'IM'.
 
 	-r, --rename
 		Changes all dots (.) in the Library_ID field of the output to underscores (_).
@@ -105,11 +120,23 @@ eager_inputs
 │   └──ABC
 │       ├── ABC001
 │       └── ABC002
+├── TM
+│   └──ABC
+│       ├── ABC001
+│       └── ABC002
 ├── RP
 │   └──ABC
 │       ├── ABC001
 │       └── ABC002
-└── RM
+├── RM
+│   └──ABC
+│       ├── ABC001
+│       └── ABC002
+├── YC
+│   └──ABC
+│       ├── ABC001
+│       └── ABC002
+└── IM
     └──ABC
          ├── ABC001
          └── ABC002
@@ -119,11 +146,9 @@ Alongside each created TSV is a file named `autorun_eager_version.txt`, which st
 
 ## run_Eager.sh
 
-A wrapper shell script that goes through all TSVs in the `eager_inputs` directory, checks if a completed run exists for a given TSV, and submits/resumes an
-eager run for that individual if necessary.
+A wrapper shell script that goes through all TSVs in the `eager_inputs` directory, checks if a completed run exists for a given TSV, and submits/resumes an eager run for that individual if necessary.
 
-Currently uses eager version `2.4.5` and profiles `eva,archgen,medium_data,autorun,local_paths` across all runs, with the `SG` or `TF` profiles used for their respective
-data types.
+Currently uses eager version `2.5.0` and profiles `eva,archgen,medium_data,autorun,local_paths` across all runs, with the appropriate profile.
 
 The outputs are saved with the same directory structure as the inputs, but in a separate parent directory.
 
@@ -215,3 +240,13 @@ Options:
 -h, --help		Print this text and exit.
 -a, --analysis_type		Set the analysis type. Options: TF, SG.
 ```
+
+## create_processed_ind_list.sh
+
+A shell script that creates a list of processed individuals for each analysis type, as well as across all analysis types, from the results directories of the eager outputs.
+These lists are then used to provide counts of the number of processed individuals in a dedicated file.
+
+```
+		 usage: create_processed_ind_list.sh
+```
+
