@@ -13,6 +13,13 @@ find /mnt/archgen/Autorun/Results/Human_1240k/2* -name '*.bam' -mtime -1 2>/dev/
     scripts/prepare_eager_tsv.R -s $RUN -a TF -o eager_inputs/ -d .eva_credentials
 done
 
+# 1240k + mtDNA
+# Note: this find only checks runs starting from 2020. Silence stderr to avoid 'permission denied'.
+find /mnt/archgen/Autorun/Results/Human_1240k/2* -name '*.bam' -mtime -1 2>/dev/null | cut -f 7 -d "/" | sort -u | while read RUN ; do
+    echo "Processing TF data from run: ${RUN}"
+    scripts/prepare_eager_tsv.R -s $RUN -a TM -o eager_inputs/ -d .eva_credentials
+done
+
 # Shotgun
 # Note: this find only checks runs starting from 2020.  Silence stderr to avoid 'permission denied'.
 find /mnt/archgen/Autorun/Results/Human_Shotgun/2* -name '*.bam' -mtime -1 2>/dev/null | cut -f 7 -d "/" | sort -u | while read RUN ; do
