@@ -110,7 +110,7 @@ if [[ ! -d ${output_dir} ]] && [[ -f ${input_dir}/pileupcaller.single.geno ]] &&
 
   ## Populate the janno file
   errecho "${Yellow}## Populating janno file ##${Normal}"
-  ${autorun_root_dir}/scripts/fill_in_janno.R \
+  ${autorun_root_dir}/scripts/run_Rscript_containerised.sh ${autorun_root_dir}/scripts/fill_in_janno.R \
     -j ${TEMPDIR}/${ind_id}/${ind_id}.janno \
     -i ${ind_id} \
     -c ${cred_file} \
@@ -120,7 +120,7 @@ if [[ ! -d ${output_dir} ]] && [[ -f ${input_dir}/pileupcaller.single.geno ]] &&
 
   ## Mirror sex and group_name information to ind file.
   errecho "${Yellow}## Updating indFile ##${Normal}"
-  ${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml
+  ${autorun_root_dir}/scripts/run_Rscript_containerised.sh ${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml
 
   ## Use trident update to get correct md5sums and add log info
   ##    Also add TCL and KP as contributors. Can be changed before publishing the package if users want.
@@ -187,7 +187,7 @@ elif [[ ! -d ${output_dir} ]]; then
 
   ## Populate the janno file
   errecho "${Yellow}## Populating janno file ##${Normal}"
-  ${autorun_root_dir}/scripts/fill_in_janno.R \
+  ${autorun_root_dir}/scripts/run_Rscript_containerised.sh ${autorun_root_dir}/scripts/fill_in_janno.R \
     -j ${TEMPDIR}/${ind_id}/${ind_id}.janno \
     -i ${ind_id} \
     -c ${cred_file} \
@@ -197,7 +197,7 @@ elif [[ ! -d ${output_dir} ]]; then
 
   ## Mirror sex and group_name information to ind file.
   errecho "${Yellow}## Updating indFile ##${Normal}"
-  ${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml
+  ${autorun_root_dir}/scripts/run_Rscript_containerised.sh ${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml
 
   ## Use trident update to get correct md5sums and add log info
   ##    Also add TCL and KP as contributors. Can be changed before publishing the package if users want.
@@ -267,7 +267,7 @@ elif [[ -d ${output_dir} ]] && [[ ( -f ${input_dir}/pileupcaller.single.geno && 
 
   ## Populate the janno file
   errecho "${Yellow}## Populating janno file ##${Normal}"
-  ${autorun_root_dir}/scripts/fill_in_janno.R \
+  ${autorun_root_dir}/scripts/run_Rscript_containerised.sh ${autorun_root_dir}/scripts/fill_in_janno.R \
     -j ${TEMPDIR}/${ind_id}/${ind_id}.janno \
     -i ${ind_id} \
     -c ${cred_file} \
@@ -277,7 +277,7 @@ elif [[ -d ${output_dir} ]] && [[ ( -f ${input_dir}/pileupcaller.single.geno && 
 
   ## Mirror sex and group_name information to ind file.
   errecho "${Yellow}## Updating indFile ##${Normal}"
-  ${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml
+  ${autorun_root_dir}/scripts/run_Rscript_containerised.sh ${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml
 
   ## Use trident update to get correct md5sums and add log info
   errecho "${Yellow}## Trident update ##${Normal}"
@@ -344,7 +344,7 @@ elif [[ -d ${output_dir} ]] && [[ ( ${input_dir}/pileupcaller.single.geno -nt ${
 
   ## Populate the janno file
   errecho "${Yellow}## Populating janno file ##${Normal}"
-  ${autorun_root_dir}/scripts/fill_in_janno.R \
+  ${autorun_root_dir}/scripts/run_Rscript_containerised.sh ${autorun_root_dir}/scripts/fill_in_janno.R \
     -j ${TEMPDIR}/${ind_id}/${ind_id}.janno \
     -i ${ind_id} \
     -c ${cred_file} \
@@ -354,7 +354,7 @@ elif [[ -d ${output_dir} ]] && [[ ( ${input_dir}/pileupcaller.single.geno -nt ${
 
   ## Mirror sex and group_name information to ind file.
   errecho "${Yellow}## Updating indFile ##${Normal}"
-  ${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml
+  ${autorun_root_dir}/scripts/run_Rscript_containerised.sh ${autorun_root_dir}/scripts/update_dataset_from_janno.R -y ${TEMPDIR}/${ind_id}/POSEIDON.yml
 
   ## Use trident update to get correct md5sums and add log info
   errecho "${Yellow}## Trident update ##${Normal}"
