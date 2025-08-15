@@ -3,4 +3,6 @@
 ## This is necessary because building singularity images requires sudo privileges, which are not available on the servers.
 ## It requires Docker to be installed and running.
 docker pull tclamnidis/singularity-in-docker:3.8.1
-docker run --rm --privileged -v $(pwd):/work tclamnidis/singularity-in-docker:3.8.1 build --force singularity/sidora_AE_singularity.sif singularity/sidora_AE_singularity.def
+docker run --rm --privileged -v $(pwd):/work tclamnidis/singularity-in-docker:3.8.1 build --force singularity/AE_R_deps_singularity.sif singularity/AE_R_deps_singularity.def
+
+## The resulting image should then be moved to the appropriate directory on the server-side installation of Autorun_eager.
