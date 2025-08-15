@@ -6,6 +6,7 @@ From: rocker/tidyverse:4.1.1
   R --slave -e 'install.packages(c("remotes", "DBI", "RMariaDB", "optparse"))'
   R --slave -e 'remotes::install_github("sidora-tools/sidora.core", dependencies = TRUE)'
   R --slave -e 'remotes::install_github("sidora-tools/pandora2eager", dependencies = TRUE)'
+  R --slave -e  'remotes::install_github("sidora-tools/eager2poseidon", dependencies = TRUE)'
   ## Clone helper scripts repository and install rPandoraHelper
   mkdir -p /github/
   cd /github/
