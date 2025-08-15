@@ -4,6 +4,11 @@ Automated nf-core/eager processing of Autorun output bams.
 
 ## Quickstart
 
+> [!NOTE]
+> A Singularity wrapper is provided for R scripts: `scripts/run_Rscript_containerised.sh`.
+> It is recommended that you use the provided Singularity image wrapper to run Rscripts in this repository.
+> This ensures that the required R packages are available and that the scripts run in a consistent environment.
+
 - Run `prepare_eager_tsv.R` for human SG, TF, TM, RP, RM, IM, or YC data for a given sequencing batch:
 
     ```bash
@@ -69,6 +74,12 @@ The standardised parameters for processing human Immuno-capture data.
 The standardised parameters for processing human Y+MT (YMCA) capture data.
 
 ## prepare_eager_tsv.R
+
+> [!NOTE]
+> A Singularity wrapper is provided for R scripts: `scripts/run_Rscript_containerised.sh`.
+> It is recommended that you use the provided Singularity image wrapper to run Rscripts in this repository.
+> This ensures that the required R packages are available and that the scripts run in a consistent environment.
+
 
 An R script that when given a sequencing batch ID, Autorun Analysis type and PANDORA credentials will create/update eager input TSV files for further processing.
 
