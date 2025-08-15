@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Singularity image build script for OSX systems using Docker.
 - Singularity definition file for building the AE Singularity image.
+- `scripts/cron_daily_prepare.sh`: 
+  - Now uses the new Singularity image `sidora_AE_singularity.sif` for running the `prepare_eager_tsv.R` script.
+- `scripts/update_poseidon_packages.sh`: 
+  - Now uses the new Singularity image `sidora_AE_singularity.sif` for running the `fill_in_janno.R` and `update_dataset_from_janno.R` scripts.
 
 ### `Fixed`
 
