@@ -1,0 +1,18 @@
+Bootstrap: docker
+From: rocker/tidyverse:4.1.1
+
+%post
+  apt-get update && apt-get install -y libmariadb-dev
+  R --slave -e 'install.packages(c("remotes", "DBI", "RMariaDB", "optparse"))'
+  R --slave -e 'remotes::install_github("sidora-tools/sidora.core", dependencies = TRUE)'
+  R --slave -e 'remotes::install_github("sidora-tools/pandora2eager", dependencies = TRUE)'
+  ## Clone helper scripts repository and install rPandoraHelper
+  mkdir -p /github/
+  cd /github/
+  git clone https://github.com/MPI-EVA-Archaeogenetics/helper_scripts.git
+  R --slave -e 'install.packages("/github/helper_scripts/r_helpers/rPandoraHelper", repos = NULL, type = "source")'
+
+%labels
+  Author  Thiseas C. Lamnidis
+  GithubUrl https://github.com/MPI-EVA-Archaeogenetics/Autorun_eager.git
+  Version 1.7.0
