@@ -140,7 +140,23 @@ complete_pandora_table <- join_pandora_tables(
     )), con = con,
     cache = F
   )
-) %>% 
+) %>%
+  select(
+    ## Only keep necessary columns to reduce memory usage
+    individual.Full_Individual_Id,
+    individual.Main_Individual_Id,
+    individual.Organism,
+    sample.Ethically_culturally_sensitive,
+    library.Full_Library_Id,
+    library.Protocol,
+    analysis.Analysis_Id,
+    analysis.Result_Directory,
+    sequencing.Run_Id,
+    sequencing.Sequencing_Id,
+    sequencing.Full_Sequencing_Id,
+    sequencing.Single_Stranded,
+    sequencing.Exclude
+  ) %>%
   convert_all_ids_to_values(., con = con) %>%
   filter(
       ## Exclude ethically/culturally sensitive data. Conservative since it excludes NAs
