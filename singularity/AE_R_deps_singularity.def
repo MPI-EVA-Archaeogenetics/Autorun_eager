@@ -18,4 +18,4 @@ From: rocker/tidyverse:4.1.1
 %labels
   Author  Thiseas C. Lamnidis
   GithubUrl https://github.com/MPI-EVA-Archaeogenetics/Autorun_eager.git
-  Version 1.7.0
+  Version 1.7.1
