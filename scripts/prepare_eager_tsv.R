@@ -74,6 +74,48 @@ autorun_names_from_analysis_type <- function(analysis_type) {
   return(autorun_names)
 }
 
+## This function prepares the SQL query for pandora DB.
+prepare_sql_query <- function(analysis_type, no_query = F) {
+  if (no_query) { tab_query = ''
+  } else {
+    tab_query = paste0("AND ( ", paste0("A.Analysis_Id = '", autorun_names_from_analysis_type(analysis_type), collapse="' OR "), "' )")
+  }
+  query = paste0(
+"  SELECT
+      I.Full_Individual_Id AS 'individual.Full_Individual_Id',
+      I.Main_Individual_Id AS 'individual.Main_Individual_Id',
+      I.Organism AS 'individual.Organism',
+      S.Ethically_culturally_sensitive AS 'sample.Ethically_culturally_sensitive',
+      L.Full_Library_Id AS 'library.Full_Library_Id',
+      L.Protocol AS 'library.Protocol',
+      A.Analysis_Id AS 'analysis.Analysis_Id',
+      A.Result_Directory AS 'analysis.Result_Directory',
+      -- SeB.Name AS 'sequencing.Batch',
+      Se.Sequencing_Id AS 'sequencing.Sequencing_Id',
+      Se.Run_Id AS 'sequencing.Run_Id',
+      Se.Full_Sequencing_Id AS 'sequencing.Full_Sequencing_Id',
+      Se.Single_Stranded AS 'sequencing.Single_Stranded',
+      Se.Exclude AS 'sequencing.Exclude'
+  FROM
+           TAB_Analysis   AS A
+      JOIN TAB_Raw_Data   AS R   ON A.Raw_Data   = R.id
+      JOIN TAB_Sequencing AS Se  ON R.sequencing = Se.id
+      JOIN TAB_Capture    AS C   ON Se.capture   = C.id
+      JOIN TAB_Library    AS L   ON C.library    = L.id
+      JOIN TAB_Extract    AS E   ON L.extract    = E.id
+      JOIN TAB_Sample     AS S   ON E.sample     = S.id
+      JOIN TAB_Individual AS I   ON S.individual = I.id
+      JOIN TAB_Site       AS Si  ON I.site       = Si.id
+      JOIN TAB_Batch      AS SeB ON Se.Batch     = SeB.Id
+  WHERE
+      -- Remove any deleted analysis entries.
+      A.Deleted = 'false'
+      ", tab_query,"
+  ORDER BY I.Full_Individual_Id,L.Full_Library_Id;"
+  )
+  return(query)
+}
+
 ## MAIN ##
 
 ## Parse arguments ----------------------------
@@ -132,37 +174,17 @@ output_dir <- paste0(opts$outdir,"/",analysis_type)
 
 con <- get_pandora_connection(cred_file)
 
-## Get complete pandora table
-complete_pandora_table <- join_pandora_tables(
-  get_df_list(
-    c(make_complete_table_list(
-      c("TAB_Site", "TAB_Analysis")
-    )), con = con,
-    cache = F
-  )
-) %>%
-  select(
-    ## Only keep necessary columns to reduce memory usage
-    individual.Full_Individual_Id,
-    individual.Main_Individual_Id,
-    individual.Organism,
-    sample.Ethically_culturally_sensitive,
-    library.Full_Library_Id,
-    library.Protocol,
-    analysis.Analysis_Id,
-    analysis.Result_Directory,
-    sequencing.Run_Id,
-    sequencing.Sequencing_Id,
-    sequencing.Full_Sequencing_Id,
-    sequencing.Single_Stranded,
-    sequencing.Exclude
-  ) %>%
+## Querying PandoraDB with an SQL query that also does the filtering.
+## This is quicker and cleaner than using sidora.core::get_df_list, and limits the RAM footprint considerably.
+complete_pandora_table <- DBI::dbGetQuery(con, prepare_sql_query(analysis_type)) %>%
+  sidora.core:::enforce_types() %>%
   convert_all_ids_to_values(., con = con) %>%
   filter(
       ## Exclude ethically/culturally sensitive data. Conservative since it excludes NAs
       sample.Ethically_culturally_sensitive == FALSE,
       ## Exclude marked sequencing entities
-      sequencing.Exclude == FALSE
+      ## In some cases, entries end up empty instead of having a "no" value, which becomes an NA
+      sequencing.Exclude == FALSE | is.na(sequencing.Exclude)
     )
 
 ## Any individuals with a Main_Individual_ID set in Pandora need to be included in the list of individuals to process.
