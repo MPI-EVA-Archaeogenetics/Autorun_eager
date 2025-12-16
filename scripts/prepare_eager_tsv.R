@@ -206,7 +206,6 @@ con <- get_pandora_connection(cred_file)
 #     sample.Ethically_culturally_sensitive == FALSE,
 #     ## Exclude marked sequencing entities
 #     sequencing.Exclude == FALSE,
-#     analysis.Analysis_Id %in% autorun_names_from_analysis_type(analysis_type)
 #   )
 
 ## Querying PandoraDB with an SQL query that also does the filtering.
