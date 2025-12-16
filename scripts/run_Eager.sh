@@ -112,8 +112,8 @@ done
 if [[ ${array} == 'TRUE' ]]; then
     mkdir -p /mnt/archgen/Autorun_eager/array_Logs/$(basename ${temp_file}) ## Create new directory for the logs for more traversable structure
     jn=$(wc -l ${temp_file} | cut -f 1 -d " ") ## number of jobs equals number of lines
-    export NXF_OPTS='-Xms6G -Xmx6G -XX:ParallelGCThreads=1' ## Set 4GB limit to Nextflow VM
-    export JAVA_OPTS='-Xms12G -Xmx12G -XX:ParallelGCThreads=1' ## Set 8GB limit to Java VM. Single GarbageCollecteor thread
+    export NXF_OPTS='-Xms8G -Xmx8G -XX:ParallelGCThreads=1' ## Set 4GB limit to Nextflow VM
+    export JAVA_OPTS='-Xms16G -Xmx16G -XX:ParallelGCThreads=1' ## Set 8GB limit to Java VM. Single GarbageCollecteor thread
     ## -V Pass environment to job (includes nxf/java opts)
     ## -S /bin/bash Use bash
     ## -l v_hmem=40G ## 40GB memory limit (8 for java + the rest for garbage collector)
@@ -125,6 +125,7 @@ if [[ ${array} == 'TRUE' ]]; then
     ## -o /mnt/archgen/Autorun_eager/array_Logs/ ## Keep all log files in one directory.
     ## -tc 10 ## Number of concurrent spawner jobs (10)
     ## -t 1-${jn} ## The number of array jobs (from 1 to $jn)
-    echo "qsub -V -S /bin/bash -l h_vmem=40G -pe smp 2 -N AE_spawner_$(basename ${temp_file}) -cwd -j y -b y -o /mnt/archgen/Autorun_eager/array_Logs/$(basename ${temp_file}) -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}"
-    qsub -V -S /bin/bash -l h_vmem=40G -pe smp 2 -N AE_spawner_$(basename ${temp_file}) -cwd -j y -b y -o /mnt/archgen/Autorun_eager/array_Logs/$(basename ${temp_file}) -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}
+    ## -l h='!(hpc100|hpc101|hpc102|hpc103)' ## Do not send spawner jobs to new hpc nodes.
+    echo "qsub -V -S /bin/bash -l h='!(hpc100|hpc101|hpc102|hpc103)' -l h_vmem=40G -pe smp 2 -N AE_spawner_$(basename ${temp_file}) -cwd -j y -b y -o /mnt/archgen/Autorun_eager/array_Logs/$(basename ${temp_file}) -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}"
+    qsub -V -S /bin/bash -l h='!(hpc100|hpc101|hpc102|hpc103)' -l h_vmem=40G -pe smp 2 -N AE_spawner_$(basename ${temp_file}) -cwd -j y -b y -o /mnt/archgen/Autorun_eager/array_Logs/$(basename ${temp_file}) -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}
 fi
