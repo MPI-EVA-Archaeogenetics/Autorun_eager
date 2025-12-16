@@ -3,6 +3,24 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 16/12/2025
+
+### `Added`
+
+### `Fixed`
+
+- `scripts/run_Eager.sh`: Exclude hpc nodes from AE spawner job queue.
+- `scripts/ethical_sample_scrub.sh`: 
+  - Remove existing directories if any.
+  - Fixed warnings when TERM is unset.
+- `scripts/prepare_eager_tsv.R`:
+  - Now uses a direct SQL query to PandoraDB, which is faster and less resource-intensive than the old sidora.core call.
+  - NAs are now allowed in the sequencing.Exclude column.
+
+### `Dependencies`
+
+### `Deprecated`
+
 ## [1.7.0] - 15/08/2025
 
 ### `Added`
