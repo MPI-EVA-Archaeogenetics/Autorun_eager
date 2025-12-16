@@ -15,14 +15,20 @@ function Helptext() {
 
 ## Print messages to stderr, optionally with colours
 function errecho() {
+  local term
   local Normal
   local Red
   local Yellow
   local colour
 
-  Normal=$(tput sgr0)
-  Red=$(tput sgr0)'\033[1;31m' ## Red normal face
-  Yellow=$(tput sgr0)'\033[1;33m' ## Yellow normal face
+  if [[ -z "${TERM}" ]]; then
+    term="xterm-256color"
+  else
+    term="${TERM}"
+  fi
+  Normal=$(tput -T${TERM} sgr0)
+  Red=$(tput -T${TERM} sgr0)'\033[1;31m' ## Red normal face
+  Yellow=$(tput -T${TERM} sgr0)'\033[1;33m' ## Yellow normal face
 
   colour=''
   if [[ ${1} == '-y' ]]; then
@@ -78,6 +84,10 @@ else
         errecho "    ${raw_iid} ${eager_input_tsv}"
         old_name=$(dirname ${eager_input_tsv})
         new_name=$(dirname ${old_name})/.${raw_iid}
+        ## If the directory exists and is within the expected root input directory, then delete the existing dir and rename the old dir
+        if [[ -d ${new_name} && ${new_name} =~ ^${root_input_dir} ]]; then
+          rm -r ${new_name}
+        fi
         mv -v ${old_name} ${new_name} ## Hide the input directory
         chmod 0700 ${new_name}        ## Restrict the directory contents
       fi
@@ -87,6 +97,10 @@ else
       if [[ -d ${eager_output_dir} ]]; then
         errecho "    ${rawiid} ${eager_output_dir}"
         new_outdir_name=$(dirname ${eager_output_dir})/.${raw_iid}
+        ## If the directory exists and is within the expected root output directory, then delete the existing dir and rename the old dir
+        if [[ -d ${new_outdir_name} && ${new_outdir_name} =~ ^${root_output_dir} ]]; then
+          rm -r ${new_outdir_name}
+        fi
         mv -v ${eager_output_dir} ${new_outdir_name} ## Hide the output directory
         chmod 0700 ${new_outdir_name}                ## Restrict the directory contents
       fi
