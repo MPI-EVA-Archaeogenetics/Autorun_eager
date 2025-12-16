@@ -217,7 +217,8 @@ complete_pandora_table <- DBI::dbGetQuery(con, prepare_sql_query(analysis_type))
       ## Exclude ethically/culturally sensitive data. Conservative since it excludes NAs
       sample.Ethically_culturally_sensitive == FALSE,
       ## Exclude marked sequencing entities
-      sequencing.Exclude == FALSE
+      ## In some cases, entries end up empty instead of having a "no" value, which becomes an NA
+      sequencing.Exclude == FALSE | is.na(sequencing.Exclude)
     )
 
 ## Any individuals with a Main_Individual_ID set in Pandora need to be included in the list of individuals to process.
