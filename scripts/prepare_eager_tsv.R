@@ -74,6 +74,48 @@ autorun_names_from_analysis_type <- function(analysis_type) {
   return(autorun_names)
 }
 
+## This function prepares the SQL query for pandora DB.
+prepare_sql_query <- function(analysis_type, no_query = F) {
+  if (no_query) { tab_query = ''
+  } else {
+    tab_query = paste0("AND ( ", paste0("A.Analysis_Id = '", autorun_names_from_analysis_type(analysis_type), collapse="' OR "), "' )")
+  }
+  query = paste0(
+"  SELECT
+      I.Full_Individual_Id AS 'individual.Full_Individual_Id',
+      I.Main_Individual_Id AS 'individual.Main_Individual_Id',
+      I.Organism AS 'individual.Organism',
+      S.Ethically_culturally_sensitive AS 'sample.Ethically_culturally_sensitive',
+      L.Full_Library_Id AS 'library.Full_Library_Id',
+      L.Protocol AS 'library.Protocol',
+      A.Analysis_Id AS 'analysis.Analysis_Id',
+      A.Result_Directory AS 'analysis.Result_Directory',
+      -- SeB.Name AS 'sequencing.Batch',
+      Se.Sequencing_Id AS 'sequencing.Sequencing_Id',
+      Se.Run_Id AS 'sequencing.Run_Id',
+      Se.Full_Sequencing_Id AS 'sequencing.Full_Sequencing_Id',
+      Se.Single_Stranded AS 'sequencing.Single_Stranded',
+      Se.Exclude AS 'sequencing.Exclude'
+  FROM
+           TAB_Analysis   AS A
+      JOIN TAB_Raw_Data   AS R   ON A.Raw_Data   = R.id
+      JOIN TAB_Sequencing AS Se  ON R.sequencing = Se.id
+      JOIN TAB_Capture    AS C   ON Se.capture   = C.id
+      JOIN TAB_Library    AS L   ON C.library    = L.id
+      JOIN TAB_Extract    AS E   ON L.extract    = E.id
+      JOIN TAB_Sample     AS S   ON E.sample     = S.id
+      JOIN TAB_Individual AS I   ON S.individual = I.id
+      JOIN TAB_Site       AS Si  ON I.site       = Si.id
+      JOIN TAB_Batch      AS SeB ON Se.Batch     = SeB.Id
+  WHERE
+      -- Remove any deleted analysis entries.
+      A.Deleted = 'false'
+      ", tab_query,"
+  ORDER BY I.Full_Individual_Id,L.Full_Library_Id;"
+  )
+  return(query)
+}
+
 ## MAIN ##
 
 ## Parse arguments ----------------------------
