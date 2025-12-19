@@ -3,6 +3,18 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.2] - 19/12/2025
+
+### `Added`
+
+- `scripts/prepare_eager_tsv.R`: Added check for empty results tables before attempting to create TSVs. If no results are found for the specified sequencing batch and analysis type, a message is printed and no TSVs are created.
+
+### `Fixed`
+
+### `Dependencies`
+
+### `Deprecated`
+
 ## [1.7.1] - 16/12/2025
 
 ### `Added`
@@ -10,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Fixed`
 
 - `scripts/run_Eager.sh`: Exclude hpc nodes from AE spawner job queue.
-- `scripts/ethical_sample_scrub.sh`: 
+- `scripts/ethical_sample_scrub.sh`:
   - Remove existing directories if any.
   - Fixed warnings when TERM is unset.
 - `scripts/prepare_eager_tsv.R`:
@@ -27,9 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Singularity image build script for OSX systems using Docker.
 - Singularity definition file for building the AE Singularity image.
-- `scripts/cron_daily_prepare.sh`: 
+- `scripts/cron_daily_prepare.sh`:
   - Now uses the new Singularity image `sidora_AE_singularity.sif` for running the `prepare_eager_tsv.R` script.
-- `scripts/update_poseidon_packages.sh`: 
+- `scripts/update_poseidon_packages.sh`:
   - Now uses the new Singularity image `sidora_AE_singularity.sif` for running the `fill_in_janno.R` and `update_dataset_from_janno.R` scripts.
 
 ### `Fixed`
@@ -60,7 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Processing of YC data. (Y + mtDNA capture (YMCA))
 - Processing of IM data. (Immunocapture)
-- `conf/Autorun.config`: 
+- `conf/Autorun.config`:
   - Use hard links when publishing results, instead of copying files.
   - Add YC profile for processing YMCA data.
   - Add IM profile for processing Immunocapture data.
@@ -76,12 +88,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `scripts/prepare_eager_tsv.R`
     - `scripts/fill_in_janno.R`
 - Refactor how valid analysis types are determined in shell scripts, to make more easily extendable.
-- `scripts/prepare_eager_tsv.R`: 
+- `scripts/prepare_eager_tsv.R`:
   - Now uses Main_Individual_ID instead of Full_Individual_ID as the Sample_Name when one is provided.
   - Now excludes sequencing entries with the `Exclude` flag set to `Yes`.
 - `scripts/create_processed_ind_list.sh`: Script to create a list of processed individuals across all analysis types, and a count of individuals in each analysis type.
 
 ### `Fixed`
+
 - `scripts/run_Eager.sh`: Java garbage collector now limited to one thread to avoid memory issues and hanging spawner jobs.
 
 ### `Dependencies`

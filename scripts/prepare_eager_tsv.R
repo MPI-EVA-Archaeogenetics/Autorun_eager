@@ -53,7 +53,7 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
   data %>% ungroup() %>% select(-target_ind) %>%  readr::write_tsv(file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
 
   ## Print Autorun_eager version to file
-  AE_version <- "1.7.0"
+  AE_version <- "1.7.2"
   cat(AE_version, file=paste0(ind_dir,"/autorun_eager_version.txt"), fill=T, append = F)
 }
 
@@ -271,4 +271,9 @@ if (! is.na(whitelist_fn) ){
 }
 
 ## Group by individual IDs and save each chunk as TSV
-results %>% group_by(target_ind) %>% group_walk(~save_ind_tsv(., rename=F, output_dir=output_dir), .keep=T)
+if (nrow(results) == 0) {
+  write(paste0("[prepare_eager_tsv.R]: No ",analysis_type," results for sequencing batch '",sequencing_batch_id,"'. Please try again after Autorun results have been added to Pandora."), stdout())
+} else {
+  write(paste0("[prepare_eager_tsv.R]: Preparing EAGER TSV files for ", n_distinct(results$target_ind), " individuals for sequencing batch '",sequencing_batch_id,"' and analysis type '",analysis_type,"'."), stdout())
+  results %>% group_by(target_ind) %>% group_walk(~save_ind_tsv(., rename=F, output_dir=output_dir), .keep=T)
+}
