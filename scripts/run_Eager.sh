@@ -66,7 +66,6 @@ for analysis_type in ${valid_analysis_types[@]}; do
                 --input ${eager_input} \
                 --outdir ${eager_output_dir} \
                 -w ${eager_output_dir}/work \
-                -with-tower \
                 -ansi-log false \
                 ${run_name} ${rush}" | tr -s " " >> ${temp_file}
                 continue ## Skip running eager interactively if arrays are requested.
@@ -84,14 +83,11 @@ for analysis_type in ${valid_analysis_types[@]}; do
                 --input ${eager_input} \
                 --outdir ${eager_output_dir} \
                 -w ${eager_output_dir}/work \
-                -with-tower \
                 -ansi-log false \
                 ${run_name} ${rush}"
             
 
             ## Actually run eager now.
-                ## Monitor run in nf tower. Only works if TOWER_ACCESS_TOKEN is set.
-                ## Runs show in the Autorun_Eager workspace on tower.nf
             ${nxf_path}/nextflow run nf-core/eager \
                 -r ${eager_version} \
                 -profile ${analysis_profiles} \
@@ -99,7 +95,6 @@ for analysis_type in ${valid_analysis_types[@]}; do
                 --input ${eager_input} \
                 --outdir ${eager_output_dir} \
                 -w ${eager_output_dir}/work \
-                -with-tower \
                 -ansi-log false \
                 ${run_name} ${rush}
             
