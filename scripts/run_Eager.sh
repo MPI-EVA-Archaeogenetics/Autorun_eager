@@ -65,7 +65,7 @@ for analysis_type in ${valid_analysis_types[@]}; do
                 -c ${autorun_config} \
                 --input ${eager_input} \
                 --outdir ${eager_output_dir} \
-                -w ${eager_output_dir}/work \
+                -w ${eager_output_dir}/temp \
                 -ansi-log false \
                 ${run_name} ${rush}" | tr -s " " >> ${temp_file}
                 continue ## Skip running eager interactively if arrays are requested.
@@ -82,7 +82,7 @@ for analysis_type in ${valid_analysis_types[@]}; do
                 -c ${autorun_config} \
                 --input ${eager_input} \
                 --outdir ${eager_output_dir} \
-                -w ${eager_output_dir}/work \
+                -w ${eager_output_dir}/temp \
                 -ansi-log false \
                 ${run_name} ${rush}"
             
@@ -94,7 +94,7 @@ for analysis_type in ${valid_analysis_types[@]}; do
                 -c ${autorun_config} \
                 --input ${eager_input} \
                 --outdir ${eager_output_dir} \
-                -w ${eager_output_dir}/work \
+                -w ${eager_output_dir}/temp \
                 -ansi-log false \
                 ${run_name} ${rush}
             
