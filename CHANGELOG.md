@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added`
 
+- `scripts/submit_as_array.sh`: Now works with the SLURM scheduler as well, for GRACE.
+- `scripts/run_Eager.sh`:
+  - Work directories renamed `work` -> `temp` [#32](https://github.com/MPI-EVA-Archaeogenetics/Autorun_eager/issues/32).
+  - Now works with the SLURM scheduler as well, for GRACE.
+
 ### `Fixed`
 
 ### `Dependencies`
