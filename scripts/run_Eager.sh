@@ -109,18 +109,35 @@ if [[ ${array} == 'TRUE' ]]; then
     jn=$(wc -l ${temp_file} | cut -f 1 -d " ") ## number of jobs equals number of lines
     export NXF_OPTS='-Xms8G -Xmx8G -XX:ParallelGCThreads=1' ## Set 4GB limit to Nextflow VM
     export JAVA_OPTS='-Xms16G -Xmx16G -XX:ParallelGCThreads=1' ## Set 8GB limit to Java VM. Single GarbageCollecteor thread
-    ## -V Pass environment to job (includes nxf/java opts)
-    ## -S /bin/bash Use bash
-    ## -l v_hmem=40G ## 40GB memory limit (8 for java + the rest for garbage collector)
-    ## -pe smp 2 ## Use two cores. one for nextflow, one for garbage collector
-    ## -n AE_spawner ## Name the job
-    ## -cwd Run in currect run directory (ran commands include a cd anyway, but to find the files at least)
-    ## -j y ## join stderr and stdout into one output log file
-    ## -b y ## Provided command is a binary already (i.e. executable)
-    ## -o /mnt/archgen/Autorun_eager/array_Logs/ ## Keep all log files in one directory.
-    ## -tc 10 ## Number of concurrent spawner jobs (10)
-    ## -t 1-${jn} ## The number of array jobs (from 1 to $jn)
-    ## -l h='!(hpc100|hpc101|hpc102|hpc103)' ## Do not send spawner jobs to new hpc nodes.
-    echo "qsub -V -S /bin/bash -l h='!(hpc100|hpc101|hpc102|hpc103)' -l h_vmem=40G -pe smp 2 -N AE_spawner_$(basename ${temp_file}) -cwd -j y -b y -o /mnt/archgen/Autorun_eager/array_Logs/$(basename ${temp_file}) -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}"
-    qsub -V -S /bin/bash -l h='!(hpc100|hpc101|hpc102|hpc103)' -l h_vmem=40G -pe smp 2 -N AE_spawner_$(basename ${temp_file}) -cwd -j y -b y -o /mnt/archgen/Autorun_eager/array_Logs/$(basename ${temp_file}) -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}
+    if ! hostname | grep -q -e login01 -e hpc -e dlcenode ; then 
+        ## -V Pass environment to job (includes nxf/java opts)
+        ## -S /bin/bash Use bash
+        ## -l v_hmem=40G ## 40GB memory limit (8 for java + the rest for garbage collector)
+        ## -pe smp 2 ## Use two cores. one for nextflow, one for garbage collector
+        ## -n AE_spawner ## Name the job
+        ## -cwd Run in current run directory (ran commands include a cd anyway, but to find the files at least)
+        ## -j y ## join stderr and stdout into one output log file
+        ## -b y ## Provided command is a binary already (i.e. executable)
+        ## -o /mnt/archgen/Autorun_eager/array_Logs/ ## Keep all log files in one directory.
+        ## -tc 10 ## Number of concurrent spawner jobs (10)
+        ## -t 1-${jn} ## The number of array jobs (from 1 to $jn)
+        ## -l h='!(hpc100|hpc101|hpc102|hpc103)' ## Do not send spawner jobs to new hpc nodes.
+        echo "qsub -V -S /bin/bash -l h='!(hpc100|hpc101|hpc102|hpc103)' -l h_vmem=40G -pe smp 2 -N AE_spawner_$(basename ${temp_file}) -cwd -j y -b y -o /mnt/archgen/Autorun_eager/array_Logs/$(basename ${temp_file}) -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}"
+        qsub -V -S /bin/bash -l h='!(hpc100|hpc101|hpc102|hpc103)' -l h_vmem=40G -pe smp 2 -N AE_spawner_$(basename ${temp_file}) -cwd -j y -b y -o /mnt/archgen/Autorun_eager/array_Logs/$(basename ${temp_file}) -tc 10 -t 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}
+    else
+        ## SLURM passes user environment by default.
+        ## No need to specify the shell used in SLURM.
+        ## --mem=40GB ## 40GB memory limit (8 for java + the rest for garbage collector)
+        ## --cpus-per-task=2 ## Use two cores. one for nextflow, one for garbage collector
+        ## --job-name="AE_spawner_$(basename ${temp_file})" ## Name the job
+        ## SLURM runs the jobs from current directory anyway.
+        ## SLURM already joins stdout and stderr together.
+        ## No need to define if file is binary or not, since --wrap is used in SLURM when not.
+        ## --output="/mnt/archgen/Autorun_eager/array_Logs/%x.po%A.%a ## Keep all log files in one directory. Keep names identical to SGE version for simplicity.
+        ## Number of concurrent spawner jobs (10) specified in --array with %
+        ## --array 1-${jn}%10 ## The number of array jobs (from 1 to $jn). 10 concurrent jobs can be ran.
+        ## --exclude="hpc[101-103]" ## Do not send spawner jobs to new hpc nodes. Not used atm, but for future reference.
+        echo "sbatch --mem=40GB --cpus-per-task=2 --job-name=AE_spawner_$(basename ${temp_file}) --output=/mnt/archgen/Autorun_eager/array_Logs/%x.po%A.%a --array 1-${jn}%10 /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}"
+        sbatch --mem=40GB --cpus-per-task=2 --job_-name=AE_spawner_$(basename ${temp_file}) --output=/mnt/archgen/Autorun_eager/array_Logs/%x.po%A.%a --array 1-${jn}%10 /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}
+    fi
 fi
