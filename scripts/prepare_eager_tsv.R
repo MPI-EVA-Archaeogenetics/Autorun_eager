@@ -68,6 +68,7 @@ autorun_names_from_analysis_type <- function(analysis_type) {
     analysis_type == "RM" ~ c( "HUMAN_RM",      "Human_RM" ),
     analysis_type == "YC" ~ c( "HUMAN_Y",       "Human_Y" ),
     analysis_type == "IM" ~ c( "HUMAN_IM",      "Human_IM" ),
+    analysis_type == "BL" ~ c( "BLANKS",        "Blanks"),
     ## Future analyses can be added here to pull those bams for eager processsing.
     TRUE ~ NA_character_
   )
