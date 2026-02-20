@@ -221,10 +221,8 @@ results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individua
     ## SeqType and Seq Lane should not matter since we start with BAMs
     SeqType="SE",
     Lane=row_number(),
-    Strandedness=case_when(
-      sequencing.Single_Stranded == 'yes' ~ "single",
-      sequencing.Single_Stranded == 'no' ~ "double",
-      is.na(sequencing.Single_Stranded) ~ "Unknown"), ## So far, any NAs are for libraries that were never sequenced, but just in case.
+    ## Use pandora2eager to infer protocol info from the Library Protocol.
+    Strandedness=map_chr(library.Protocol, function(.){pandora2eager::infer_library_specs(., pandora_library_protocol_info)[1]}),
     inferred_udg=map_chr(library.Protocol, function(.){pandora2eager::infer_library_specs(., pandora_library_protocol_info)[2]}),
     ## If UDG treatment cannot be assigned, but library is ssDNA, then assume none (since no trimming anyway)
     UDG_Treatment=case_when(
