@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION="1.7.2"
+VERSION="1.7.3"
 
 ## DEPENDENCY
 pandora_helper="/mnt/archgen/tools/helper_scripts/py_helpers/pyPandoraHelper/pyPandoraHelper.py"
