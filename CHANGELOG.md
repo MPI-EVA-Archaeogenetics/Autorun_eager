@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Work directories renamed `work` -> `temp` [#32](https://github.com/MPI-EVA-Archaeogenetics/Autorun_eager/issues/32).
   - Now works with the SLURM scheduler as well, for GRACE [#36](https://github.com/MPI-EVA-Archaeogenetics/Autorun_eager/issues/36).
   - Inference of Library strandedness is now done based on the library protocol, instead of the sequencing run information.[#34](https://github.com/MPI-EVA-Archaeogenetics/Autorun_eager/issues/34)
+- Added `BL` analysis type, for processing of Blanks.
+- `conf/Autorun.config`: Added `BL` processing profile. Minimal processing profile that skips most steps.
 
 ### `Fixed`
 
