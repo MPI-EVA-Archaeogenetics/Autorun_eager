@@ -202,7 +202,7 @@ pandora_library_protocol_info <- pandora2eager:::load_library_protocol_info(con)
 ##   The SQL query for complete_pandora_table now already filters the table down to entries that match the desired analyssi ID, so the additional filtering step can be dropped.
 ##   This has the benefit that now the Capture ID is no longer implicitly linked to the analysis name, which allows the fake "BL" analysis type to pick up data from all capture types.
 results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individual.Full_Individual_Id"="individual.Full_Individual_Id")) %>%
-  filter(grepl(paste0("\\.", analysis_type), sequencing.Full_Sequencing_Id), analysis.Analysis_Id %in% autorun_names_from_analysis_type(analysis_type)) %>%
+  # filter(grepl(paste0("\\.", analysis_type), sequencing.Full_Sequencing_Id), analysis.Analysis_Id %in% autorun_names_from_analysis_type(analysis_type)) %>%
   select(individual.Full_Individual_Id,individual.Main_Individual_Id,individual.Organism,library.Full_Library_Id,library.Protocol,analysis.Result_Directory,sequencing.Sequencing_Id,sequencing.Full_Sequencing_Id,sequencing.Single_Stranded) %>%
   distinct() %>% ## Need distinct() call because of how analysis tab is read in, which created one copy of each row per analysis field.
   mutate(
