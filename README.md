@@ -9,7 +9,7 @@ Automated nf-core/eager processing of Autorun output bams.
 > It is recommended that you use the provided Singularity image wrapper to run Rscripts in this repository.
 > This ensures that the required R packages are available and that the scripts run in a consistent environment.
 
-- Run `prepare_eager_tsv.R` for human SG, TF, TM, RP, RM, IM, or YC data for a given sequencing batch:
+- Run `prepare_eager_tsv.R` for human SG, TF, TM, RP, RM, IM, YC, or BL data for a given sequencing batch:
 
     ```bash
     prepare_eager_tsv.R -s <batch_Id> -a SG -o eager_inputs/ -d .eva_credentials
@@ -19,6 +19,7 @@ Automated nf-core/eager processing of Autorun output bams.
     prepare_eager_tsv.R -s <batch_Id> -a RM -o eager_inputs/ -d .eva_credentials
     prepare_eager_tsv.R -s <batch_Id> -a IM -o eager_inputs/ -d .eva_credentials
     prepare_eager_tsv.R -s <batch_Id> -a YC -o eager_inputs/ -d .eva_credentials
+    prepare_eager_tsv.R -s <batch_Id> -a BL -o eager_inputs/ -d .eva_credentials
     ```
 
 - Run eager with the following script, which then runs on the generated TSV files:
@@ -32,7 +33,7 @@ In such cases, an eager input TSV will still be created, but UDG treatment for a
 
 ## Autorun.config
 
-Contains the `autorun`, `local_paths`, `SG`, `TF`, `TM`, `RP`, `RM`, `IM`, and `YC`  profiles.
+Contains the `autorun`, `local_paths`, `SG`, `TF`, `TM`, `RP`, `RM`, `IM`, `YC`, and `BL`  profiles.
 
 ### autorun
 
@@ -72,6 +73,10 @@ The standardised parameters for processing human Immuno-capture data.
 ### YC
 
 The standardised parameters for processing human Y+MT (YMCA) capture data.
+
+### BL
+
+The standardised parameters for processing Blanks. 
 
 ## prepare_eager_tsv.R
 
@@ -147,7 +152,11 @@ eager_inputs
 │   └──ABC
 │       ├── ABC001
 │       └── ABC002
-└── IM
+├── IM
+│   └──ABC
+│       ├── ABC001
+│       └── ABC002
+└── BL
     └──ABC
          ├── ABC001
          └── ABC002
@@ -173,11 +182,27 @@ eager_outputs
 │   └──ABC
 │       ├── ABC001
 │       └── ABC002
+├── TM
+│   └──ABC
+│       ├── ABC001
+│       └── ABC002
 ├── RP
 │   └──ABC
 │       ├── ABC001
 │       └── ABC002
-└── RM
+├── RM
+│   └──ABC
+│       ├── ABC001
+│       └── ABC002
+├── YC
+│   └──ABC
+│       ├── ABC001
+│       └── ABC002
+├── IM
+│   └──ABC
+│       ├── ABC001
+│       └── ABC002
+└── BL
     └──ABC
          ├── ABC001
          └── ABC002
@@ -229,9 +254,9 @@ Options:
 A shell script that will clear the work directories of individuals in a specified individual ID list from both the SG and TF results directories.
 
 ```
-     usage: clear_work_dirs.sh [options] <ind_id_list>
+	 usage: ./scripts/clear_work_dirs.sh [options] <ind_id_list>
 
-This script clears the work directories of individuals in a specified individual ID list from both the SG and TF results directories.
+This script clears the work directories of individuals in a specified individual ID list from all results directories.
 
 Options:
 -h, --help		Print this text and exit.
@@ -242,14 +267,14 @@ Options:
 A shell script that clears the results directories of all individuals in a specified list While maintaining nextflow's caching of already-ran processes. This is useful for refreshing the results directories of individuals when changes to the input might have changes merging of libraries, thus making the directory structure inconsistent.
 
 ```
-     usage: clear_results.sh [options] <ind_id_list>
+	 usage: ./scripts/clear_results.sh [options] <ind_id_list>
 
 This script removes all output directory contents for the provided individuals, without clearing out caching, allowing for the results to be re-published.
-    This enables refreshing of result directories when changes to the input might have changes merging of libraries, thus making the directory structure inconsistent.
+ This enables refreshing of result directories when changes to the input might have changes merging of libraries, thus making the directory structure inconsistent.
 
 Options:
 -h, --help		Print this text and exit.
--a, --analysis_type		Set the analysis type. Options: TF, SG.
+-a, --analysis_type		Set the analysis type. Options: TF,TM,SG,RP,RM,IM,YC.
 ```
 
 ## create_processed_ind_list.sh
