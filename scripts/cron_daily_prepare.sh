@@ -54,3 +54,10 @@ find /mnt/archgen/Autorun/Results/Human_IM/2* -name '*.bam' -mtime -1 2>/dev/nul
     echo "Processing IM data from run: ${RUN}"
     scripts/run_Rscript_containerised.sh scripts/prepare_eager_tsv.R -s $RUN -a IM -o eager_inputs/ -d .eva_credentials
 done
+
+# Blanks
+# Note: this find only checks runs starting from 2020.  Silence stderr to avoid 'permission denied'.
+find /mnt/archgen/Autorun/Results/Blanks/2* -name '*.bam' -mtime -1 2>/dev/null | cut -f 7 -d "/" | sort -u | while read RUN ; do
+    echo "Processing BL data from run: ${RUN}"
+    scripts/run_Rscript_containerised.sh scripts/prepare_eager_tsv.R -s $RUN -a BL -o eager_inputs/ -d .eva_credentials
+done

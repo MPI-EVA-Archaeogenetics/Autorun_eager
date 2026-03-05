@@ -3,6 +3,26 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.3dev] - XX/XX/XXXX
+
+### `Added`
+
+- `scripts/submit_as_array.sh`: Now works with the SLURM scheduler as well, for GRACE [#36](https://github.com/MPI-EVA-Archaeogenetics/Autorun_eager/issues/36).
+- `scripts/run_Eager.sh`:
+  - Work directories renamed `work` -> `temp` [#32](https://github.com/MPI-EVA-Archaeogenetics/Autorun_eager/issues/32).
+  - Now works with the SLURM scheduler as well, for GRACE [#36](https://github.com/MPI-EVA-Archaeogenetics/Autorun_eager/issues/36).
+  - Inference of Library strandedness is now done based on the library protocol, instead of the sequencing run information.[#34](https://github.com/MPI-EVA-Archaeogenetics/Autorun_eager/issues/34)
+- Added `BL` analysis type, for processing of Blanks.
+- `conf/Autorun.config`: Added `BL` processing profile. Minimal processing profile that skips most steps.
+
+### `Fixed`
+
+### `Dependencies`
+
+### `Deprecated`
+
+- Removed monitoring of processing using Sequera platform/Nextflow tower [#31](https://github.com/MPI-EVA-Archaeogenetics/Autorun_eager/issues/31).
+
 ## [1.7.2] - 19/12/2025
 
 ### `Added`
