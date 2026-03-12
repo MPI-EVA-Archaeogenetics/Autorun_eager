@@ -137,7 +137,7 @@ if [[ ${array} == 'TRUE' ]]; then
         ## Number of concurrent spawner jobs (10) specified in --array with %
         ## --array 1-${jn}%10 ## The number of array jobs (from 1 to $jn). 10 concurrent jobs can be ran.
         ## --exclude="hpc[101-103]" ## Do not send spawner jobs to new hpc nodes. Not used atm, but for future reference.
-        echo "sbatch --mem=40GB --cpus-per-task=2 --job-name=AE_spawner_$(basename ${temp_file}) --output=/mnt/archgen/Autorun_eager/array_Logs/%x.po%A.%a --array 1-${jn}%10 /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}"
-        sbatch --mem=40GB --cpus-per-task=2 --job-name=AE_spawner_$(basename ${temp_file}) --output=/mnt/archgen/Autorun_eager/array_Logs/%x.po%A.%a --array 1-${jn}%10 /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}
+        echo "sbatch --mem=40GB --cpus-per-task=2 --job-name=AE_spawner_$(basename ${temp_file}) --output=/mnt/archgen/Autorun_eager/array_Logs/$(basename ${temp_file})/%x.po%A.%a --array 1-${jn}%10 /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}"
+        sbatch --mem=40GB --cpus-per-task=2 --job-name=AE_spawner_$(basename ${temp_file}) --output=/mnt/archgen/Autorun_eager/array_Logs/$(basename ${temp_file})/%x.po%A.%a --array 1-${jn}%10 /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}
     fi
 fi
