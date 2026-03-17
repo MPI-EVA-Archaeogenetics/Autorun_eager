@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Fixed`
 
 - Corrected the base nextflow profiles used for processing on the GRACE cluster.
+- Update cluster conditional to work with new login node.
 
 ### `Dependencies`
 

@@ -30,7 +30,7 @@ root_output_dir='/mnt/archgen/Autorun_eager/eager_outputs'
 # root_input_dir='/mnt/archgen/Autorun_eager/dev/testing/eager_inputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each individual.
 # root_output_dir='/mnt/archgen/Autorun_eager/dev/testing/eager_outputs'
 
-if ! hostname | grep -q -e login01 -e hpc -e dlcenode ; then 
+if ! hostname | grep -q -e login -e hpc -e dlcenode ; then 
     ## Set base profiles for EVA cluster.
     nextflow_profiles="eva,archgen,medium_data,autorun,local_paths"
 else
@@ -114,7 +114,7 @@ if [[ ${array} == 'TRUE' ]]; then
     jn=$(wc -l ${temp_file} | cut -f 1 -d " ") ## number of jobs equals number of lines
     export NXF_OPTS='-Xms8G -Xmx8G -XX:ParallelGCThreads=1' ## Set 4GB limit to Nextflow VM
     export JAVA_OPTS='-Xms16G -Xmx16G -XX:ParallelGCThreads=1' ## Set 8GB limit to Java VM. Single GarbageCollecteor thread
-    if ! hostname | grep -q -e login01 -e hpc -e dlcenode ; then 
+    if ! hostname | grep -q -e login -e hpc -e dlcenode ; then 
         ## -V Pass environment to job (includes nxf/java opts)
         ## -S /bin/bash Use bash
         ## -l v_hmem=40G ## 40GB memory limit (8 for java + the rest for garbage collector)

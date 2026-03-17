@@ -8,7 +8,7 @@ else
 fi
 
 ## Pick the correct task ID in both the SGE and the SLURM cluster.
-if ! hostname | grep -q -e login01 -e hpc -e dlcenode ; then 
+if ! hostname | grep -q -e login -e hpc -e dlcenode ; then 
     task_id=${SGE_TASK_ID}
 else
     task_id=${SLURM_ARRAY_TASK_ID}
