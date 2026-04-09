@@ -15,7 +15,7 @@ done
 
 # 1240k + mtDNA
 # Note: this find only checks runs starting from 2020. Silence stderr to avoid 'permission denied'.
-find /mnt/archgen/Autorun/Results/Human_1240k/2* -name '*.bam' -mtime -1 2>/dev/null | cut -f 7 -d "/" | sort -u | while read RUN ; do
+find /mnt/archgen/Autorun/Results/Human_MT/2* -name '*.bam' -mtime -1 2>/dev/null | cut -f 7 -d "/" | sort -u | while read RUN ; do
     echo "Processing TM data from run: ${RUN}"
     scripts/run_Rscript_containerised.sh scripts/prepare_eager_tsv.R -s $RUN -a TM -o eager_inputs/ -d .eva_credentials
 done
