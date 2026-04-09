@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Corrected the base nextflow profiles used for processing on the GRACE cluster.
 - Update cluster conditional to work with new login node.
+- Fixed a bug in the cron job that picks up on new TM data. (09/04/2026)
 
 ### `Dependencies`
 
