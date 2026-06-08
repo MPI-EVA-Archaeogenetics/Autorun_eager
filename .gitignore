@@ -20,3 +20,5 @@ debug_tables/
 *.txt
 stats/
 AE_R_deps_singularity.sif
+*.log
+*.err
