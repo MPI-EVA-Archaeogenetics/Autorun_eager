@@ -53,7 +53,7 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
   data %>% ungroup() %>% select(-target_ind) %>%  readr::write_tsv(file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
 
   ## Print Autorun_eager version to file
-  AE_version <- "1.7.3"
+  AE_version <- "1.7.4"
   cat(AE_version, file=paste0(ind_dir,"/autorun_eager_version.txt"), fill=T, append = F)
 }
 
@@ -193,8 +193,10 @@ complete_pandora_table <- DBI::dbGetQuery(con, prepare_sql_query(analysis_type))
 fiid_list <- complete_pandora_table %>% filter(sequencing.Run_Id == sequencing_batch_id) %>% select(individual.Full_Individual_Id) %>% distinct()
 ## Then get the list of non-missing Main_Individual_IDs in the sequencing run. Change the column name to match the Full_individual_Id column name.
 miid_list <- complete_pandora_table %>% filter(sequencing.Run_Id == sequencing_batch_id, individual.Main_Individual_Id != "") %>% select(individual.Full_Individual_Id=individual.Main_Individual_Id) %>% distinct()
-## Combine the two lists and remove duplicates
-tibble_input_iids <- bind_rows(fiid_list, miid_list) %>% distinct()
+## When picking up data of the Main individual, we need to add any datasets that use this ID as their main ID from other runs.
+miid_of_others <- complete_pandora_table %>% filter(individual.Main_Individual_Id %in% fiid_list$individual.Full_Individual_Id) %>% select(individual.Full_Individual_Id) %>% distinct()
+## Combine the three lists and remove duplicates
+tibble_input_iids <- bind_rows(fiid_list, miid_list, miid_of_others) %>% distinct()
 
 ## Get protocol tab with udg and strandedness info for each library protocol
 pandora_library_protocol_info <- pandora2eager:::load_library_protocol_info(con)
