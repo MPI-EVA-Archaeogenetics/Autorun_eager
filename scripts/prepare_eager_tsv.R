@@ -27,7 +27,7 @@ require(stringr)
 
 ## Validate analysis type option input
 validate_analysis_type <- function(option, opt_str, value, parser) {
-  valid_entries <- c("TF", "TM", "SG", "RP", "RM", "YC", "IM") ## TODO comment: should this be embedded within the function? You would want to maybe update this over time no? 
+  valid_entries <- c("TF", "TM", "SG", "RP", "RM", "YC", "IM", "BL") ## TODO comment: should this be embedded within the function? You would want to maybe update this over time no? 
   ifelse(value %in% valid_entries, return(value), stop(call.=F, "\n[prepare_eager_tsv.R] error: Invalid analysis type: '", value, 
                                                       "'\nAccepted values: ", paste(valid_entries,collapse=", "),"\n\n"))
 }
@@ -53,7 +53,7 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
   data %>% ungroup() %>% select(-target_ind) %>%  readr::write_tsv(file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
 
   ## Print Autorun_eager version to file
-  AE_version <- "1.7.1"
+  AE_version <- "1.7.3"
   cat(AE_version, file=paste0(ind_dir,"/autorun_eager_version.txt"), fill=T, append = F)
 }
 
@@ -68,6 +68,7 @@ autorun_names_from_analysis_type <- function(analysis_type) {
     analysis_type == "RM" ~ c( "HUMAN_RM",      "Human_RM" ),
     analysis_type == "YC" ~ c( "HUMAN_Y",       "Human_Y" ),
     analysis_type == "IM" ~ c( "HUMAN_IM",      "Human_IM" ),
+    analysis_type == "BL" ~ c( "BLANKS",        "Blanks"),
     ## Future analyses can be added here to pull those bams for eager processsing.
     TRUE ~ NA_character_
   )
@@ -128,7 +129,7 @@ parser <- add_option(parser, c("-s", "--sequencing_batch_id"), type = 'character
 parser <- add_option(parser, c("-a", "--analysis_type"), type = 'character',
                     action = "callback", dest = "analysis_type",
                     callback = validate_analysis_type, default=NA,
-                    help = "The analysis type to compile the data from. Should be one of: 'SG', 'TF', 'RP', 'RM', 'YC', 'IM'.")
+                    help = "The analysis type to compile the data from. Should be one of: 'SG', 'TF', 'RP', 'RM', 'YC', 'IM', 'BL'.")
 parser <- add_option(parser, c("-r", "--rename"), type = 'logical',
                     action = 'store_true', dest = 'rename', default=F,
                     help = "Changes all dots (.) in the Library_ID field of the output to underscores (_).
@@ -201,8 +202,10 @@ tibble_input_iids <- bind_rows(fiid_list, miid_list, miid_of_others) %>% distinc
 pandora_library_protocol_info <- pandora2eager:::load_library_protocol_info(con)
 
 ## Pull information from pandora, keeping only matching IIDs and requested Sequencing types.
+##   The SQL query for complete_pandora_table now already filters the table down to entries that match the desired analyssi ID, so the additional filtering step can be dropped.
+##   This has the benefit that now the Capture ID is no longer implicitly linked to the analysis name, which allows the fake "BL" analysis type to pick up data from all capture types.
 results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individual.Full_Individual_Id"="individual.Full_Individual_Id")) %>%
-  filter(grepl(paste0("\\.", analysis_type), sequencing.Full_Sequencing_Id), analysis.Analysis_Id %in% autorun_names_from_analysis_type(analysis_type)) %>%
+  # filter(grepl(paste0("\\.", analysis_type), sequencing.Full_Sequencing_Id), analysis.Analysis_Id %in% autorun_names_from_analysis_type(analysis_type)) %>%
   select(individual.Full_Individual_Id,individual.Main_Individual_Id,individual.Organism,library.Full_Library_Id,library.Protocol,analysis.Result_Directory,sequencing.Sequencing_Id,sequencing.Full_Sequencing_Id,sequencing.Single_Stranded) %>%
   distinct() %>% ## Need distinct() call because of how analysis tab is read in, which created one copy of each row per analysis field.
   mutate(
@@ -223,10 +226,8 @@ results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individua
     ## SeqType and Seq Lane should not matter since we start with BAMs
     SeqType="SE",
     Lane=row_number(),
-    Strandedness=case_when(
-      sequencing.Single_Stranded == 'yes' ~ "single",
-      sequencing.Single_Stranded == 'no' ~ "double",
-      is.na(sequencing.Single_Stranded) ~ "Unknown"), ## So far, any NAs are for libraries that were never sequenced, but just in case.
+    ## Use pandora2eager to infer protocol info from the Library Protocol.
+    Strandedness=map_chr(library.Protocol, function(.){pandora2eager::infer_library_specs(., pandora_library_protocol_info)[1]}),
     inferred_udg=map_chr(library.Protocol, function(.){pandora2eager::infer_library_specs(., pandora_library_protocol_info)[2]}),
     ## If UDG treatment cannot be assigned, but library is ssDNA, then assume none (since no trimming anyway)
     UDG_Treatment=case_when(
@@ -273,4 +274,9 @@ if (! is.na(whitelist_fn) ){
 }
 
 ## Group by individual IDs and save each chunk as TSV
-results %>% group_by(target_ind) %>% group_walk(~save_ind_tsv(., rename=F, output_dir=output_dir), .keep=T)
+if (nrow(results) == 0) {
+  write(paste0("[prepare_eager_tsv.R]: No ",analysis_type," results for sequencing batch '",sequencing_batch_id,"'. Please try again after Autorun results have been added to Pandora."), stdout())
+} else {
+  write(paste0("[prepare_eager_tsv.R]: Preparing EAGER TSV files for ", n_distinct(results$target_ind), " individuals for sequencing batch '",sequencing_batch_id,"' and analysis type '",analysis_type,"'."), stdout())
+  results %>% group_by(target_ind) %>% group_walk(~save_ind_tsv(., rename=F, output_dir=output_dir), .keep=T)
+}
