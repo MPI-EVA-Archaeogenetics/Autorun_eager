@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Fixed`
 
+- Corrected the base nextflow profiles used for processing on the GRACE cluster.
+- Update cluster conditional to work with new login node.
+- Fixed a bug in the cron job that picks up on new TM data. (09/04/2026)
 - `prepare_eager_tsv.R` Now correctly pulls all datasets of a Main ID when processing sequencing from the Main Individual. [#37](https://github.com/MPI-EVA-Archaeogenetics/Autorun_eager/issues/37)
 
 ### `Dependencies`

@@ -30,8 +30,13 @@ root_output_dir='/mnt/archgen/Autorun_eager/eager_outputs'
 # root_input_dir='/mnt/archgen/Autorun_eager/dev/testing/eager_inputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each individual.
 # root_output_dir='/mnt/archgen/Autorun_eager/dev/testing/eager_outputs'
 
-## Set base profiles for EVA cluster.
-nextflow_profiles="eva,archgen,medium_data,autorun,local_paths"
+if ! hostname | grep -q -e login -e hpc -e dlcenode ; then 
+    ## Set base profiles for EVA cluster.
+    nextflow_profiles="eva,archgen,medium_data,autorun,local_paths"
+else
+    ## Set base profiles for GRACE
+    nextflow_profiles="eva_grace,autorun,local_paths"
+fi
 
 ## Set colour and face for colour printing
 Red='\033[1;31m'$(tput bold) ## Red bold face
@@ -109,7 +114,7 @@ if [[ ${array} == 'TRUE' ]]; then
     jn=$(wc -l ${temp_file} | cut -f 1 -d " ") ## number of jobs equals number of lines
     export NXF_OPTS='-Xms8G -Xmx8G -XX:ParallelGCThreads=1' ## Set 4GB limit to Nextflow VM
     export JAVA_OPTS='-Xms16G -Xmx16G -XX:ParallelGCThreads=1' ## Set 8GB limit to Java VM. Single GarbageCollecteor thread
-    if ! hostname | grep -q -e login01 -e hpc -e dlcenode ; then 
+    if ! hostname | grep -q -e login -e hpc -e dlcenode ; then 
         ## -V Pass environment to job (includes nxf/java opts)
         ## -S /bin/bash Use bash
         ## -l v_hmem=40G ## 40GB memory limit (8 for java + the rest for garbage collector)
@@ -137,7 +142,7 @@ if [[ ${array} == 'TRUE' ]]; then
         ## Number of concurrent spawner jobs (10) specified in --array with %
         ## --array 1-${jn}%10 ## The number of array jobs (from 1 to $jn). 10 concurrent jobs can be ran.
         ## --exclude="hpc[101-103]" ## Do not send spawner jobs to new hpc nodes. Not used atm, but for future reference.
-        echo "sbatch --mem=40GB --cpus-per-task=2 --job-name=AE_spawner_$(basename ${temp_file}) --output=/mnt/archgen/Autorun_eager/array_Logs/%x.po%A.%a --array 1-${jn}%10 /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}"
-        sbatch --mem=40GB --cpus-per-task=2 --job-name=AE_spawner_$(basename ${temp_file}) --output=/mnt/archgen/Autorun_eager/array_Logs/%x.po%A.%a --array 1-${jn}%10 /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}
+        echo "sbatch --mem=40GB --cpus-per-task=2 --job-name=AE_spawner_$(basename ${temp_file}) --output=/mnt/archgen/Autorun_eager/array_Logs/$(basename ${temp_file})/%x.po%A.%a --array 1-${jn}%10 /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}"
+        sbatch --mem=40GB --cpus-per-task=2 --job-name=AE_spawner_$(basename ${temp_file}) --output=/mnt/archgen/Autorun_eager/array_Logs/$(basename ${temp_file})/%x.po%A.%a --array 1-${jn}%10 /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${temp_file}
     fi
 fi
