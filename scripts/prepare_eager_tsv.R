@@ -218,7 +218,7 @@ ind_list <- fiid_list %>%
 
 ## List of IDs to pull (incl main Ids and any Inds sharing a main ID from other runs.)
 tibble_input_iids <- complete_pandora_table %>% filter(individual.Main_Individual_Id %in% ind_list$individual.Full_Individual_Id) %>% select(individual.Full_Individual_Id) %>%
-  bind_rows (fiid_list, ind_list) %>% distinct()
+  bind_rows (ind_list) %>% distinct()
 
 ## Get protocol tab with udg and strandedness info for each library protocol
 pandora_library_protocol_info <- pandora2eager:::load_library_protocol_info(con)
@@ -289,7 +289,9 @@ if ( opts$debug ) { write_tsv(results, file=paste0(sequencing_batch_id, ".", ana
 
 ## Read in the whitelist if any, and filter the results table
 if (! is.na(whitelist_fn) ){
-  whitelist <- read_tsv(whitelist_fn, col_types='c', col_names='Pandora_ID') %>% mutate(Pandora_ID = map_chr(Pandora_ID, ~ get_main_id_of(.x, complete_pandora_table) %>% pull()))
+  whitelist <- read_tsv(whitelist_fn, col_types='c', col_names='Pandora_ID')
+  ## Overwrite instead of mutate, in case the whitelist has non-existent indivs.
+  whitelist <- get_main_id_of(whitelist$Pandora_ID, complete_pandora_table)
 
   results <- results %>% filter(target_ind %in% whitelist$Pandora_ID)
   # write_tsv(results, file=paste0(sequencing_batch_id, ".", analysis_type, ".whitelist.results.txt"))
