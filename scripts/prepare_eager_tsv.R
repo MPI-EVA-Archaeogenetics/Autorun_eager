@@ -53,7 +53,7 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
   data %>% ungroup() %>% select(-target_ind) %>%  readr::write_tsv(file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
 
   ## Print Autorun_eager version to file
-  AE_version <- "1.7.4"
+  AE_version <- "1.7.5"
   cat(AE_version, file=paste0(ind_dir,"/autorun_eager_version.txt"), fill=T, append = F)
 }
 
@@ -115,6 +115,21 @@ prepare_sql_query <- function(analysis_type, no_query = F) {
   ORDER BY I.Full_Individual_Id,L.Full_Library_Id;"
   )
   return(query)
+}
+
+## Function to get the main ID of individual IDs. If no Main_ID is set, then return the original Ind_ID
+get_main_id_of <- function(ind_id, pandora_table_df = complete_pandora_table) {
+  result <- pandora_table_df %>% 
+    select(individual.Full_Individual_Id, individual.Main_Individual_Id) %>%
+    distinct() %>%
+    filter(individual.Full_Individual_Id %in% ind_id) %>%
+    mutate(
+      .keep="none",
+      main_id = case_when(
+      individual.Main_Individual_Id == "" ~ individual.Full_Individual_Id,
+      TRUE ~ individual.Main_Individual_Id
+    ))
+  return(result)
 }
 
 ## MAIN ##
@@ -190,13 +205,20 @@ complete_pandora_table <- DBI::dbGetQuery(con, prepare_sql_query(analysis_type))
 
 ## Any individuals with a Main_Individual_ID set in Pandora need to be included in the list of individuals to process.
 ## First get the list of Full_Individual_IDs in the sequencing run
-fiid_list <- complete_pandora_table %>% filter(sequencing.Run_Id == sequencing_batch_id) %>% select(individual.Full_Individual_Id) %>% distinct()
-## Then get the list of non-missing Main_Individual_IDs in the sequencing run. Change the column name to match the Full_individual_Id column name.
-miid_list <- complete_pandora_table %>% filter(sequencing.Run_Id == sequencing_batch_id, individual.Main_Individual_Id != "") %>% select(individual.Full_Individual_Id=individual.Main_Individual_Id) %>% distinct()
-## When picking up data of the Main individual, we need to add any datasets that use this ID as their main ID from other runs.
-miid_of_others <- complete_pandora_table %>% filter(individual.Main_Individual_Id %in% fiid_list$individual.Full_Individual_Id) %>% select(individual.Full_Individual_Id) %>% distinct()
-## Combine the three lists and remove duplicates
-tibble_input_iids <- bind_rows(fiid_list, miid_list, miid_of_others) %>% distinct()
+## Then convert those to Main_IDs, and pull them and all data where the Main Ids are mentioned
+fiid_list <- complete_pandora_table %>%
+  filter(sequencing.Run_Id == sequencing_batch_id) %>%
+  select(individual.Full_Individual_Id) %>%
+  distinct()
+
+## List of sequenced individuals and their Main_IDs
+ind_list <- fiid_list %>%
+  mutate(individual.Full_Individual_Id=map_chr(individual.Full_Individual_Id, ~ get_main_id_of(.x, complete_pandora_table) %>% pull())) %>%
+  bind_rows(fiid_list)
+
+## List of IDs to pull (incl main Ids and any Inds sharing a main ID from other runs.)
+tibble_input_iids <- complete_pandora_table %>% filter(individual.Main_Individual_Id %in% ind_list$individual.Full_Individual_Id) %>% select(individual.Full_Individual_Id) %>%
+  bind_rows (fiid_list, miid_list) %>% distinct()
 
 ## Get protocol tab with udg and strandedness info for each library protocol
 pandora_library_protocol_info <- pandora2eager:::load_library_protocol_info(con)
@@ -267,8 +289,8 @@ if ( opts$debug ) { write_tsv(results, file=paste0(sequencing_batch_id, ".", ana
 
 ## Read in the whitelist if any, and filter the results table
 if (! is.na(whitelist_fn) ){
-  whitelist <- read_tsv(whitelist_fn, col_types='c', col_names='Pandora_ID')
-  
+  whitelist <- read_tsv(whitelist_fn, col_types='c', col_names='Pandora_ID') %>% mutate(Pandora_ID = map_chr(Pandora_ID, ~ get_main_id_of(.x, complete_pandora_table) %>% pull()))
+
   results <- results %>% filter(target_ind %in% whitelist$Pandora_ID)
   # write_tsv(results, file=paste0(sequencing_batch_id, ".", analysis_type, ".whitelist.results.txt"))
 }
