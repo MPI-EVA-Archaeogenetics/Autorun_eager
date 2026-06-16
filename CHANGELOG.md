@@ -3,6 +3,18 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.5] - 16/06/2026
+
+### `Added`
+
+### `Fixed`
+
+- `prepare_eager_tsv.R` ACTUALLY fixed [#37](https://github.com/MPI-EVA-Archaeogenetics/Autorun_eager/issues/37) now. AE will now correctly pick up data from the main Individual, as well as other individuals with the same Main_ID, even those IDs that only appearin other sequencing runs!
+
+### `Dependencies`
+
+### `Deprecated`
+
 ## [1.7.4] - 08/06/2026
 
 ### `Added`
