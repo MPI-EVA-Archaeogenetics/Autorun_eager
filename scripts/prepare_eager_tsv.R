@@ -205,13 +205,20 @@ complete_pandora_table <- DBI::dbGetQuery(con, prepare_sql_query(analysis_type))
 
 ## Any individuals with a Main_Individual_ID set in Pandora need to be included in the list of individuals to process.
 ## First get the list of Full_Individual_IDs in the sequencing run
-fiid_list <- complete_pandora_table %>% filter(sequencing.Run_Id == sequencing_batch_id) %>% select(individual.Full_Individual_Id) %>% distinct()
-## Then get the list of non-missing Main_Individual_IDs in the sequencing run. Change the column name to match the Full_individual_Id column name.
-miid_list <- complete_pandora_table %>% filter(sequencing.Run_Id == sequencing_batch_id, individual.Main_Individual_Id != "") %>% select(individual.Full_Individual_Id=individual.Main_Individual_Id) %>% distinct()
-## When picking up data of the Main individual, we need to add any datasets that use this ID as their main ID from other runs.
-miid_of_others <- complete_pandora_table %>% filter(individual.Main_Individual_Id %in% fiid_list$individual.Full_Individual_Id) %>% select(individual.Full_Individual_Id) %>% distinct()
-## Combine the three lists and remove duplicates
-tibble_input_iids <- bind_rows(fiid_list, miid_list, miid_of_others) %>% distinct()
+## Then convert those to Main_IDs, and pull them and all data where the Main Ids are mentioned
+fiid_list <- complete_pandora_table %>%
+  filter(sequencing.Run_Id == sequencing_batch_id) %>%
+  select(individual.Full_Individual_Id) %>%
+  distinct()
+
+## List of sequenced individuals and their Main_IDs
+ind_list <- fiid_list %>%
+  mutate(individual.Full_Individual_Id=map_chr(individual.Full_Individual_Id, ~ get_main_id_of(.x, complete_pandora_table) %>% pull())) %>%
+  bind_rows(fiid_list)
+
+## List of IDs to pull (incl main Ids and any Inds sharing a main ID from other runs.)
+tibble_input_iids <- complete_pandora_table %>% filter(individual.Main_Individual_Id %in% ind_list$individual.Full_Individual_Id) %>% select(individual.Full_Individual_Id) %>%
+  bind_rows (fiid_list, miid_list) %>% distinct()
 
 ## Get protocol tab with udg and strandedness info for each library protocol
 pandora_library_protocol_info <- pandora2eager:::load_library_protocol_info(con)
