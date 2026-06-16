@@ -218,7 +218,7 @@ ind_list <- fiid_list %>%
 
 ## List of IDs to pull (incl main Ids and any Inds sharing a main ID from other runs.)
 tibble_input_iids <- complete_pandora_table %>% filter(individual.Main_Individual_Id %in% ind_list$individual.Full_Individual_Id) %>% select(individual.Full_Individual_Id) %>%
-  bind_rows (fiid_list, miid_list) %>% distinct()
+  bind_rows (fiid_list, ind_list) %>% distinct()
 
 ## Get protocol tab with udg and strandedness info for each library protocol
 pandora_library_protocol_info <- pandora2eager:::load_library_protocol_info(con)
