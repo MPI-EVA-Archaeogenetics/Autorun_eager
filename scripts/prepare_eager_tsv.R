@@ -117,6 +117,21 @@ prepare_sql_query <- function(analysis_type, no_query = F) {
   return(query)
 }
 
+## Function to get the main ID of individual IDs. If no Main_ID is set, then return the original Ind_ID
+get_main_id_of <- function(ind_id, pandora_table_df = complete_pandora_table) {
+  result <- pandora_table_df %>% 
+    select(individual.Full_Individual_Id, individual.Main_Individual_Id) %>%
+    distinct() %>%
+    filter(individual.Full_Individual_Id %in% ind_id) %>%
+    mutate(
+      .keep="none",
+      main_id = case_when(
+      individual.Main_Individual_Id == "" ~ individual.Full_Individual_Id,
+      TRUE ~ individual.Main_Individual_Id
+    ))
+  return(result)
+}
+
 ## MAIN ##
 
 ## Parse arguments ----------------------------
@@ -267,8 +282,8 @@ if ( opts$debug ) { write_tsv(results, file=paste0(sequencing_batch_id, ".", ana
 
 ## Read in the whitelist if any, and filter the results table
 if (! is.na(whitelist_fn) ){
-  whitelist <- read_tsv(whitelist_fn, col_types='c', col_names='Pandora_ID')
-  
+  whitelist <- read_tsv(whitelist_fn, col_types='c', col_names='Pandora_ID') %>% mutate(Pandora_ID = map_chr(Pandora_ID, ~ get_main_id_of(.x, complete_pandora_table) %>% pull()))
+
   results <- results %>% filter(target_ind %in% whitelist$Pandora_ID)
   # write_tsv(results, file=paste0(sequencing_batch_id, ".", analysis_type, ".whitelist.results.txt"))
 }
