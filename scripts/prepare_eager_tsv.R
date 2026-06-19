@@ -293,7 +293,7 @@ if (! is.na(whitelist_fn) ){
   ## Overwrite instead of mutate, in case the whitelist has non-existent indivs.
   whitelist <- get_main_id_of(whitelist$Pandora_ID, complete_pandora_table)
 
-  results <- results %>% filter(target_ind %in% whitelist$Pandora_ID)
+  results <- results %>% filter(target_ind %in% whitelist$main_id)
   # write_tsv(results, file=paste0(sequencing_batch_id, ".", analysis_type, ".whitelist.results.txt"))
 }
 
