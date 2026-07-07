@@ -281,7 +281,7 @@ def build_sql_query(
         str: Full SQL query string.
     """
         # tables: a list of Pandora table names that are to be pulled. Currently hardcoded. As working out the correct join keys is beyond the scope of this script.
-    tables = [ "TAB_Sample", "TAB_Individual","TAB_Site" ]
+    tables = [ "TAB_Sample", "TAB_Individual","TAB_Site", "TAB_Type" ]
     filter_query = ""
     if not column:
         print("No column provided. No query filtering will be performed.")
@@ -307,13 +307,13 @@ def build_sql_query(
                 columns.append(f"{new_name}.`{column.name}` AS `{new_name}.{column.name}`")
         
         select_clause += ",\n".join(columns)
-
     query = f"""
     {select_clause}
     FROM
          TAB_Sample     AS sample
     JOIN TAB_Individual AS individual ON sample.individual = individual.id
     JOIN TAB_Site       AS site       ON individual.site   = site.id
+    JOIN TAB_Type       AS type       ON sample.type       = type.id
     WHERE
         -- Remove any deleted entries.
         sample.Deleted            =  'false'
@@ -384,7 +384,7 @@ def query_pandora(
 def main(cli_args:str = None):
     
     args=_get_args(cli_args)
-    
+
     ## Collect JSONs for steps wthat can produce multiple.
     damage_estimation_paths = glob.glob(
         os.path.join(args.eager_result_dir, "damageprofiler", "*", "*.json")
@@ -465,6 +465,7 @@ def main(cli_args:str = None):
         .merge(contamination_table, on="Library_ID", validate="one_to_one")
     )
     lib_results["Sample_Name"] = lib_results["Library_ID"].str.replace(r".[A-Z][0-9]{4}$", "", regex=True)
+    lib_results['Contamination_Meas'] = np.where(lib_results['Contamination_Nr_SNPs'] > 100, 'ANGSD', np.nan)
 
     ## Aggregate lib_results to sample level
     collected_lib_results = pd.DataFrame()
@@ -548,7 +549,16 @@ def main(cli_args:str = None):
         .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
     )
 
-    
+    ## Conamination_Meas: onlt ANGSD if some libraries have enough SNPs
+    collected_lib_results = (
+        lib_results.groupby("Sample_Name")[["Contamination_Meas"]]
+        .agg(
+            lambda x: np.nan if x.isna().all() else 'ANGSD'
+        )
+        .reset_index()
+        .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
+        )
+
     ## Create list of Pandora Library IDs that were used, to create Library_Names and Nr_Libraries.
     ## Janno Columns: Library_Names, Library_Built, Nr_Libraries, UDG
     library_built_table=tsv_table[["Sample_Name", "Library_ID"]]
@@ -607,6 +617,82 @@ def main(cli_args:str = None):
         .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
         .rename(columns={"Sample_Name":"Eager_ID"})
     )
+
+    creds=read_credfile(args.credentials)
+    pandora_results = query_pandora(**creds, filter_values="ABF001")
+    pandora_results = pandora_results[~pandora_results['sample.Ethically_culturally_sensitive'].str.startswith('Yes', na=False)]
+    
+    
+    ## Get Source_Material column info.
+    sample_results = (
+        pandora_results
+        .filter(['sample.Full_Sample_Id', 'type.Type_Group', 'type.Name'])
+    )
+    sample_results['Source_Material'] = (
+        (sample_results['type.Type_Group'] + '_' + sample_results['type.Name'])
+        .str.lower()
+        .str.replace(' ', '_')
+    )
+    sample_results = sample_results.drop(['type.Type_Group', 'type.Name'], axis=1)
+    
+    pandora_cols_to_keep = [
+        'individual.Full_Individual_Id',
+        'individual.Provenience',
+        'individual.Archaeological_ID', 
+        'individual.Archaeological_Date_From',
+        'individual.Archaeological_Date_To',
+        'individual.Archaeological_Date_Info',
+        'individual.C14_Uncalibrated',
+        'individual.C14_Uncalibrated_Variation',
+        'individual.C14_Calibrated_From',
+        'individual.C14_Calibrated_To',
+        'individual.C14_Calibrated_Mean',
+        'individual.C14_Calibration_Software',
+        'individual.C14_Calibration_Curve',
+        'individual.C14_Calibration_Reservoir_Offset',
+        'individual.C14_Info',
+        'individual.C14_Id_Lab',
+        'individual.C14_Id',
+        'site.Name',
+        'site.Locality',
+        'site.Province',
+        'site.Country',
+        'site.Latitude',
+        'site.Longitude',
+        'site.Date_From',
+        'site.Date_To',
+        'site.Date_Info'
+    ]
+    individual_results = (
+        pandora_results
+        .filter(pandora_cols_to_keep)
+        .drop_duplicates()
+        .rename(columns={
+            'individual.Full_Individual_Id' : 'Individual_ID', ## Foreign Key
+            'individual.Archaeological_ID' : 'Alternative_IDs',
+            'individual.Archaeological_Date_From' : '',
+            'individual.Archaeological_Date_To' : '',
+            'individual.Archaeological_Date_Info' : '',
+            'individual.C14_Uncalibrated' : '',
+            'individual.C14_Uncalibrated_Variation' : '',
+            'individual.C14_Calibrated_From' : '',
+            'individual.C14_Calibrated_To' : '',
+            'individual.C14_Calibrated_Mean' : '',
+            'individual.C14_Calibration_Software' : '',
+            'individual.C14_Calibration_Curve' : '',
+            'individual.C14_Calibration_Reservoir_Offset' : '',
+            'individual.C14_Info' : '',
+            'individual.C14_Id_Lab' : '',
+            'individual.C14_Id' : '',
+            'site.Name' : 'Site',
+            'site.Locality' : 'Location2',
+            'site.Province' : 'Location1',
+            'site.Country' : 'Country',
+            'site.Latitude' : 'Latitude',
+            'site.Longitude' : 'Longitude',
+        })
+    )
+    
     
     out_janno=coalesce_dataframes(janno_table, collected_sample_results, "Eager_ID")
     
