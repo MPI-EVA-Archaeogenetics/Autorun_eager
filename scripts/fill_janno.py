@@ -58,6 +58,7 @@ def _get_args(cli_args:str = None):
         metavar="<CONTAMINATION_SNP_CUTOFF>",
         required=False,
         default=100,
+        type=int,
         help="The snp cutoff for nuclear contamination results. Nuclear contamination results with fewer than this number of SNPs will be ignored when calculating the values for 'Contamination_*' columns. [100]"
     )
     parser.add_argument(
@@ -887,9 +888,9 @@ def main(cli_args:str = None):
     
     ## Decide where to save the output
     if args.safe:
-        output = args.input+".new"
+        output = args.janno+".new"
     else:
-        output = args.input
+        output = args.janno
     return(output, out_janno)
 
 if __name__ == "__main__":
@@ -898,7 +899,6 @@ if __name__ == "__main__":
     ## Save output to file.
     filled_janno.to_csv(
             output_fn,
-            filled_janno, 
             sep="\t",
             na_rep="",
             mode="w",
