@@ -57,7 +57,7 @@ def _get_args(cli_args:str = None):
         "----contamination_snp_cutoff",
         metavar="<CONTAMINATION_SNP_CUTOFF>",
         required=False,
-        default=100
+        default=100,
         help="The snp cutoff for nuclear contamination results. Nuclear contamination results with fewer than this number of SNPs will be ignored when calculating the values for 'Contamination_*' columns. [100]"
     )
     parser.add_argument(
