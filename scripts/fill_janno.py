@@ -132,18 +132,18 @@ def read_janno(path:str) -> pd.DataFrame:
         "Keywords" : "str"
     }))
 
-def get_eager_version(eager_result_dir: str):
-    software_versions_csv_fn = os.path.join(
-        eager_result_dir, "pipeline_info", "software_versions.csv"
-    )
-    ## Check the file xists, and if so, read it in and return the version of nf-core/eager
-    if os.path.exists(software_versions_csv_fn):
-        with open(software_versions_csv_fn, "r") as f:
-            for line in f:
-                if line.strip().split()[0] == "nf-core/eager":
-                    return line.strip().split()[1].lstrip("v")
-    else:
-        return None
+# def get_eager_version(eager_result_dir: str):
+#     software_versions_csv_fn = os.path.join(
+#         eager_result_dir, "pipeline_info", "software_versions.csv"
+#     )
+#     ## Check the file xists, and if so, read it in and return the version of nf-core/eager
+#     if os.path.exists(software_versions_csv_fn):
+#         with open(software_versions_csv_fn, "r") as f:
+#             for line in f:
+#                 if line.strip().split()[0] == "nf-core/eager":
+#                     return line.strip().split()[1].lstrip("v")
+#     else:
+#         return None
 
 ## Function to calculate weighted mean of a group from the weight and value columns specified.
 def weighted_mean(
@@ -391,7 +391,7 @@ def query_pandora(
     print("[query_pandora]: All samples and metadata successfully retrieved")
     return request
 
-def add_date_columns(data):
+def add_date_columns(data:pd.DataFrame) -> pd.DataFrame:
     df = data.copy()
     ## Edits the underlying dataframe
     ## Initialize new columns with NaN
@@ -549,8 +549,8 @@ def main(cli_args:str = None):
     args=_get_args(cli_args)
     
     site_id=pH.get_site_id(args.ind_id)
-    eager_result_dir = f"/mnt/archgen/Autorun_eager/eager_outputs/{analysis_type}/{site_id}/{ind_id}/"
-    
+    eager_result_dir = f"/mnt/archgen/Autorun_eager/eager_outputs/{args.analysis_type}/{site_id}/{args.ind_id}/"
+
     ## Collect JSONs for steps wthat can produce multiple.
     damage_estimation_paths = glob.glob(
         os.path.join(eager_result_dir, "damageprofiler", "*", "*.json")
@@ -573,7 +573,7 @@ def main(cli_args:str = None):
     )
     
     ## Read in nf-core/eager TSV info
-    eager_tsv_path = f"/mnt/archgen/Autorun_eager/eager_inputs/{analysis_type}/{site_id}/{ind_id}/{ind_id}.tsv"
+    eager_tsv_path = f"/mnt/archgen/Autorun_eager/eager_inputs/{args.analysis_type}/{site_id}/{args.ind_id}/{args.ind_id}.tsv"
     tsv_table = pyEager.parsers.parse_eager_tsv(eager_tsv_path)
     tsv_table = pyEager.parsers.infer_merged_bam_names(
         tsv_table, run_trim_bam=True, skip_deduplication=False
@@ -707,9 +707,7 @@ def main(cli_args:str = None):
         lib_results.astype("string")
         .groupby("Sample_Name")[["Contamination_Nr_SNPs"]]
         .agg(
-            lambda x: "Nr Snps (per library): {}. Estimate and error are weighted means of values per library. Libraries with fewer than {args.contamination_snp_cutoff} SNPs used in contamination estimation were excluded.".format(
-                ";".join(x)
-            )
+            lambda x: f"Nr Snps (per library): {';'.join(x)}. Estimate and error are weighted means of values per library. Libraries with fewer than {args.contamination_snp_cutoff} SNPs used in contamination estimation were excluded."
         )
         .rename(columns={"Contamination_Nr_SNPs": "Contamination_Note"})
         .reset_index()
@@ -750,6 +748,7 @@ def main(cli_args:str = None):
     library_built_table=(
             tsv_table[["Sample_Name", "Library_ID", "UDG_Treatment"]]
         .drop_duplicates()
+        .apply(udg_treatment_to_udg, axis=1)
         .groupby("Sample_Name")[["UDG_Treatment"]]
         .agg(lambda x: ";".join(x))
         .rename(columns={"UDG_Treatment": "UDG"})
@@ -885,20 +884,22 @@ def main(cli_args:str = None):
     ## Finally, update the Group_Name to include the poseidon ID, as well as the site ID with the analysis type suffix.
     out_janno['Group_Name'] = out_janno['Group_Name'] + ';' + out_janno['Group_Name'] + f'.{args.analysis_type}'
     out_janno['Genotype_Ploidy'] = args.genotype_ploidy
-    return(out_janno)
-
-if __name__ == "__main__":
-    filled_janno = main()
+    
+    ## Decide where to save the output
     if args.safe:
         output = args.input+".new"
     else:
         output = args.input
+    return(output, out_janno)
+
+if __name__ == "__main__":
+    (output_fn, filled_janno) = main()
     
     ## Save output to file.
     filled_janno.to_csv(
-            args.janno+'.new', 
+            output_fn,
             filled_janno, 
-            sep="\t", 
+            sep="\t",
             na_rep="",
             mode="w",
         )
