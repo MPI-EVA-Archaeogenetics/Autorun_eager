@@ -11,6 +11,7 @@ import numpy as np
 import sqlalchemy
 import pymysql
 import country_converter as coco
+import pyPandoraHelper as pH
 pd.options.mode.copy_on_write = True
 VERSION="0.0.1"
 
@@ -25,11 +26,10 @@ def _get_args(cli_args:str = None):
         "which case the output files get the suffix '.new'.",
     )
     parser.add_argument(
-        "-r",
-        "--eager_result_dir",
-        metavar="<DIR>",
+        "-i",
+        "--ind_id",
         required=True,
-        help="The nf-core/eager result directory for the minotaur package.",
+        help="The individual ID whose package janno should be updated."
     )
     parser.add_argument(
         "-j",
@@ -37,13 +37,6 @@ def _get_args(cli_args:str = None):
         metavar="<JANNO>",
         required=True,
         help="The input janno file.",
-    )
-    parser.add_argument(
-        "-t",
-        "--eager_tsv_path",
-        metavar="<TSV>",
-        required=True,
-        help="The path to the eager input TSV used to generate the nf-core/eager results.",
     )
     parser.add_argument(
         "-a",
@@ -58,6 +51,22 @@ def _get_args(cli_args:str = None):
         metavar="<CREDETIALS>",
         required=True,
         help="The PANDORA credentials file.",
+    )
+    parser.add_argument(
+        "-s",
+        "----contamination_snp_cutoff",
+        metavar="<CONTAMINATION_SNP_CUTOFF>",
+        required=False,
+        default=100
+        help="The snp cutoff for nuclear contamination results. Nuclear contamination results with fewer than this number of SNPs will be ignored when calculating the values for 'Contamination_*' columns. [100]"
+    )
+    parser.add_argument(
+        "-p",
+        "--genotype_ploidy",
+        metavar="<PLOIDY>",
+        required=False,
+        default='haploid',
+        help="The genotype ploidy of the genotypes produced by eager. This value will be used to fill in all missing entries in the 'Genotype_Ploidy' in the output janno file. ['haploid']",
     )
     parser.add_argument(
         "--safe",
@@ -538,40 +547,44 @@ def add_country_iso(data: pd.DataFrame, country_column: str = "Country") -> pd.D
 def main(cli_args:str = None):
     
     args=_get_args(cli_args)
-
+    
+    site_id=pH.get_site_id(args.ind_id)
+    eager_result_dir = f"/mnt/archgen/Autorun_eager/eager_outputs/{analysis_type}/{site_id}/{ind_id}/"
+    
     ## Collect JSONs for steps wthat can produce multiple.
     damage_estimation_paths = glob.glob(
-        os.path.join(args.eager_result_dir, "damageprofiler", "*", "*.json")
-    ) + glob.glob(os.path.join(args.eager_result_dir, "mapdamage", "*"))
+        os.path.join(eager_result_dir, "damageprofiler", "*", "*.json")
+    ) + glob.glob(os.path.join(eager_result_dir, "mapdamage", "*"))
     ## Endogenous in Poseidon should be calculated on the SG data.
     endorspy_json_paths = glob.glob(
-        os.path.join(args.eager_result_dir, "endorspy", "*.json")
+        os.path.join(eager_result_dir, "endorspy", "*.json")
             .replace(f"/{args.analysis_type}/", "/SG/")
     )
     snp_coverage_json_paths = glob.glob(
-        os.path.join(args.eager_result_dir, "genotyping", "*.json")
+        os.path.join(eager_result_dir, "genotyping", "*.json")
     )
-
+    
     ## Collect paths for analyses with single json.
     sexdeterrmine_json_path = os.path.join(
-        args.eager_result_dir, "sex_determination", "sexdeterrmine.json"
+        eager_result_dir, "sex_determination", "sexdeterrmine.json"
     )
     nuclear_contamination_json_path = os.path.join(
-        args.eager_result_dir, "nuclear_contamination", "nuclear_contamination_mqc.json"
+        eager_result_dir, "nuclear_contamination", "nuclear_contamination_mqc.json"
     )
-
+    
     ## Read in nf-core/eager TSV info
-    tsv_table = pyEager.parsers.parse_eager_tsv(args.eager_tsv_path)
+    eager_tsv_path = f"/mnt/archgen/Autorun_eager/eager_inputs/{analysis_type}/{site_id}/{ind_id}/{ind_id}.tsv"
+    tsv_table = pyEager.parsers.parse_eager_tsv(eager_tsv_path)
     tsv_table = pyEager.parsers.infer_merged_bam_names(
         tsv_table, run_trim_bam=True, skip_deduplication=False
     )
-
+    
     ## Read in janno and create needed additonal columns.
     janno_table = read_janno(args.janno)
     ## Add Individual_ID to janno table. That is the Poseidon_ID after removing added analysis type and _ss suffixes.
     janno_table["Eager_ID"] = janno_table["Poseidon_ID"].str.replace(f".{args.analysis_type}", "")
     janno_table["Individual_ID"] = janno_table["Eager_ID"].str.replace(r"_ss", "")
-
+    
     ## Prepare damage table for joining. Infer eager Library_ID from id column, by removing '_rmdup.bam' suffix
     ## Janno Columns: Damage
     ## The "_rmdup" is removed separately to also apply to mapdamage results (which lack the .bam suffix)
@@ -582,14 +595,14 @@ def main(cli_args:str = None):
     damage_table = damage_table[["Library_ID", "n_reads", "dmg_5p_1bp"]].rename(
         columns={"dmg_5p_1bp": "damage"}
     )
-
+    
     ## Prepare SG endogenous table for joining. Should be max value in cases where multiple libraries are merged.
     ## Janno Columns: Endogenous
     endogenous_table = pyEager.wrappers.compile_endogenous_table(endorspy_json_paths)
     endogenous_table = endogenous_table[["id", "endogenous_dna"]].rename(
         columns={"id": "Library_ID", "endogenous_dna": "endogenous"}
     )
-
+    
     ## Prepare contamination table for joining. Always at library level. Only need to fix column names here.
     ## Janno columns: Contamination_Est, Conamination_SE, Contamination_Nr_SNPs, Conamination_Note
     contamination_table = pyEager.parsers.parse_nuclear_contamination_json(
@@ -611,7 +624,7 @@ def main(cli_args:str = None):
     contamination_table["Contamination_SE"] = pd.to_numeric(
         contamination_table["Contamination_SE"], errors="coerce"
     )
-
+    
     ## LIBRARY LEVEL RESULTS THAT NEED AGGRGATION. Need to be put together since weighted mean relies on n_reads from damage_table.
     lib_results = (
         damage_table
@@ -620,11 +633,11 @@ def main(cli_args:str = None):
     )
     lib_results["Sample_Name"] = lib_results["Library_ID"].str.replace(r".[A-Z][0-9]{4}$", "", regex=True)
     lib_results['Contamination_Meas'] = np.where(lib_results['Contamination_Nr_SNPs'] > 100, 'ANGSD', pd.NA)
-
+    
     ## Aggregate lib_results to sample level
     collected_lib_results = pd.DataFrame()
     collected_lib_results["Sample_Name"] = lib_results["Sample_Name"].unique()
-
+    
     ## Endogenous: maximum value across libraries
     collected_lib_results = (
         lib_results.groupby("Sample_Name")["endogenous"]
@@ -634,7 +647,7 @@ def main(cli_args:str = None):
         .rename(columns={"endogenous": "Endogenous"})
         .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
     )
-
+    
     ## Damage: weighted mean across libraries
     collected_lib_results = (
         lib_results.groupby("Sample_Name")[
@@ -652,7 +665,7 @@ def main(cli_args:str = None):
         .rename(columns={0: "Damage"})
         .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
     )
-
+    
     ## Contamination_Est: weighted mean across libraries
     collected_lib_results = (
         lib_results.groupby("Sample_Name")[
@@ -663,14 +676,14 @@ def main(cli_args:str = None):
             wt_col="n_reads",
             val_col="Contamination_Est",
             filter_col="Contamination_Nr_SNPs",
-            min_val=100,
+            min_val=args.contamination_snp_cutoff,
         )
         .apply(lambda x: round (x, 3) )
         .reset_index()
         .rename(columns={0: "Contamination"})
         .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
     )
-
+    
     ## Contamination_SE: weighted mean across libraries
     collected_lib_results = (
         lib_results.groupby("Sample_Name")[
@@ -681,20 +694,20 @@ def main(cli_args:str = None):
             wt_col="n_reads",
             val_col="Contamination_SE",
             filter_col="Contamination_Nr_SNPs",
-            min_val=100,
+            min_val=args.contamination_snp_cutoff,
         )
         .apply(lambda x: round (x, 5) )
         .reset_index()
         .rename(columns={0: "Contamination_Err"})
         .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
     )
-
+    
     ## Contamination_Note: message about contamination estimation
     collected_lib_results = (
         lib_results.astype("string")
         .groupby("Sample_Name")[["Contamination_Nr_SNPs"]]
         .agg(
-            lambda x: "Nr Snps (per library): {}. Estimate and error are weighted means of values per library. Libraries with fewer than 100 SNPs used in contamination estimation were excluded.".format(
+            lambda x: "Nr Snps (per library): {}. Estimate and error are weighted means of values per library. Libraries with fewer than {args.contamination_snp_cutoff} SNPs used in contamination estimation were excluded.".format(
                 ";".join(x)
             )
         )
@@ -702,7 +715,7 @@ def main(cli_args:str = None):
         .reset_index()
         .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
     )
-
+    
     ## Conamination_Meas: onlt ANGSD if some libraries have enough SNPs
     collected_lib_results = (
         lib_results.groupby("Sample_Name")[["Contamination_Meas"]]
@@ -712,11 +725,10 @@ def main(cli_args:str = None):
         .reset_index()
         .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
         )
-
+    
     ## Create list of Pandora Library IDs that were used, to create Library_Names and Nr_Libraries.
     ## Janno Columns: Library_Names, Library_Built, Nr_Libraries, UDG
     library_built_table=tsv_table[["Sample_Name", "Library_ID"]]
-    # library_built_table.loc[-1] = ["AAR001_ss", "AAR001_ss.A0102"]
     library_built_table["Library_ID"]=library_built_table["Library_ID"].str.replace(r"_ss", "")
     library_built_table=(
             library_built_table[["Sample_Name", "Library_ID"]]
@@ -744,7 +756,7 @@ def main(cli_args:str = None):
         .reset_index()
         .merge(library_built_table, on="Sample_Name", validate="one_to_one")
     )
-
+    
     ## Prepare SNP coverage table for joining. Should always be on the sample level, so only need to fix column names.
     ## Janno columns: Nr_SNPs
     snp_coverage_table = pyEager.wrappers.compile_snp_coverage_table(
@@ -753,7 +765,7 @@ def main(cli_args:str = None):
     snp_coverage_table = snp_coverage_table.drop("Total_Snps", axis=1).rename(
         columns={"id": "Sample_Name", "Covered_Snps": "Nr_SNPs"}
     )
-
+    
     sex_determination_table = pyEager.parsers.parse_sexdeterrmine_json(
         sexdeterrmine_json_path
     )
@@ -763,7 +775,7 @@ def main(cli_args:str = None):
         .apply(lambda x: round(pd.to_numeric(x, errors='coerce'), 5))
     )
     sex_determination_table = sex_determination_table[["Sample_Name", "RateX", "RateY", "RateErrX", "RateErrY"]]
-
+    
     collected_sample_results = (
         sex_determination_table
         .merge(snp_coverage_table, on="Sample_Name", validate="one_to_one")
@@ -771,23 +783,29 @@ def main(cli_args:str = None):
         .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
         .rename(columns={"Sample_Name":"Eager_ID"})
     )
-
-    creds=read_credfile(args.credentials)
-    pandora_results = query_pandora(**creds, filter_values="ABF001").replace('', pd.NA)
-    pandora_results = pandora_results[~pandora_results['sample.Ethically_culturally_sensitive'].str.startswith('Yes', na=False)]
     
+    creds=read_credfile(args.credentials)
+    ## Pull info from padora. Uses the first Individual_ID in the janno. This is because at this stage, all poseidon IDs will have the same Invidual_ID.
+    pandora_results = query_pandora(**creds, filter_values=janno_table['Individual_ID'][0]).replace('', pd.NA)
+    pandora_results = pandora_results[~pandora_results['sample.Ethically_culturally_sensitive'].str.startswith('Yes', na=False)]
     
     ## Get Source_Material column info.
     sample_results = (
         pandora_results
-        .filter(['sample.Full_Sample_Id', 'type.Type_Group', 'type.Name'])
+        .filter(['individual.Full_Individual_Id', 'sample.Full_Sample_Id', 'type.Type_Group', 'type.Name'])
     )
     sample_results['Source_Material'] = (
         (sample_results['type.Type_Group'] + '_' + sample_results['type.Name'])
         .str.lower()
         .str.replace(' ', '_')
     )
-    sample_results = sample_results.drop(['type.Type_Group', 'type.Name'], axis=1)
+    sample_results = (
+        sample_results
+        .drop(['sample.Full_Sample_Id', 'type.Type_Group', 'type.Name'], axis=1)
+        .groupby("individual.Full_Individual_Id")
+        .agg(lambda x: ";".join(x))
+        .reset_index()
+    )
     
     pandora_cols_to_keep = [
         'individual.Full_Individual_Id',
@@ -835,6 +853,7 @@ def main(cli_args:str = None):
         'Date_Note',
         'Location',
         'Country_ISO',
+        'Source_Material'
     ]
     
     individual_results = (
@@ -849,6 +868,7 @@ def main(cli_args:str = None):
     ## Finalise individual results table from pandora
     individual_results = (
         individual_results
+        .merge(sample_results, on="individual.Full_Individual_Id", validate="one_to_one")
         .rename(columns={
             'individual.Full_Individual_Id' : 'Individual_ID', ## Foreign Key
             'individual.Archaeological_ID' : 'Alternative_IDs',
@@ -859,10 +879,26 @@ def main(cli_args:str = None):
         .filter(poseidon_cols, axis=1)
     )
     
-    
+    ## Put together all the information from the compiled tables into the janno.
     out_janno=coalesce_dataframes(janno_table, collected_sample_results, "Eager_ID")
-    
+    out_janno=coalesce_dataframes(out_janno  , individual_results      , "Individual_ID")
+    ## Finally, update the Group_Name to include the poseidon ID, as well as the site ID with the analysis type suffix.
+    out_janno['Group_Name'] = out_janno['Group_Name'] + ';' + out_janno['Group_Name'] + f'.{args.analysis_type}'
+    out_janno['Genotype_Ploidy'] = args.genotype_ploidy
     return(out_janno)
 
 if __name__ == "__main__":
-    main()
+    filled_janno = main()
+    if args.safe:
+        output = args.input+".new"
+    else:
+        output = args.input
+    
+    ## Save output to file.
+    filled_janno.to_csv(
+            args.janno+'.new', 
+            filled_janno, 
+            sep="\t", 
+            na_rep="",
+            mode="w",
+        )
