@@ -10,6 +10,7 @@ import pandas as pd
 import numpy as np
 import sqlalchemy
 import pymysql
+import country_converter as coco
 pd.options.mode.copy_on_write = True
 VERSION="0.0.1"
 
@@ -381,6 +382,159 @@ def query_pandora(
     print("[query_pandora]: All samples and metadata successfully retrieved")
     return request
 
+def add_date_columns(data):
+    df = data.copy()
+    ## Edits the underlying dataframe
+    ## Initialize new columns with NaN
+    df['Date_Type']                 = pd.NA
+    df['Date_C14_Labnr']            = pd.NA
+    df['Date_C14_Uncal_BP']         = np.nan
+    df['Date_C14_Uncal_BP_Err']     = np.nan
+    df['Date_C14_Reservoir_Offset'] = np.nan
+    df['Date_BC_AD_Start']          = np.nan
+    df['Date_BC_AD_Median']         = np.nan
+    df['Date_BC_AD_Stop']           = np.nan
+    df['Date_Note']                 = pd.NA
+    
+    ## Define a function to determine Date_Type
+    def determine_date_type(row):
+        if pd.notna(row['individual.C14_Uncalibrated']) and not row['individual.C14_Uncalibrated'] == 0:
+            return 'C14'
+        elif pd.notna(row['individual.Archaeological_Date_From']) or pd.notna(row['site.Date_From']):
+            return 'contextual'
+        else:
+            return pd.NA
+    
+    ## Define a function to determine Date_C14_Labnr
+    def detrmine_c14_labnr(row):
+        ## Only keep C14 IDs that are input in the Uncal date column.
+        if pd.notna(row['individual.C14_Uncalibrated']) and not row['individual.C14_Uncalibrated'] == 0:
+            if pd.notna(row['individual.C14_Id']) and pd.notna(row['individual.C14_Id_Lab']):
+                return row['individual.C14_Id_Lab'] + "-" + row['individual.C14_Id']
+            ## Sometimes the enire code is set in the ID column. in such cases, return only the lab ID
+            elif pd.notna(row['individual.C14_Id']):
+                return row['individual.C14_Id']
+            else:
+                return pd.NA
+        else:
+            return pd.NA
+    
+    ## Define a function to determine Date_C14_Uncal_BP adn Date_C14_Uncal_BP_Err, Date_C14_Reservoir_Offset (if any)
+    def determine_uncal_dates_and_reservoir(row):
+        ## I am assuming only one value is in these fields, even when multiple dates are present.
+        ## I think pandora only allows a single integer in the field anyway.
+        if pd.notna(row['individual.C14_Uncalibrated']) and not row['individual.C14_Uncalibrated'] == 0:
+            if pd.notna(row['individual.C14_Calibration_Reservoir_Offset']):
+                reservoir_offset=row['individual.C14_Calibration_Reservoir_Offset']
+            else:
+                reservoir_offset=pd.NA
+            return (row['individual.C14_Uncalibrated'], row['individual.C14_Uncalibrated_Variation'], reservoir_offset)
+        else:
+            return (pd.NA, pd.NA, pd.NA)
+    
+    ## Define a function to determine Date_BC_AD_* columns
+    def determine_bc_ad_dates(row):
+        if pd.notna(row['individual.C14_Uncalibrated']) and not row['individual.C14_Uncalibrated'] == 0:
+            ## If there are uncalibrated and calibrated dates, fill in from Pandora. 
+            if pd.notna(row['individual.C14_Calibrated_From']) and pd.notna(row['individual.C14_Calibrated_To']):
+                ## Rare cases where the Pandora values correspond to 1 sigma. These should be excluded as they do not conform to Poseidon schema.
+                if any(x in row['individual.C14_Info'].lower() for x in ["1 sigma", "1-sigma", "sigma1", "sigma 1", "sigma-1"]):
+                    return ( pd.NA, pd.NA, pd.NA )
+                else:
+                    ## If mean is missing in Pandora, leave blank. (Median can't be calculated without the distribution.)
+                    if pd.notna(row['individual.C14_Calibrated_Mean']):
+                        calibrated_mean=row['individual.C14_Calibrated_Mean']
+                    else:
+                        calibrated_mean=pd.NA
+                    return (
+                        row['individual.C14_Calibrated_From'],
+                        calibrated_mean,
+                        row['individual.C14_Calibrated_To']
+                    )
+            else:
+                ## If there are uncalibrated dates, but no calibrated ones, leave empty (should get quickcalibrated).
+                return ( pd.NA, pd.NA, pd.NA )
+        elif pd.notna(row['individual.Archaeological_Date_From']) and pd.notna(row['individual.Archaeological_Date_To']):
+            ## If the individual has Archaeological dates, use those.
+            individual_mean = np.mean([row['individual.Archaeological_Date_From'], row['individual.Archaeological_Date_To']])
+            return(
+                row['individual.Archaeological_Date_From'],
+                individual_mean,
+                row['individual.Archaeological_Date_To']
+            )
+        elif pd.notna(row['site.Date_From']) and pd.notna(row['site.Date_To']):
+            ## If the site has a date range, use that.
+            site_mean = np.mean([row['site.Date_From'], row['site.Date_To']])
+            return(
+                row['site.Date_From'],
+                site_mean,
+                row['site.Date_To']
+            )
+        else:
+            ## If all the above are missing, leave empty.
+            return( pd.NA, pd.NA, pd.NA )
+    
+    def add_date_note(row):
+        if pd.notna(row['individual.C14_Calibration_Curve']) and pd.notna(row['individual.C14_Calibration_Software']):
+            return f"{row['individual.C14_Calibration_Curve']}, calibrated with {row['individual.C14_Calibration_Software']}"
+        elif pd.notna(row['individual.C14_Calibration_Curve']):
+            return f"{row['individual.C14_Calibration_Curve']}"
+        else:
+            return pd.NA
+            
+    # Apply the function to determine Date_Type
+    df['Date_Type'] = df.apply(determine_date_type, axis=1)
+    
+    # Apply the function to extract lab number from Pandora entries
+    df['Date_C14_Labnr'] = df.apply(detrmine_c14_labnr, axis=1)
+    
+    # Apply the function to determine uncalibrated dates and reservoir offset.
+    df[['Date_C14_Uncal_BP','Date_C14_Uncal_BP_Err', 'Date_C14_Reservoir_Offset']] = df.apply(determine_uncal_dates_and_reservoir, axis=1, result_type='expand')
+    
+    # Apply the function to determine BC_AD range columns
+    df[['Date_BC_AD_Start', 'Date_BC_AD_Median', 'Date_BC_AD_Stop']] = df.apply(determine_bc_ad_dates, axis=1, result_type='expand')
+    
+    ## Apply function to add calibrartion note
+    df['Date_Note'] = df.apply(add_date_note, axis=1)
+    
+    return df
+
+def determine_location(row):
+    if pd.notna(row['site.Locality']) and pd.notna(row['site.Province']) and row['site.Province'].lower() not in ["na", "none"]:
+        return f"{row['site.Locality']}, {row['site.Province']}"
+    elif pd.notna(row['site.Locality']) and not pd.notna(row['site.Province']):
+        return row['site.Locality']
+    elif not pd.notna(row['site.Locality']) and pd.notna(row['site.Province']) and row['site.Province'].lower() not in ["na", "none"]:
+        return row['site.Province']
+    else:
+        return pd.NA
+
+def add_country_iso(data: pd.DataFrame, country_column: str = "Country") -> pd.DataFrame:
+    """
+    Adds a new column 'Country_ISO' to the DataFrame with ISO alpha-2 country codes.
+
+    Parameters:
+    df (pd.DataFrame): The input DataFrame.
+    country_column (str): The name of the column containing country names.
+
+    Returns:
+    pd.DataFrame: The DataFrame with the new 'Country_ISO' column.
+    """
+    df = data.copy()
+    # Initialize the CountryConverter
+    cc = coco.CountryConverter()
+    
+    ## First, strip whitespace
+    df[country_column] = df[country_column].apply(str.strip)
+    
+    ## Convert all names to ISO2 codes.
+    iso_codes=cc.pandas_convert(df[country_column], to="iso2")
+    
+    # Add the new column to the DataFrame
+    df['Country_ISO'] = iso_codes
+    
+    return df
+
 def main(cli_args:str = None):
     
     args=_get_args(cli_args)
@@ -465,7 +619,7 @@ def main(cli_args:str = None):
         .merge(contamination_table, on="Library_ID", validate="one_to_one")
     )
     lib_results["Sample_Name"] = lib_results["Library_ID"].str.replace(r".[A-Z][0-9]{4}$", "", regex=True)
-    lib_results['Contamination_Meas'] = np.where(lib_results['Contamination_Nr_SNPs'] > 100, 'ANGSD', np.nan)
+    lib_results['Contamination_Meas'] = np.where(lib_results['Contamination_Nr_SNPs'] > 100, 'ANGSD', pd.NA)
 
     ## Aggregate lib_results to sample level
     collected_lib_results = pd.DataFrame()
@@ -619,7 +773,7 @@ def main(cli_args:str = None):
     )
 
     creds=read_credfile(args.credentials)
-    pandora_results = query_pandora(**creds, filter_values="ABF001")
+    pandora_results = query_pandora(**creds, filter_values="ABF001").replace('', pd.NA)
     pandora_results = pandora_results[~pandora_results['sample.Ethically_culturally_sensitive'].str.startswith('Yes', na=False)]
     
     
@@ -663,34 +817,46 @@ def main(cli_args:str = None):
         'site.Date_To',
         'site.Date_Info'
     ]
+    
+    poseidon_cols = [
+        'Individual_ID',
+        'Alternative_IDs',
+        'Site',
+        'Latitude',
+        'Longitude',
+        'Date_Type',
+        'Date_C14_Labnr',
+        'Date_C14_Uncal_BP',
+        'Date_C14_Uncal_BP_Err',
+        'Date_C14_Reservoir_Offset',
+        'Date_BC_AD_Start',
+        'Date_BC_AD_Median',
+        'Date_BC_AD_Stop',
+        'Date_Note',
+        'Location',
+        'Country_ISO',
+    ]
+    
     individual_results = (
         pandora_results
         .filter(pandora_cols_to_keep)
         .drop_duplicates()
+    )
+    individual_results = add_date_columns(individual_results)
+    individual_results['Location'] = individual_results.apply(determine_location, axis=1)
+    individual_results = add_country_iso(individual_results, "site.Country")
+    
+    ## Finalise individual results table from pandora
+    individual_results = (
+        individual_results
         .rename(columns={
             'individual.Full_Individual_Id' : 'Individual_ID', ## Foreign Key
             'individual.Archaeological_ID' : 'Alternative_IDs',
-            'individual.Archaeological_Date_From' : '',
-            'individual.Archaeological_Date_To' : '',
-            'individual.Archaeological_Date_Info' : '',
-            'individual.C14_Uncalibrated' : '',
-            'individual.C14_Uncalibrated_Variation' : '',
-            'individual.C14_Calibrated_From' : '',
-            'individual.C14_Calibrated_To' : '',
-            'individual.C14_Calibrated_Mean' : '',
-            'individual.C14_Calibration_Software' : '',
-            'individual.C14_Calibration_Curve' : '',
-            'individual.C14_Calibration_Reservoir_Offset' : '',
-            'individual.C14_Info' : '',
-            'individual.C14_Id_Lab' : '',
-            'individual.C14_Id' : '',
             'site.Name' : 'Site',
-            'site.Locality' : 'Location2',
-            'site.Province' : 'Location1',
-            'site.Country' : 'Country',
             'site.Latitude' : 'Latitude',
             'site.Longitude' : 'Longitude',
         })
+        .filter(poseidon_cols, axis=1)
     )
     
     
