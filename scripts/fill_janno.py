@@ -32,18 +32,18 @@ def _get_args(cli_args:str = None):
         help="The individual ID whose package janno should be updated."
     )
     parser.add_argument(
-        "-j",
-        "--janno",
-        metavar="<JANNO>",
-        required=True,
-        help="The input janno file.",
-    )
-    parser.add_argument(
         "-a",
         "--analysis_type",
         required=True,
         help="The analysis type of the data to fill in.",
         choices=["SG","TF","TM","RP","RM"]
+    )
+    parser.add_argument(
+        "-j",
+        "--janno",
+        metavar="<JANNO>",
+        required=True,
+        help="The input janno file.",
     )
     parser.add_argument(
         "-c",
