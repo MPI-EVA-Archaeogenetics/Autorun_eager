@@ -970,4 +970,5 @@ if __name__ == "__main__":
             sep="\t",
             na_rep="",
             mode="w",
+            index=False,
         )
