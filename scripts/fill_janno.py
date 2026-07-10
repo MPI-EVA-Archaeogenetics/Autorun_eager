@@ -887,12 +887,79 @@ def main(cli_args:str = None):
     out_janno['Group_Name'] = out_janno['Group_Name'] + ';' + out_janno['Group_Name'] + f'.{args.analysis_type}'
     out_janno['Genotype_Ploidy'] = args.genotype_ploidy
     
+    out_col_order = [
+        'Poseidon_ID',
+        'Genetic_Sex',
+        'Group_Name',
+        'Individual_ID',
+        'Species',
+        'Alternative_IDs',
+        'Alternative_IDs_Context',
+        'Relation_To',
+        'Relation_Degree',
+        'Relation_Type',
+        'Relation_Note',
+        'Collection_ID',
+        'Custodian_Institution',
+        'Cultural_Era',
+        'Cultural_Era_URL',
+        'Archaeological_Culture',
+        'Archaeological_Culture_URL',
+        'Country',
+        'Country_ISO',
+        'Location',
+        'Site',
+        'Latitude',
+        'Longitude',
+        'Date_Type',
+        'Date_C14_Labnr',
+        'Date_C14_Uncal_BP',
+        'Date_C14_Uncal_BP_Err',
+        'Date_C14_Reservoir_Offset',
+        'Date_BC_AD_Start',
+        'Date_BC_AD_Median',
+        'Date_BC_AD_Stop',
+        'Date_Note',
+        'Chromosomal_Anomalies',
+        'Chromosomal_Anomalies_Note',
+        'MT_Haplogroup',
+        'Y_Haplogroup',
+        'Source_Material',
+        'Source_Material_Note',
+        'Nr_Libraries',
+        'Library_Names',
+        'Included_Seq_IDs',
+        'Capture_Type',
+        'UDG',
+        'Library_Built',
+        'Genotype_Ploidy',
+        'Data_Preparation_Pipeline_URL',
+        'Endogenous',
+        'Nr_SNPs',
+        'Coverage_on_Target_SNPs',
+        'Damage',
+        'Contamination',
+        'Contamination_Err',
+        'Contamination_Meas',
+        'Contamination_Note',
+        'Genetic_Source_Accession_IDs',
+        'Primary_Contact',
+        'Publication',
+        'Note',
+        'Keywords',
+        'RateX',
+        'RateY',
+        'RateErrX',
+        'RateErrY',
+        ]
+    
     ## Decide where to save the output
     if args.safe:
         output = args.janno+".new"
     else:
         output = args.janno
-    return(output, out_janno)
+    
+    return(output, out_janno[out_col_order])
 
 if __name__ == "__main__":
     (output_fn, filled_janno) = main()
