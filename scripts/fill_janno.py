@@ -756,6 +756,16 @@ def main(cli_args:str = None):
         .reset_index()
         .merge(library_built_table, on="Sample_Name", validate="one_to_one")
     )
+    library_built_table=(
+            tsv_table[["Sample_Name", "BAM"]]
+        # .drop_duplicates()
+        .assign(BAM=lambda d: d["BAM"].str.rsplit("/", n=1).str[-1].str.removesuffix(".bam"))
+        .groupby("Sample_Name")[["BAM"]]
+        .agg(lambda x: ";".join(x))
+        .rename(columns={"BAM": "Included_Seq_IDs"})
+        .reset_index()
+        .merge(library_built_table, on="Sample_Name", validate="one_to_one")
+    )
     
     ## Prepare SNP coverage table for joining. Should always be on the sample level, so only need to fix column names.
     ## Janno columns: Nr_SNPs
