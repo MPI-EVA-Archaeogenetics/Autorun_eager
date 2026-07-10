@@ -875,6 +875,7 @@ def main(cli_args:str = None):
             'site.Name' : 'Site',
             'site.Latitude' : 'Latitude',
             'site.Longitude' : 'Longitude',
+            'site.Country' : 'Country',
         })
         .filter(poseidon_cols, axis=1)
     )
