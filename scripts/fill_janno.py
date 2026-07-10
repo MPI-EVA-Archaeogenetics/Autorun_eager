@@ -852,6 +852,7 @@ def main(cli_args:str = None):
         'Date_BC_AD_Stop',
         'Date_Note',
         'Location',
+        'Country',
         'Country_ISO',
         'Source_Material'
     ]
