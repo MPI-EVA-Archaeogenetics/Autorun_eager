@@ -848,7 +848,7 @@ def main(cli_args:str = None):
     
     poseidon_cols = [
         'Individual_ID',
-        'Alternative_IDs',
+        'Collection_ID',
         'Site',
         'Latitude',
         'Longitude',
@@ -882,7 +882,7 @@ def main(cli_args:str = None):
         .merge(sample_results, on="individual.Full_Individual_Id", validate="one_to_one")
         .rename(columns={
             'individual.Full_Individual_Id' : 'Individual_ID', ## Foreign Key
-            'individual.Archaeological_ID' : 'Alternative_IDs',
+            'individual.Archaeological_ID' : 'Collection_ID',
             'site.Name' : 'Site',
             'site.Latitude' : 'Latitude',
             'site.Longitude' : 'Longitude',
