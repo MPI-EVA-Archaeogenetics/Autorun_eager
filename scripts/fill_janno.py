@@ -544,6 +544,30 @@ def add_country_iso(data: pd.DataFrame, country_column: str = "Country") -> pd.D
     
     return df
 
+def determine_source_material(row, type_col='type.Type_Name', type_group_col='type.Type_Group'):
+    match row[type_group_col]:
+        case 'Tooth':
+            return 'tooth'
+        case 'Calculus':
+            return 'other'
+        case 'Bone':
+            if row[type_col] in ['Petrous', 'Pars petrosa']:
+                return 'petrous'
+            else:
+                return 'bone'
+        case 'Other':
+            match row[type_col]:
+                case 'Hair':
+                    return 'hair'
+                case 'Soft tissue':
+                    return 'soft'
+                case 'Soil':
+                    return 'sediment'
+                case _:
+                    return 'other'
+        case _:
+            return pd.NA
+
 def main(cli_args:str = None):
     
     args=_get_args(cli_args)
@@ -804,11 +828,7 @@ def main(cli_args:str = None):
         pandora_results
         .filter(['individual.Full_Individual_Id', 'sample.Full_Sample_Id', 'type.Type_Group', 'type.Name'])
     )
-    sample_results['Source_Material'] = (
-        (sample_results['type.Type_Group'] + '_' + sample_results['type.Name'])
-        .str.lower()
-        .str.replace(' ', '_')
-    )
+    sample_results['Source_Material'] = sample_results.apply(determine_source_material, axis=1)
     sample_results = (
         sample_results
         .drop(['sample.Full_Sample_Id', 'type.Type_Group', 'type.Name'], axis=1)
@@ -897,6 +917,7 @@ def main(cli_args:str = None):
     ## Finally, update the Group_Name to include the poseidon ID, as well as the site ID with the analysis type suffix.
     out_janno['Group_Name'] = out_janno['Group_Name'] + ';' + out_janno['Group_Name'] + f'.{args.analysis_type}'
     out_janno['Genotype_Ploidy'] = args.genotype_ploidy
+    out_janno['Data_Preparation_Pipeline_URL'] = f"https://nf-co.re/eager{'/' + eager_version if eager_version != '' else ''}"
     
     out_col_order = [
         'Poseidon_ID',
@@ -936,7 +957,6 @@ def main(cli_args:str = None):
         'MT_Haplogroup',
         'Y_Haplogroup',
         'Source_Material',
-        'Source_Material_Note',
         'Nr_Libraries',
         'Library_Names',
         'Included_Seq_IDs',
