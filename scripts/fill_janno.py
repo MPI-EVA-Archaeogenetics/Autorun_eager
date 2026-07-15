@@ -132,18 +132,18 @@ def read_janno(path:str) -> pd.DataFrame:
         "Keywords" : "str"
     }))
 
-# def get_eager_version(eager_result_dir: str):
-#     software_versions_csv_fn = os.path.join(
-#         eager_result_dir, "pipeline_info", "software_versions.csv"
-#     )
-#     ## Check the file xists, and if so, read it in and return the version of nf-core/eager
-#     if os.path.exists(software_versions_csv_fn):
-#         with open(software_versions_csv_fn, "r") as f:
-#             for line in f:
-#                 if line.strip().split()[0] == "nf-core/eager":
-#                     return line.strip().split()[1].lstrip("v")
-#     else:
-#         return None
+def get_eager_version(eager_result_dir: str) -> str:
+    software_versions_csv_fn = os.path.join(
+        eager_result_dir, "pipeline_info", "software_versions.csv"
+    )
+    ## Check the file xists, and if so, read it in and return the version of nf-core/eager
+    if os.path.exists(software_versions_csv_fn):
+        with open(software_versions_csv_fn, "r") as f:
+            for line in f:
+                if line.strip().split()[0] == "nf-core/eager":
+                    return line.strip().split()[1].lstrip("v")
+    else:
+        return ''
 
 ## Function to calculate weighted mean of a group from the weight and value columns specified.
 def weighted_mean(
@@ -550,6 +550,7 @@ def main(cli_args:str = None):
     
     site_id=pH.get_site_id(args.ind_id)
     eager_result_dir = f"/mnt/archgen/Autorun_eager/eager_outputs/{args.analysis_type}/{site_id}/{args.ind_id}/"
+    eager_version = get_eager_version(eager_result_dir)
 
     ## Collect JSONs for steps wthat can produce multiple.
     damage_estimation_paths = glob.glob(
