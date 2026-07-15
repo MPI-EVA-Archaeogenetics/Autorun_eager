@@ -9,7 +9,6 @@ import glob
 import pandas as pd
 import numpy as np
 import sqlalchemy
-import pymysql
 import country_converter as coco
 import pyPandoraHelper as pH
 pd.options.mode.copy_on_write = True
