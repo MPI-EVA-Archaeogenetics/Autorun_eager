@@ -88,6 +88,12 @@ if [[ -z ${ind_id} ]]; then
   exit 1
 fi
 
+## Ensure the individual ID does not start with a . (meaning it should not be accessed).
+if [[ ${ind_id} == .* ]]; then
+  errecho -r "[${0##*/}]: Provided Individual ID '${ind_id}' starts with a '.' and should not be accessed."
+  exit 0 ## Do not error out, just exit gracefully, since this is a user error.
+fi
+
 site_id=`${pandora_helper} -g site_id ${ind_id}` ## Site inferred by pyPandoraHelper
 
 autorun_root_dir='/mnt/archgen/Autorun_eager/'
