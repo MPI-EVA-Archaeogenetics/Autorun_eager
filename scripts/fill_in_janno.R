@@ -1,4 +1,5 @@
 #!/usr/bin/env Rscript
+SCRIPT_VERSION <- "1.0.0"
 
 require(optparse)
 library(magrittr)
@@ -26,6 +27,14 @@ if (!require('rPandoraHelper')) {
 
 ## Parse arguments ----------------------------
 parser <- OptionParser()
+parser <- add_option(parser, c("-v", "--version"),
+  action = "callback",
+  callback = function(option, opt_str, value, parser) {
+    cat(SCRIPT_VERSION, "\n", sep = "")
+    quit(save = "no", status = 0)
+  },
+  help = "Print script version and exit."
+)
 parser <- add_option(parser, c("-j", "--input_janno"),
   type = "character",
   action = "store", dest = "janno_fn",

@@ -569,7 +569,7 @@ def determine_source_material(row, type_col='type.Type_Name', type_group_col='ty
             return pd.NA
 
 def main(cli_args:str = None):
-    
+    ## args=fj._get_args(["-c", "/mnt/archgen/Autorun_eager/.eva_credentials", "-j", "/mnt/archgen/Autorun_eager/.tmp/v2/AAR001_FnPbRfoC/AAR001/AAR001.janno","-i","AAR001","-a", "RM"])
     args=_get_args(cli_args)
     
     site_id=pH.get_site_id(args.ind_id)
@@ -1003,3 +1003,4 @@ if __name__ == "__main__":
             mode="w",
             index=False,
         )
+## TODO: Fix Source_Material column inference for validation.
