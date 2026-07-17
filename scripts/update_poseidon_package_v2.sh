@@ -18,6 +18,7 @@ function Helptext() {
   echo -ne "-a, --analysis_type\t\tThe analysis type from which the genotypes should be pulled. Individuals in the package will also get a suffix that denotes the analysis type.\n"
   echo -ne "-r, --root_output_directory\t\tOptional. The root directory to place the output packages in. Default: '/mnt/archgen/internal_poseidon_archives/'\n"
   echo -ne "-f, --force\t\tOptional. Force package creation even if no new genotypes are found.\n"
+  echo -ne "-k, --keep_logs\t\tOptional. Keep the log files generated during package creation. By default these are deleted on successful completion.\n"
   echo -ne "-h, --help\t\tPrint this text and exit.\n"
   echo -ne "-v, --version \t\tPrint version and exit.\n"
 }
@@ -46,11 +47,12 @@ function validate_analysis_type() {
 }
 
 ## Parse CLI args.
-TEMP=`getopt -q -o hfa:r:v --long help,force,analysis_type:,root_output_dir:version -n 'update_poseidon_package.sh' -- "$@"`
+TEMP=`getopt -q -o hfka:r:v --long help,force,keep_logs,analysis_type:,root_output_dir:version -n 'update_poseidon_package.sh' -- "$@"`
 eval set -- "$TEMP"
 
 ## parameter defaults
 force='false'
+keep_logs='false'
 ind_id=''
 contamination_snp_cutoff="100"  ## Provided to fill_in_janno.R
 ss_suffix="_ss"                 ## Provided to fill_in_janno.R
@@ -63,6 +65,7 @@ while true ; do
   case "$1" in
     -a|--analysis_type) analysis_type=$(validate_analysis_type $2); shift 2;;
     -f|--force) force='true'; shift ;;
+    -k|--keep_logs) keep_logs='true'; shift ;;
     -r|--root_output_dir) root_output_dir=$2; shift 2;;
     -h|--help) Helptext; exit 0 ;;
     -v|--version) echo ${VERSION}; exit 0;;
@@ -211,6 +214,15 @@ if [[ ${newest_geno} -nt ${output_dir}/${ind_id}/${ind_id}.geno ]] || [[ "${forc
   fi
   errecho "[${0##*/}]: Publishing package to '${output_dir}/${ind_id}'"
   mv ${TEMPDIR}/${ind_id} ${output_dir}/${ind_id}
+  check_fail $? "[${0##*/}]: Failed to publish package to '${output_dir}/${ind_id}'"
+  errecho -g "## Package Publish completed ##\n"
+
+  if [[ "${keep_logs}" == 'false' ]]; then
+    errecho "[${0##*/}]: Removing temporary directory '${TEMPDIR}'"
+    rm -rf ${TEMPDIR}
+  else
+    errecho "[${0##*/}]: Keeping temporary directory '${TEMPDIR}'"
+  fi
 else
   errecho -y "[${0##*/}]: No new genotypes found for ${ind_id}. No package update needed."
 fi
