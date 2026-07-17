@@ -203,7 +203,7 @@ if [[ ${newest_geno} -nt ${output_dir}/${ind_id}/${ind_id}.geno ]] || [[ "${forc
   errecho "[${0##*/}]: Publishing package to '${output_dir}/${ind_id}'"
   mv ${TEMPDIR}/${ind_id} ${output_dir}/${ind_id}
 else
-  errecho -y "[${0##*/}]: No new genotypes found for ${ind_id}. No package created."
+  errecho -y "[${0##*/}]: No new genotypes found for ${ind_id}. No package update needed."
 fi
 
 ## TODO: Fix version file setup. 
