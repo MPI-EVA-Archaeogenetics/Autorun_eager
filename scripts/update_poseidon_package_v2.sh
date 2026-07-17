@@ -138,6 +138,8 @@ if [[ ${newest_geno} -nt ${output_dir}/*geno ]]; then
 
   check_fail $? "[update_poseidon_package.sh]: Failed to create poseidon initial package. See: ${LOG}"
   errecho -g "## Initial Package Creation completed ##\n"
+  ## Flush out bibfile contents (currently it's template bloat from trident init)
+  echo '' >${TEMPDIR}/${ind_id}/${ind_id}.bib
 
   ## Populate the janno file
   LOG="${TEMPDIR}/janno_fill.log"
