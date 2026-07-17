@@ -95,6 +95,15 @@ cred_file="${autorun_root_dir}/.eva_credentials"
 trident_path="/r1/people/srv_autoeager/bin/trident-2.1.0.0"
 
 if [[ ! -d ${input_dir} ]]; then
+  ## Check if the lack of output is because there is no input. If so, the lack of input is expected, and we can exit with a nice message.
+  if [[ ! -f ${autorun_root_dir}/eager_outputs/${analysis_type}/${site_id}/${ind_id}/${ind_id}.tsv ]];then
+    errecho -g "[${0##*/}]: No eager_input found for ${ind_id} in ${analysis_type}. Nothing to do."
+    exit 0
+  else
+    ## If not, the lack of input is unexpected, and we should exit with an error.
+    errecho -r "[${0##*/}]: No genotypes found for ${ind_id} in eager outputs."
+    exit 1
+  fi
   errecho -r "[${0##*/}]: Expected eager output directory '${input_dir}' does not exist."
   exit 1
 fi
