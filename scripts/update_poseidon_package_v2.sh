@@ -46,6 +46,24 @@ function validate_analysis_type() {
   fi
 }
 
+function validate_ind_id() {
+  local input
+  local result
+  local isValid
+  input=$1
+  ## Ensure the individual ID does not start with a . (meaning it should not be accessed).
+  if [[ ${input} == .* ]]; then
+    errecho "USER_ERROR: Provided Individual ID '${input}' starts with a '.' and should not be accessed."
+    exit 1
+  fi
+
+  ## Ensure the individual ID is at least 6 characters long
+  if [[ ${#input} -lt 6 ]]; then
+    errecho "USER_ERROR: Provided Individual ID '${input}' is too short. Individual IDs cannot be less than 6 characters long."
+    exit 1
+  fi
+}
+
 ## Parse CLI args.
 TEMP=`getopt -q -o hfka:r:v --long help,force,keep_logs,analysis_type:,root_output_dir:version -n 'update_poseidon_package.sh' -- "$@"`
 eval set -- "$TEMP"
@@ -88,11 +106,7 @@ if [[ -z ${ind_id} ]]; then
   exit 1
 fi
 
-## Ensure the individual ID does not start with a . (meaning it should not be accessed).
-if [[ ${ind_id} == .* ]]; then
-  errecho -r "[${0##*/}]: Provided Individual ID '${ind_id}' starts with a '.' and should not be accessed."
-  exit 0 ## Do not error out, just exit gracefully, since this is a user error.
-fi
+validate_ind_id "${ind_id}"
 
 site_id=`${pandora_helper} -g site_id ${ind_id}` ## Site inferred by pyPandoraHelper
 
