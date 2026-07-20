@@ -572,6 +572,7 @@ def determine_source_material(row, type_col='type.Name', type_group_col='type.Ty
 def main(cli_args:str = None):
     ## args=fj._get_args(["-c", "/mnt/archgen/Autorun_eager/.eva_credentials", "-j", "/mnt/archgen/Autorun_eager/.tmp/v2/AAR001_FnPbRfoC/AAR001/AAR001.janno","-i","AAR001","-a", "RM"])
     args=_get_args(cli_args)
+    print(f"[fill_janno]: Starting fill_janno.py version {VERSION} for individual {args.ind_id} and analysis type {args.analysis_type}", file=sys.stderr)
     
     site_id=pH.get_site_id(args.ind_id)
     eager_result_dir = f"/mnt/archgen/Autorun_eager/eager_outputs/{args.analysis_type}/{site_id}/{args.ind_id}/"
