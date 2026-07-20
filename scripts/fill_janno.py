@@ -12,7 +12,7 @@ import sqlalchemy
 import country_converter as coco
 import pyPandoraHelper as pH
 pd.options.mode.copy_on_write = True
-VERSION="0.0.3"
+VERSION="0.0.4"
 
 def _get_args(cli_args:str = None):
     '''This function parses and return arguments passed in'''
@@ -577,11 +577,14 @@ def main(cli_args:str = None):
     site_id=pH.get_site_id(args.ind_id)
     eager_result_dir = f"/mnt/archgen/Autorun_eager/eager_outputs/{args.analysis_type}/{site_id}/{args.ind_id}/"
     eager_version = get_eager_version(eager_result_dir)
-
+    
     ## Collect JSONs for steps wthat can produce multiple.
-    damage_estimation_paths = glob.glob(
-        os.path.join(eager_result_dir, "damageprofiler", "*", "*.json")
-    ) + glob.glob(os.path.join(eager_result_dir, "mapdamage", "*"))
+    damage_estimation_paths = glob.glob(os.path.join(eager_result_dir, "mapdamage", "*"))
+    if not damage_estimation_paths:
+        ## Only look for damageprofiler paths if there are none for mapdamage
+        damage_estimation_paths = glob.glob(
+            os.path.join(eager_result_dir, "damageprofiler", "*", "*.json")
+        )
     ## Endogenous in Poseidon should be calculated on the SG data.
     endorspy_json_paths = glob.glob(
         os.path.join(eager_result_dir, "endorspy", "*.json")
