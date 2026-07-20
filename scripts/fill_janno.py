@@ -811,10 +811,18 @@ def main(cli_args:str = None):
     sex_determination_table = pyEager.parsers.parse_sexdeterrmine_json(
         sexdeterrmine_json_path
     )
-    sex_determination_table["Sample_Name"] = sex_determination_table["id"].str.replace(r"\..*$", "", regex=True)
     sex_determination_table[["RateX", "RateY", "RateErrX", "RateErrY"]] = (
         sex_determination_table[["RateX", "RateY", "RateErrX", "RateErrY"]]
         .apply(lambda x: round(pd.to_numeric(x, errors='coerce'), 5))
+    )
+    ## Use tsv information to infer the correct sample name.
+    sex_determination_table = (
+        sex_determination_table
+        .rename(columns={"id": "sexdet_bam_name"})
+        .merge(
+            tsv_table.filter(["Sample_Name", "sexdet_bam_name"]).drop_duplicates(),
+            on="sexdet_bam_name", validate="one_to_one"
+            )
     )
     sex_determination_table = sex_determination_table[["Sample_Name", "RateX", "RateY", "RateErrX", "RateErrY"]]
     
