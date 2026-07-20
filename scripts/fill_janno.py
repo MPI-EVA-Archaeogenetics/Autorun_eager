@@ -12,7 +12,7 @@ import sqlalchemy
 import country_converter as coco
 import pyPandoraHelper as pH
 pd.options.mode.copy_on_write = True
-VERSION="0.0.1"
+VERSION="0.0.2"
 
 def _get_args(cli_args:str = None):
     '''This function parses and return arguments passed in'''
@@ -393,17 +393,15 @@ def query_pandora(
 
 def add_date_columns(data:pd.DataFrame) -> pd.DataFrame:
     df = data.copy()
-    ## Edits the underlying dataframe
-    ## Initialize new columns with NaN
-    df['Date_Type']                 = pd.NA
-    df['Date_C14_Labnr']            = pd.NA
-    df['Date_C14_Uncal_BP']         = np.nan
-    df['Date_C14_Uncal_BP_Err']     = np.nan
-    df['Date_C14_Reservoir_Offset'] = np.nan
-    df['Date_BC_AD_Start']          = np.nan
-    df['Date_BC_AD_Median']         = np.nan
-    df['Date_BC_AD_Stop']           = np.nan
-    df['Date_Note']                 = pd.NA
+    
+    ## _cast_to_Int64 function to cast results to Int64, by rounding to nearest integer and converting to Int64.
+    def _cast_to_int64(val):
+        if pd.isna(val):
+            return pd.NA
+        if isinstance(val, float):
+            return pd.Int64Dtype().type(round(val))
+        elif isinstance(val, int):
+            return pd.Int64Dtype().type(val)
     
     ## Define a function to determine Date_Type
     def determine_date_type(row):
@@ -415,7 +413,7 @@ def add_date_columns(data:pd.DataFrame) -> pd.DataFrame:
             return pd.NA
     
     ## Define a function to determine Date_C14_Labnr
-    def detrmine_c14_labnr(row):
+    def determine_c14_labnr(row):
         ## Only keep C14 IDs that are input in the Uncal date column.
         if pd.notna(row['individual.C14_Uncalibrated']) and not row['individual.C14_Uncalibrated'] == 0:
             if pd.notna(row['individual.C14_Id']) and pd.notna(row['individual.C14_Id_Lab']):
@@ -437,7 +435,11 @@ def add_date_columns(data:pd.DataFrame) -> pd.DataFrame:
                 reservoir_offset=row['individual.C14_Calibration_Reservoir_Offset']
             else:
                 reservoir_offset=pd.NA
-            return (row['individual.C14_Uncalibrated'], row['individual.C14_Uncalibrated_Variation'], reservoir_offset)
+            return (
+                _cast_to_int64(row['individual.C14_Uncalibrated']),
+                _cast_to_int64(row['individual.C14_Uncalibrated_Variation']),
+                _cast_to_int64(reservoir_offset)
+            )
         else:
             return (pd.NA, pd.NA, pd.NA)
     
@@ -448,7 +450,7 @@ def add_date_columns(data:pd.DataFrame) -> pd.DataFrame:
             if pd.notna(row['individual.C14_Calibrated_From']) and pd.notna(row['individual.C14_Calibrated_To']):
                 ## Rare cases where the Pandora values correspond to 1 sigma. These should be excluded as they do not conform to Poseidon schema.
                 if any(x in row['individual.C14_Info'].lower() for x in ["1 sigma", "1-sigma", "sigma1", "sigma 1", "sigma-1"]):
-                    return ( pd.NA, pd.NA, pd.NA )
+                    return ( _cast_to_int64(pd.NA), _cast_to_int64(pd.NA), _cast_to_int64(pd.NA) )
                 else:
                     ## If mean is missing in Pandora, leave blank. (Median can't be calculated without the distribution.)
                     if pd.notna(row['individual.C14_Calibrated_Mean']):
@@ -456,32 +458,32 @@ def add_date_columns(data:pd.DataFrame) -> pd.DataFrame:
                     else:
                         calibrated_mean=pd.NA
                     return (
-                        row['individual.C14_Calibrated_From'],
-                        calibrated_mean,
-                        row['individual.C14_Calibrated_To']
+                        _cast_to_int64(row['individual.C14_Calibrated_From']),
+                        _cast_to_int64(calibrated_mean),
+                        _cast_to_int64(row['individual.C14_Calibrated_To'])
                     )
             else:
                 ## If there are uncalibrated dates, but no calibrated ones, leave empty (should get quickcalibrated).
-                return ( pd.NA, pd.NA, pd.NA )
+                return ( _cast_to_int64(pd.NA), _cast_to_int64(pd.NA), _cast_to_int64(pd.NA) )
         elif pd.notna(row['individual.Archaeological_Date_From']) and pd.notna(row['individual.Archaeological_Date_To']):
             ## If the individual has Archaeological dates, use those.
             individual_mean = np.mean([row['individual.Archaeological_Date_From'], row['individual.Archaeological_Date_To']])
             return(
-                row['individual.Archaeological_Date_From'],
-                individual_mean,
-                row['individual.Archaeological_Date_To']
+                _cast_to_int64(row['individual.Archaeological_Date_From']),
+                _cast_to_int64(individual_mean),
+                _cast_to_int64(row['individual.Archaeological_Date_To'])
             )
         elif pd.notna(row['site.Date_From']) and pd.notna(row['site.Date_To']):
             ## If the site has a date range, use that.
             site_mean = np.mean([row['site.Date_From'], row['site.Date_To']])
             return(
-                row['site.Date_From'],
-                site_mean,
-                row['site.Date_To']
+                _cast_to_int64(row['site.Date_From']),
+                _cast_to_int64(site_mean),
+                _cast_to_int64(row['site.Date_To'])
             )
         else:
             ## If all the above are missing, leave empty.
-            return( pd.NA, pd.NA, pd.NA )
+            return( _cast_to_int64(pd.NA), _cast_to_int64(pd.NA), _cast_to_int64(pd.NA) )
     
     def add_date_note(row):
         if pd.notna(row['individual.C14_Calibration_Curve']) and pd.notna(row['individual.C14_Calibration_Software']):
@@ -495,7 +497,7 @@ def add_date_columns(data:pd.DataFrame) -> pd.DataFrame:
     df['Date_Type'] = df.apply(determine_date_type, axis=1)
     
     # Apply the function to extract lab number from Pandora entries
-    df['Date_C14_Labnr'] = df.apply(detrmine_c14_labnr, axis=1)
+    df['Date_C14_Labnr'] = df.apply(determine_c14_labnr, axis=1)
     
     # Apply the function to determine uncalibrated dates and reservoir offset.
     df[['Date_C14_Uncal_BP','Date_C14_Uncal_BP_Err', 'Date_C14_Reservoir_Offset']] = df.apply(determine_uncal_dates_and_reservoir, axis=1, result_type='expand')
@@ -505,7 +507,6 @@ def add_date_columns(data:pd.DataFrame) -> pd.DataFrame:
     
     ## Apply function to add calibrartion note
     df['Date_Note'] = df.apply(add_date_note, axis=1)
-    
     return df
 
 def determine_location(row):
