@@ -23,6 +23,24 @@ function Helptext() {
   echo -ne "-v, --version \t\tPrint version and exit.\n"
 }
 
+function add_readme() {
+  local package_name
+  local readme_fn
+  local date_stamp
+  local fill_janno_version
+  local trident_version
+  fill_janno_version=$(${autorun_root_dir}/scripts/fill_janno.py --version)
+  trident_version=$(${trident_path} --version)
+  package_name=$1
+  readme_fn=$2
+  date_stamp="$(date -I)"
+  echo "# ${package_name}" > ${readme_fn}
+  echo "This package was created on ${date_stamp} and was processed using the following versions:" >> ${readme_fn}
+  echo "- trident: ${trident_version}" >> ${readme_fn}
+  echo "- fill_janno.py: ${fill_janno_version}" >> ${readme_fn}
+  echo "- update_poseidon_package.sh: ${VERSION}" >> ${readme_fn}
+}
+
 function validate_analysis_type() {
   local input
   local valid_analyses
@@ -199,6 +217,10 @@ if [[ ${newest_geno} -nt ${output_dir}/${ind_id}/${ind_id}.geno ]] || [[ "${forc
 
   check_fail $? "[${0##*/}]: Failed to fill janno file information. See: ${LOG}"
   errecho -g "## Janno File Fill completed ##\n"
+
+  ## Add a README file to the package
+  add_readme ${ind_id} ${TEMPDIR}/${ind_id}/README.md
+  echo "readmeFile: README.md" >> ${TEMPDIR}/${ind_id}/POSEIDON.yml
 
   ## rectify package and add contributor information
   LOG="${TEMPDIR}/package_update.log"
