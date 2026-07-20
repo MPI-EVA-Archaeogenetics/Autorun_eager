@@ -3,7 +3,7 @@
 ## Bash strict mode (no -e given, since I want to use check_fail to provide informative error info manually):
 set -uo pipefail
 
-VERSION="2.0.0"
+VERSION="2.0.1"
 
 ## DEPENDENCY
 pandora_helper="/mnt/archgen/tools/helper_scripts/py_helpers/pyPandoraHelper/pyPandoraHelper.py"
@@ -171,7 +171,8 @@ fi
 ## If the genotypes are newer than the output, create a package
 ## This will evaluate to TRUE when the newest AE geno is newer than the output geno, or when there is no output geno (i.e. no existing package).
 if [[ ${newest_geno} -nt ${output_dir}/${ind_id}/${ind_id}.geno ]] || [[ "${force}" == 'true' ]]; then
-    TEMPDIR=$(mktemp -d ${autorun_root_dir}/.tmp/v2/${ind_id}_XXXXXXXX)
+    if [[ ! -d ${autorun_root_dir}/.tmp/v2/${analysis_type}/ ]]; then mkdir -p ${autorun_root_dir}/.tmp/v2/${analysis_type}/; fi
+    TEMPDIR=$(mktemp -d ${autorun_root_dir}/.tmp/v2/${analysis_type}/${ind_id}_XXXXXXXX)
     errecho -y "[${0##*/}]: Pulling genotypes for ${ind_id}."
     ## make_genotype_dataset_out_of_genotypes <out_name> <tempdir> <output_ind_suffix> <out_population> <geno_fn1> <geno_fn2> ...
     make_genotype_dataset_out_of_genotypes ${ind_id} ${TEMPDIR} .${analysis_type} ${site_id} ${input_dir}/*geno
