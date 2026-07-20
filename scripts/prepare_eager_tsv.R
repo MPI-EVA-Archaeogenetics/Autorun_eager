@@ -53,7 +53,7 @@ save_ind_tsv <- function(data, rename, output_dir, ...) {
   data %>% ungroup() %>% select(-target_ind) %>%  readr::write_tsv(file=paste0(ind_dir,"/",ind_id,".tsv")) ## Output structure can be changed here.
 
   ## Print Autorun_eager version to file
-  AE_version <- "1.7.5"
+  AE_version <- "1.7.6"
   cat(AE_version, file=paste0(ind_dir,"/autorun_eager_version.txt"), fill=T, append = F)
 }
 
@@ -170,6 +170,18 @@ parser <- add_option(parser, c("-d", "--debug_output"), type = 'logical',
 			Helpful to check all the output data in one place."
 )
 
+## DEBUG
+arguments <- parse_args(parser,
+  args=c(
+    "-a", "TF",
+    "-w", "Main_ID_update.260608.whitelist.txt", #/Users/lamnidis/Software/github/MPI-EVA-Archaeogenetics/Autorun_eager/PDA017.txt",
+    "-o", "/Users/lamnidis/Software/github/MPI-EVA-Archaeogenetics/Autorun_eager/test/",
+    "-s", "191025_K00233_0134_AHCKWLBBXY",# "220311_K00233_0255_BHNF52BBXY_SRdi_Jena0056", #"200316_K00233_0146_AHGVGTBBXY",
+    "-d",
+    "~/Software/github/Schiffels-Popgen/MICROSCOPE-processing-pipeline/.credentials"
+    ),
+  positional_arguments = 1)
+
 arguments <- parse_args(parser, positional_arguments = 1)
 opts <- arguments$options
 
@@ -260,12 +272,12 @@ results <- inner_join(complete_pandora_table, tibble_input_iids, by=c("individua
     R2=NA,
     ## Add `_ss` to sample name for ssDNA libraries. Avoids file name collisions and allows easier merging of genotypes for end users.
     Sample_Name = case_when(
-      sequencing.Single_Stranded == 'yes' ~ paste0(target_ind, "_ss"),
+      Strandedness == 'single' ~ paste0(target_ind, "_ss"),
       TRUE ~ target_ind
     ),
     ## Also add the suffix to the Sample_ID part of the Library_ID. This ensures that in the MultiQC report, the ssDNA libraries will be sorted after the ssDNA sample.
     Library_ID = case_when(
-      sequencing.Single_Stranded == 'yes' ~ sub("\\.", "_ss.", library.Full_Library_Id),
+      Strandedness == 'single' ~ sub("\\.", "_ss.", library.Full_Library_Id),
       TRUE ~ library.Full_Library_Id
     )
   ) %>%
