@@ -544,7 +544,7 @@ def add_country_iso(data: pd.DataFrame, country_column: str = "Country") -> pd.D
     
     return df
 
-def determine_source_material(row, type_col='type.Type_Name', type_group_col='type.Type_Group'):
+def determine_source_material(row, type_col='type.Name', type_group_col='type.Type_Group'):
     match row[type_group_col]:
         case 'Tooth':
             return 'tooth'
@@ -747,7 +747,7 @@ def main(cli_args:str = None):
         )
         .reset_index()
         .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
-        )
+    )
     
     ## Create list of Pandora Library IDs that were used, to create Library_Names and Nr_Libraries.
     ## Janno Columns: Library_Names, Library_Built, Nr_Libraries, UDG
