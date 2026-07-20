@@ -12,7 +12,7 @@ import sqlalchemy
 import country_converter as coco
 import pyPandoraHelper as pH
 pd.options.mode.copy_on_write = True
-VERSION="0.0.4"
+VERSION="0.0.5"
 
 def _get_args(cli_args:str = None):
     '''This function parses and return arguments passed in'''
@@ -629,6 +629,9 @@ def main(cli_args:str = None):
     ## Prepare SG endogenous table for joining. Should be max value in cases where multiple libraries are merged.
     ## Janno Columns: Endogenous
     endogenous_table = pyEager.wrappers.compile_endogenous_table(endorspy_json_paths)
+    if endogenous_table.empty:
+        print(f"[fill_janno]: No endogenous table found for {args.ind_id}. Setting Endogenous to NaN.", file=sys.stderr)
+        endogenous_table = pd.DataFrame(columns=["id", "endogenous_dna"])
     endogenous_table = endogenous_table[["id", "endogenous_dna"]].rename(
         columns={"id": "Library_ID", "endogenous_dna": "endogenous"}
     )
