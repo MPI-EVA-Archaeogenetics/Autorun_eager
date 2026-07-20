@@ -449,7 +449,7 @@ def add_date_columns(data:pd.DataFrame) -> pd.DataFrame:
             ## If there are uncalibrated and calibrated dates, fill in from Pandora. 
             if pd.notna(row['individual.C14_Calibrated_From']) and pd.notna(row['individual.C14_Calibrated_To']):
                 ## Rare cases where the Pandora values correspond to 1 sigma. These should be excluded as they do not conform to Poseidon schema.
-                if any(x in row['individual.C14_Info'].lower() for x in ["1 sigma", "1-sigma", "sigma1", "sigma 1", "sigma-1"]):
+                if pd.notna(row['individual.C14_Info']) and any(x in row['individual.C14_Info'].lower() for x in ["1 sigma", "1-sigma", "sigma1", "sigma 1", "sigma-1"]):
                     return ( _cast_to_int64(pd.NA), _cast_to_int64(pd.NA), _cast_to_int64(pd.NA) )
                 else:
                     ## If mean is missing in Pandora, leave blank. (Median can't be calculated without the distribution.)
