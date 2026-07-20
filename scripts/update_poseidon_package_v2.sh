@@ -248,6 +248,4 @@ else
 fi
 
 ## TODO: Fix version file setup. 
-## TODO: Create actual package.
-## TODO: Finish creating and validating package
 ## TODO: Use poseidon doi Crossref query to fill BibTex entries for packages?
