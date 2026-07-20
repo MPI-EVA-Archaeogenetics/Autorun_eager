@@ -12,7 +12,7 @@ import sqlalchemy
 import country_converter as coco
 import pyPandoraHelper as pH
 pd.options.mode.copy_on_write = True
-VERSION="0.0.2"
+VERSION="0.0.3"
 
 def _get_args(cli_args:str = None):
     '''This function parses and return arguments passed in'''
