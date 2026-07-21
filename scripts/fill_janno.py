@@ -12,7 +12,7 @@ import sqlalchemy
 import country_converter as coco
 import pyPandoraHelper as pH
 pd.options.mode.copy_on_write = True
-VERSION="0.0.6"
+VERSION="0.0.7"
 
 def _get_args(cli_args:str = None):
     '''This function parses and return arguments passed in'''
@@ -696,7 +696,7 @@ def main(cli_args:str = None):
         .merge(contamination_table, on="Library_ID", validate="one_to_one")
     )
     lib_results["Sample_Name"] = lib_results["Library_ID"].str.replace(r".[A-Z][0-9]{4}$", "", regex=True)
-    lib_results['Contamination_Meas'] = np.where(lib_results['Contamination_Nr_SNPs'] > 100, 'ANGSD', pd.NA)
+    lib_results['Contamination_Meas'] = np.where(lib_results['Contamination_Nr_SNPs'] >= 100, 'ANGSD', pd.NA)
     
     ## Aggregate lib_results to sample level
     collected_lib_results = pd.DataFrame()
