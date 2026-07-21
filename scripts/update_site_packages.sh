@@ -21,6 +21,10 @@ trident_path="/r1/people/srv_autoeager/bin/trident-2.1.0.0"
 analysis_type="SG"
 site=""
 
+## Parse CLI args.
+TEMP=`getopt -q -o ha:v --long help,analysis_type:,version -n "$0" -- "$@"`
+eval set -- "$TEMP"
+
 while true ; do
   case "$1" in
     -a|--analysis_type) analysis_type=$(validate_analysis_type $2); shift 2;;
