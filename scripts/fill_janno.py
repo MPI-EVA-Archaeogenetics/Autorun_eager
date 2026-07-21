@@ -803,9 +803,9 @@ def main(cli_args:str = None):
     library_built_table["Nr_Libraries"] = library_built_table["Library_Names"].str.count(";") + 1
     library_built_table["Library_Built"] = library_built_table.apply(
         lambda row: ";".join(
-            ["ss"] * int(row["Nr_Libraries"])
+            ["ss"] * 1
             if str(row.Sample_Name).endswith("_ss")
-            else ["ds"] * int(row["Nr_Libraries"])
+            else ["ds"] * 1
         ),
         axis=1,
     )
