@@ -23,12 +23,12 @@ root_poseidon_dir="/mnt/archgen/internal_poseidon_archives"
 date_stamp="$(date -I)"
 trident_path="/r1/people/srv_autoeager/bin/trident-2.1.0.0"
 output_fn="/mnt/archgen/Autorun_eager/.tmp/sites/joblists/${date_stamp}_site_package_update_list.txt"
-echo '' > ${output_fn}
 errecho -y "Creating joblist for site package updates. Output will be written to ${output_fn}."
+echo '' > ${output_fn}
 
 for a in ${root_poseidon_dir}/*; do
   analysis_type=$(basename $a)
-  for s in ${root_poseidon_dir}/${analysis_type}/.individuals.nobackup/*; do
+  for s in ${root_poseidon_dir}/.individuals.nobackup/${analysis_type}/*; do
     site=$(basename $s)
     output_site_yml="${root_poseidon_dir}/${analysis_type}/${site}/POSEIDON.yml"
     newest_geno=$(ls -Art -1 ${s}/*/*geno | tail -n 1) ## Reverse order and tail to avoid broken pipe errors

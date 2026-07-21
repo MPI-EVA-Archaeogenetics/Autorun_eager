@@ -63,7 +63,7 @@ output_dir="${root_poseidon_dir}/${analysis_type}/${site}"
 
 errecho -y "## Forge Package ##"
 ${trident_path} forge \
-  -d ${root_poseidon_dir}/${analysis_type}/.individuals.nobackup/${site} \
+  -d ${root_poseidon_dir}/.individuals.nobackup/${analysis_type}/${site} \
   -o ${TEMPDIR}/${site} \
   --outFormat EIGENSTRAT
 

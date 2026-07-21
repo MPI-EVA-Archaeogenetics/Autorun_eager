@@ -108,7 +108,7 @@ site_id=`${pandora_helper} -g site_id ${ind_id}` ## Site inferred by pyPandoraHe
 autorun_root_dir='/mnt/archgen/Autorun_eager/'
 root_input_dir='/mnt/archgen/Autorun_eager/eager_outputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each site and individual.
 input_dir="${root_input_dir}/${analysis_type}/${site_id}/${ind_id}/genotyping/"
-output_dir="${root_output_dir}/${analysis_type}/.individuals.nobackup/${site_id}/"
+output_dir="${root_output_dir}/.individuals.nobackup/${analysis_type}/${site_id}/"
 cred_file="${autorun_root_dir}/.eva_credentials"
 trident_path="/r1/people/srv_autoeager/bin/trident-2.1.0.0"
 
