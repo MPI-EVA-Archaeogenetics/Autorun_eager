@@ -58,7 +58,7 @@ case "$analysis_type" in
 esac
 
 ## Forge the package in a temp dir
-TEMPDIR=$(mktemp -d ${autorun_root_dir}/.tmp/sites/${analysis_type}/${site}_XXXXXXXX)
+TEMPDIR=$(mktemp -d ${autorun_root_dir}/.tmp/sites/${site}_${analysis_type}_XXXXXXXX)
 output_dir="${root_poseidon_dir}/${analysis_type}/${site}"
 
 errecho -y "## Forge Package ##"
@@ -74,7 +74,7 @@ errecho -y "## Rectify Package ##"
 ${trident_path} rectify \
   -d ${TEMPDIR}/${site} \
   --checksumAll \
-  --logText "${date_stamp} Package creation" \
+  --logText "$(date -I) Package creation" \
   --packageVersion Major \
   --newContributors '[Thiseas C. Lamnidis](thiseas_christos_lamnidis@eva.mpg.de);[Kay Pruefer](kay_pruefer@eva.mpg.de)' \
 
@@ -93,10 +93,5 @@ errecho "[${0##*/}]: Publishing package to '${output_dir}'"
 mv ${TEMPDIR}/${site} ${output_dir}
 check_fail $? "[${0##*/}]: Failed to publish package to '${output_dir}'"
 errecho -g "## Package Publish completed ##\n"
-
-if [[ "${keep_logs}" == 'false' ]]; then
-  errecho "[${0##*/}]: Removing temporary directory '${TEMPDIR}'"
-  rm -rf ${TEMPDIR}
-else
-  errecho "[${0##*/}]: Keeping temporary directory '${TEMPDIR}'"
-fi
+errecho "[${0##*/}]: Removing temporary directory '${TEMPDIR}'"
+rm -rf ${TEMPDIR}
