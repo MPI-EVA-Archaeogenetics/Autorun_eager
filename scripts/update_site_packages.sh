@@ -3,42 +3,96 @@
 ## Bash strict mode (no -e given, since I want to use check_fail to provide informative error info manually):
 set -uo pipefail
 
-VERSION="2.0.0"
+VERSION="0.0.0"
 source /mnt/archgen/Autorun_eager/scripts/helper_functions.sh
 
 # ## Helptext function
-# function Helptext() {
-#   echo -ne "\t usage: $0 [options] <ind_id>\n\n"
-#   echo -ne "This script pulls data and metadata from Autorun_eager and creates a poseidon package with the data for the specified individual.\n\n"
-#   echo -ne "Options:\n"
-#   echo -ne "-a, --analysis_type\t\tThe analysis type from which the genotypes should be pulled. Individuals in the package will also get a suffix that denotes the analysis type.\n"
-#   echo -ne "-r, --root_output_directory\t\tOptional. The root directory to place the output packages in. Default: '/mnt/archgen/internal_poseidon_archives/'\n"
-#   echo -ne "-f, --force\t\tOptional. Force package creation even if no new genotypes are found.\n"
-#   echo -ne "-k, --keep_logs\t\tOptional. Keep the log files generated during package creation. By default these are deleted on successful completion.\n"
-#   echo -ne "-h, --help\t\tPrint this text and exit.\n"
-#   echo -ne "-v, --version \t\tPrint version and exit.\n"
-# }
+function Helptext() {
+  echo -ne "\t usage: $0 [options] -a <analysis_type> <site_id>\n\n"
+  echo -ne "This script pulls data and metadata from Autorun_eager and creates a poseidon package with the data for the specified individual.\n\n"
+  echo -ne "Options:\n"
+  echo -ne "-a, --analysis_type\t\tThe analysis type from which the genotypes should be pulled. Individuals in the package will also get a suffix that denotes the analysis type. Defaults to SG.\n"
+  echo -ne "-h, --help\t\tPrint this text and exit.\n"
+  echo -ne "-v, --version \t\tPrint version and exit.\n"
+}
 
 root_poseidon_dir="/mnt/archgen/internal_poseidon_archives"
-date_stamp="$(date -I)"
 trident_path="/r1/people/srv_autoeager/bin/trident-2.1.0.0"
-output_fn=${date_stamp}_site_package_update_list.txt
-echo '' > ${output_fn}
+analysis_type="SG"
+site=""
 
-for a in ${root_poseidon_dir}/*; do
-  analysis_type=$(basename $a)
-  for s in ${root_poseidon_dir}/${analysis_type}/.individuals/*; do
-    site=$(basename $s)
-    output_site_yml="${root_poseidon_dir}/${analysis_type}/${site}/POSEIDON.yml"
-    newest_geno=$(ls -Art -1 ${s}/*/*geno | tail -n 1) ## Reverse order and tail to avoid broken pipe errors
-    
-    if [[ ${newest_geno} -nt ${output_site_yml} ]]; then
-      echo "${trident_path} forge -d ${s} -o ${root_poseidon_dir}/${analysis_type}/${site} --outFormat EIGENSTRAT" >> ${output_fn}
-    else
-      errecho -g "No newer genotypes found for site ${site} in analysis type ${analysis_type}. Skipping package update."
-    fi
-  done
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -a|--analysis_type) analysis_type="$2"; shift 2 ;;
+    -h|--help) Helptext; exit 0;;
+    -v|--version) echo "$VERSION"; exit 0;;
+    --) site="$1"; break;;
+    -*) echo "ERROR: Unknown option: $1" >&2; Helptext ;exit 1 ;;
+    *) echo "ERROR: Unexpected argument: $1" >&2; Helptext; exit 1 ;;
+  esac
 done
 
-echo "sbatch --mem=4GB -p short --cpus-per-task=1 --job-name=site_spawner_${output_fn} --output=/mnt/archgen/Autorun_eager/.tmp/sites/$(basename ${output_fn})/%x.po%A.%a --array 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${output_fn}"
-sbatch --mem=4GB -p short --cpus-per-task=1 --job-name=site_spawner_${output_fn} --output=/mnt/archgen/Autorun_eager/.tmp/sites/$(basename ${output_fn})/%x.po%A.%a --array 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${output_fn}
+if [[ -z "$site" && $# -gt 0 ]]; then
+  site="$1"
+  shift
+fi
+
+if [[ -z "$site" ]]; then
+  echo "ERROR: Missing required argument <site_id>" >&2
+  Helptext
+  exit 1
+fi
+
+case "$analysis_type" in
+  SG|TF|TM|RP|RM)
+    ;;
+  *)
+    echo "ERROR: Unsupported analysis type: $analysis_type" >&2
+    Helptext
+    exit 1
+    ;;
+esac
+
+## Forge the package in a temp dir
+TEMPDIR=$(mktemp -d ${autorun_root_dir}/.tmp/sites/${analysis_type}/${site_id}_XXXXXXXX)
+output_dir="${root_poseidon_dir}/${analysis_type}/${site}"
+
+errecho -y "## Forge Package ##"
+${trident_path} forge \
+  -d ${root_poseidon_dir}/${analysis_type}/.individuals/${site} \
+  -o ${TEMPDIR}/${site} \
+  --outFormat EIGENSTRAT
+
+check_fail $? "Trident forge command failed for site ${site} in analysis type ${analysis_type}."
+errecho -g "## Package Forge completed ##\n"
+
+errecho -y "## Rectify Package ##"
+${trident_path} rectify \
+  -d ${TEMPDIR}/${site} \
+  --checksumAll \
+  --logText "${date_stamp} Package creation" \
+  --packageVersion Major \
+  --newContributors '[Thiseas C. Lamnidis](thiseas_christos_lamnidis@eva.mpg.de);[Kay Pruefer](kay_pruefer@eva.mpg.de)' \
+
+check_fail $? "Trident rectify command failed for site ${site} in analysis type ${analysis_type}."
+errecho -g "## Package Rectify completed ##\n"
+
+## Remove live package, and publish this one
+errecho -y "## Publish Package ##"
+mkdir -p ${output_dir}
+if [[ -d ${output_dir}/ ]]; then
+  errecho "[${0##*/}]: Removing old package at '${output_dir}/'"
+  rm -f ${output_dir}/*
+  rmdir ${output_dir}/
+fi
+errecho "[${0##*/}]: Publishing package to '${output_dir}'"
+mv ${TEMPDIR}/${site} ${output_dir}
+check_fail $? "[${0##*/}]: Failed to publish package to '${output_dir}'"
+errecho -g "## Package Publish completed ##\n"
+
+if [[ "${keep_logs}" == 'false' ]]; then
+  errecho "[${0##*/}]: Removing temporary directory '${TEMPDIR}'"
+  rm -rf ${TEMPDIR}
+else
+  errecho "[${0##*/}]: Keeping temporary directory '${TEMPDIR}'"
+fi
