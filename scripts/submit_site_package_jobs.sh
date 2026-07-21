@@ -34,6 +34,7 @@ for a in ${root_poseidon_dir}/*; do
     
     if [[ ${newest_geno} -nt ${output_site_yml} ]]; then
       echo "/mnt/archgen/Autorun_eager/scripts/update_site_packages.sh -a ${analysis_type} ${site}" >> ${output_fn}
+      errecho -y "Newer genotypes found for site ${site} in analysis type ${analysis_type}. Adding package update job to list."
     else
       errecho -g "No newer genotypes found for site ${site} in analysis type ${analysis_type}. Skipping package update."
     fi
