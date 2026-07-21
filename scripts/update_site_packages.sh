@@ -57,7 +57,7 @@ case "$analysis_type" in
 esac
 
 ## Forge the package in a temp dir
-TEMPDIR=$(mktemp -d ${autorun_root_dir}/.tmp/sites/${analysis_type}/${site_id}_XXXXXXXX)
+TEMPDIR=$(mktemp -d ${autorun_root_dir}/.tmp/sites/${analysis_type}/${site}_XXXXXXXX)
 output_dir="${root_poseidon_dir}/${analysis_type}/${site}"
 
 errecho -y "## Forge Package ##"
