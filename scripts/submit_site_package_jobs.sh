@@ -42,6 +42,6 @@ for a in ${root_poseidon_dir}/*; do
   done
 done
 
-jn=$(wc -l ${output_fn})
+jn=$(wc -l < ${output_fn})
 echo "sbatch --mem=4GB -p short --cpus-per-task=1 --job-name=site_spawner_$(basename ${output_fn}) --output=/mnt/archgen/Autorun_eager/.tmp/sites/$(basename ${output_fn})/%x.po%A.%a --array 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${output_fn}"
 sbatch --mem=4GB -p short --cpus-per-task=1 --job-name=site_spawner_$(basename ${output_fn}) --output=/mnt/archgen/Autorun_eager/.tmp/sites/$(basename ${output_fn})/%x.po%A.%a --array 1-${jn} /mnt/archgen/Autorun_eager/scripts/submit_as_array.sh ${output_fn}
