@@ -20,6 +20,7 @@ root_poseidon_dir="/mnt/archgen/internal_poseidon_archives"
 trident_path="/r1/people/srv_autoeager/bin/trident-2.1.0.0"
 analysis_type="SG"
 site=""
+autorun_root_dir='/mnt/archgen/Autorun_eager/'
 
 ## Parse CLI args.
 TEMP=`getopt -q -o ha:v --long help,analysis_type:,version -n "$0" -- "$@"`
