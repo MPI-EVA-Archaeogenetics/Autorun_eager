@@ -17,7 +17,7 @@ if [[ ${ind_list_fn} = '' ]]; then
     echo "Usage: ${0##*/} <analysis_type> <ind_list_fn>"
     exit 0
 fi
-output_fn="${ind_list_fn##*/}.${analysis_type}.joblist"
+output_fn="/mnt/archgen/Autorun_eager/.tmp/joblists/${ind_list_fn##*/}.${analysis_type}.joblist"
 echo '' > ${output_fn}
 
 while read r; do
