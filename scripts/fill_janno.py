@@ -391,6 +391,35 @@ def query_pandora(
     print("[query_pandora]: All samples and metadata successfully retrieved")
     return request
 
+def add_udg_column(data: pd.DataFrame, udg_treatment_col: str = 'UDG_Treatment') -> pd.DataFrame:
+    df = data.copy()
+    
+    def convert_to_poseidon_udg(row, udg_treatment_col: str = 'UDG_Treatment') -> str:
+        ## Function takes aggregated udg treatments and converts them to poseidon udg values.
+        udg_list=row[udg_treatment_col].strip().split(";")
+        udg_list=list(dict.fromkeys(udg_list)) ## Remove duplicates
+        
+        if len(udg_list) > 1:
+            return "mixed"
+        match udg_list[0]:
+            case 'none':
+                return 'minus'
+            case 'half':
+                return 'half'
+            case 'full':
+                return 'plus'
+    df = (
+        df[["Sample_Name", "Library_ID", udg_treatment_col]]
+        .drop_duplicates()
+        .groupby("Sample_Name")[[udg_treatment_col]]
+        .agg(lambda x: ";".join(x))
+    )
+    df ['UDG'] = (
+        df[[udg_treatment_col]]
+        .apply(convert_to_poseidon_udg, axis=1)
+    )
+    return df
+
 def add_date_columns(data:pd.DataFrame) -> pd.DataFrame:
     df = data.copy()
     
@@ -585,6 +614,7 @@ def main(cli_args:str = None):
         damage_estimation_paths = glob.glob(
             os.path.join(eager_result_dir, "damageprofiler", "*", "*.json")
         )
+    
     ## Endogenous in Poseidon should be calculated on the SG data.
     endorspy_json_paths = glob.glob(
         os.path.join(eager_result_dir, "endorspy", "*.json")
@@ -632,6 +662,7 @@ def main(cli_args:str = None):
     if endogenous_table.empty:
         print(f"[fill_janno]: No endogenous table found for {args.ind_id}. Setting Endogenous to NaN.", file=sys.stderr)
         endogenous_table = pd.DataFrame(columns=["id", "endogenous_dna"])
+    
     endogenous_table = endogenous_table[["id", "endogenous_dna"]].rename(
         columns={"id": "Library_ID", "endogenous_dna": "endogenous"}
     )
@@ -779,13 +810,8 @@ def main(cli_args:str = None):
         axis=1,
     )
     library_built_table=(
-            tsv_table[["Sample_Name", "Library_ID", "UDG_Treatment"]]
-        .drop_duplicates()
-        .apply(udg_treatment_to_udg, axis=1)
-        .groupby("Sample_Name")[["UDG_Treatment"]]
-        .agg(lambda x: ";".join(x))
-        .rename(columns={"UDG_Treatment": "UDG"})
-        .reset_index()
+        add_udg_column(tsv_table)
+        .filter(["Sample_Name", "UDG"])
         .merge(library_built_table, on="Sample_Name", validate="one_to_one")
     )
     library_built_table=(
