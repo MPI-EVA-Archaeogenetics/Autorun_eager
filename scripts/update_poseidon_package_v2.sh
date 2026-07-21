@@ -41,29 +41,6 @@ function add_readme() {
   echo "- update_poseidon_package.sh: ${VERSION}" >> ${readme_fn}
 }
 
-function validate_analysis_type() {
-  local input
-  local valid_analyses
-  local result
-  local isValid
-  valid_analyses=("SG" "TF" "TM" "RP" "RM")
-  input=$1
-  let isValid=0
-  for a in ${valid_analyses[@]}; do
-    if [[ ${a} == ${input} ]]; then
-      let isValid=1
-    fi
-  done
-
-  if [[ ${isValid} -eq 1 ]]; then
-    echo ${input}
-  else
-    errecho "USER_ERROR: Invalid analysis type provided: ${input}"
-    errecho "Valid analyses: ${valid_analyses[@]}"
-    exit 1
-  fi
-}
-
 function validate_ind_id() {
   local input
   local result

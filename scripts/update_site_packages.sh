@@ -21,14 +21,13 @@ trident_path="/r1/people/srv_autoeager/bin/trident-2.1.0.0"
 analysis_type="SG"
 site=""
 
-while [[ $# -gt 0 ]]; do
+while true ; do
   case "$1" in
-    -a|--analysis_type) analysis_type="$2"; shift 2 ;;
-    -h|--help) Helptext; exit 0;;
-    -v|--version) echo "$VERSION"; exit 0;;
-    --) site="$1"; break;;
-    -*) echo "ERROR: Unknown option: $1" >&2; Helptext ;exit 1 ;;
-    *) echo "ERROR: Unexpected argument: $1" >&2; Helptext; exit 1 ;;
+    -a|--analysis_type) analysis_type=$(validate_analysis_type $2); shift 2;;
+    -h|--help) Helptext; exit 0 ;;
+    -v|--version) echo ${VERSION}; exit 0;;
+    --) site="${2}"; break ;; ## Remove the _ss suffix already if provided.
+    *) echo -e "invalid option provided: $1.\n"; Helptext; exit 1;;
   esac
 done
 
