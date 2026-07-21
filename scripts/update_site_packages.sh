@@ -62,21 +62,25 @@ TEMPDIR=$(mktemp -d ${autorun_root_dir}/.tmp/sites/${site}_${analysis_type}_XXXX
 output_dir="${root_poseidon_dir}/${analysis_type}/${site}"
 
 errecho -y "## Forge Package ##"
+LOG="${TEMPDIR}/package_forge.log"
 ${trident_path} forge \
   -d ${root_poseidon_dir}/.individuals.nobackup/${analysis_type}/${site} \
   -o ${TEMPDIR}/${site} \
-  --outFormat EIGENSTRAT
+  --outFormat EIGENSTRAT \
+  2>&1 | tee -a ${LOG} ## Save stderr/stdout to log file for future reference.
 
 check_fail $? "Trident forge command failed for site ${site} in analysis type ${analysis_type}."
 errecho -g "## Package Forge completed ##\n"
 
 errecho -y "## Rectify Package ##"
+LOG="${TEMPDIR}/package_update.log"
 ${trident_path} rectify \
   -d ${TEMPDIR}/${site} \
   --checksumAll \
   --logText "$(date -I) Package creation" \
   --packageVersion Major \
   --newContributors '[Thiseas C. Lamnidis](thiseas_christos_lamnidis@eva.mpg.de);[Kay Pruefer](kay_pruefer@eva.mpg.de)' \
+  2>&1 | tee -a ${LOG} ## Save stderr/stdout to log file for future reference.
 
 check_fail $? "Trident rectify command failed for site ${site} in analysis type ${analysis_type}."
 errecho -g "## Package Rectify completed ##\n"
