@@ -28,7 +28,7 @@ errecho -y "Creating joblist for site package updates. Output will be written to
 
 for a in ${root_poseidon_dir}/*; do
   analysis_type=$(basename $a)
-  for s in ${root_poseidon_dir}/${analysis_type}/.individuals/*; do
+  for s in ${root_poseidon_dir}/${analysis_type}/.individuals.nobackup/*; do
     site=$(basename $s)
     output_site_yml="${root_poseidon_dir}/${analysis_type}/${site}/POSEIDON.yml"
     newest_geno=$(ls -Art -1 ${s}/*/*geno | tail -n 1) ## Reverse order and tail to avoid broken pipe errors
