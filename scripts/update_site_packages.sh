@@ -3,7 +3,7 @@
 ## Bash strict mode (no -e given, since I want to use check_fail to provide informative error info manually):
 set -uo pipefail
 
-VERSION="0.0.0"
+VERSION="0.1.0"
 source /mnt/archgen/Autorun_eager/scripts/helper_functions.sh
 
 # ## Helptext function
@@ -85,6 +85,15 @@ ${trident_path} rectify \
 
 check_fail $? "Trident rectify command failed for site ${site} in analysis type ${analysis_type}."
 errecho -g "## Package Rectify completed ##\n"
+
+errecho -y "## Valdiate Package ##"
+LOG="${TEMPDIR}/package_validation.log"
+${trident_path} validate \
+  -d ${TEMPDIR}/${site} \
+  2>&1 | tee -a ${LOG} ## Save stderr/stdout to log file for future reference.
+
+check_fail $? "Trident validate command failed for site ${site} in analysis type ${analysis_type}."
+errecho -g "## Package Validate completed ##\n"
 
 ## Remove live package, and publish this one
 errecho -y "## Publish Package ##"
