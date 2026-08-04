@@ -106,6 +106,7 @@ validate_ind_id "${ind_id}"
 site_id=`${pandora_helper} -g site_id ${ind_id}` ## Site inferred by pyPandoraHelper
 
 autorun_root_dir='/mnt/archgen/Autorun_eager/'
+scratch_dir='/mnt/archgen/scratch/srv_autoeager/.individuals'
 root_input_dir='/mnt/archgen/Autorun_eager/eager_outputs' ## Directory should include subdirectories for each analysis type (TF/SG) and sub-subdirectories for each site and individual.
 input_dir="${root_input_dir}/${analysis_type}/${site_id}/${ind_id}/genotyping/"
 output_dir="${root_output_dir}/.individuals.nobackup/${analysis_type}/${site_id}/"
@@ -149,7 +150,7 @@ fi
 ## This will evaluate to TRUE when the newest AE geno is newer than the output geno, or when there is no output geno (i.e. no existing package).
 if [[ ${newest_geno} -nt ${output_dir}/${ind_id}/${ind_id}.geno ]] || [[ "${force}" == 'true' ]]; then
     if [[ ! -d ${autorun_root_dir}/.tmp/v2/${analysis_type}/ ]]; then mkdir -p ${autorun_root_dir}/.tmp/v2/${analysis_type}/; fi
-    TEMPDIR=$(mktemp -d ${autorun_root_dir}/.tmp/v2/${analysis_type}/${ind_id}_XXXXXXXX)
+    TEMPDIR=$(mktemp -d ${scratch_dir}/${analysis_type}/${ind_id}_XXXXXXXX)
     errecho -y "[${0##*/}]: Pulling genotypes for ${ind_id}."
     ## make_genotype_dataset_out_of_genotypes <out_name> <tempdir> <output_ind_suffix> <out_population> <geno_fn1> <geno_fn2> ...
     make_genotype_dataset_out_of_genotypes ${ind_id} ${TEMPDIR} .${analysis_type} ${site_id} ${input_dir}/*geno

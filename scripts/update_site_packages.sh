@@ -17,6 +17,7 @@ function Helptext() {
 }
 
 root_poseidon_dir="/mnt/archgen/internal_poseidon_archives"
+scratch_dir='/mnt/archgen/scratch/srv_autoeager/.sites'
 trident_path="/r1/people/srv_autoeager/bin/trident-2.1.0.0"
 analysis_type="SG"
 site=""
@@ -58,7 +59,7 @@ case "$analysis_type" in
 esac
 
 ## Forge the package in a temp dir
-TEMPDIR=$(mktemp -d ${autorun_root_dir}/.tmp/sites/${site}_${analysis_type}_XXXXXXXX)
+TEMPDIR=$(mktemp -d ${scratch_dir}/${site}_${analysis_type}_XXXXXXXX)
 output_dir="${root_poseidon_dir}/${analysis_type}/${site}"
 
 errecho -y "## Forge Package ##"
