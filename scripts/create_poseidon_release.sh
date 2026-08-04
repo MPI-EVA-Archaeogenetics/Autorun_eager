@@ -1,81 +1,97 @@
 #!/usr/bin/env bash
 
-VERSION="1.0.0"
+## Bash strict mode (no -e given, since I want to use check_fail to provide informative error info manually):
+set -uo pipefail
 
-## Colours for printing to terminal
-Yellow=$(tput sgr0)'\033[1;33m' ## Yellow normal face
-Red=$(tput sgr0)'\033[1;31m' ## Red normal face
-Normal=$(tput sgr0)
+VERSION="2.0.0"
+
+## Dependency
+source /mnt/archgen/Autorun_eager/scripts/helper_functions.sh
 
 ## Helptext function
 function Helptext() {
   echo -ne "\t usage: $0 [options] <release_name>\n\n"
-  echo -ne "This creates a dated release of all poseidon packages.\n\n"
+  echo -ne "This creates a dated release of all poseidon packages in each analysis type.\n\n"
   echo -ne "Options:\n"
+  echo -ne "-d, --packageDate\t\tOptional.The ISO formatted date the letter packages were created. Assumed to be today if not provided."
   echo -ne "-h, --help\t\tPrint this text and exit.\n"
   echo -ne "-v, --version \t\tPrint version and exit.\n"
 }
 
-## Print messages to stderr
-function errecho() { echo -e $* 1>&2 ;}
-
-
 ## Parse CLI args.
-TEMP=`getopt -q -o hv --long help,version -n 'create_poseidon_release.sh' -- "$@"`  
+TEMP=`getopt -q -o dhv --long packageDate,help,version -n 'create_poseidon_releases.sh' -- "$@"`  
 eval set -- "$TEMP"
 
 ## parameter defaults
-trident_path="/r1/people/srv_autoeager/bin/trident-1.5.7.0"
-## In the future, maybe multiple releases, for each data type?
-poseidon_pacakges="/mnt/archgen/Autorun_eager/poseidon_packages/TF/Sites/"
-release_dir="/mnt/archgen/Autorun_eager/poseidon_packages/releases/"
+trident_path="/r1/people/srv_autoeager/bin/trident-2.1.0.0"
+scratch_dir='/mnt/archgen/scratch/srv_autoeager/.releases'
+root_poseidon_dir="/mnt/archgen/internal_poseidon_archives"
+release_dir="${root_poseidon_dir}/releases/"
+date_stamp="$(date -I)"
+input_date="${date_stamp}"
+dependency=''
 
 ## Read in CLI arguments
 while true ; do
   case "$1" in
     -h|--help) Helptext; exit 0 ;;
     -v|--version) echo ${VERSION}; exit 0;;
-    --) release_name="${2}"; break ;;
+    -d|--packageDate) input_date="$2"; shift 2;;
+    --) break ;;
     *) echo -e "invalid option provided: $1.\n"; Helptext; exit 1;;
   esac
 done
 
-## All poseidon packages have the population name "Unknown". This can be used to make a mega release easily.
-##   Once the large dataset is created, the population name can be changed to the site name.
-## TODO: a) Submit to scheduler, b) First forge each site, then forge across sites. That limits open file handles and speeds things up considerably.
-CMD="${trident_path} forge \
-  -d ${poseidon_pacakges} \
-  --forgeString Unknown \
-  --outFormat EIGENSTRAT \
-  --outPackagePath ${release_dir}/${release_name} \
-  --outPackageName ${release_name} \
-  --logMode SimpleLog"
+joblist_fn="${scratch_dir}/.joblists/${date_stamp}_release.joblist"
+echo -n '' > ${joblist_fn} ##Flush out list if it exists.
 
-errecho "${CMD}" | tr -s ' '
-${CMD} 2>&1 > ${release_dir}/${release_name}.creation_log
+for a in SG TF TM RP RM; do
+  TEMPDIR=$(mktemp -d ${scratch_dir}/${date_stamp}/release)
+  LOG=${TEMPDIR}/forge.log
+  ${trident_path} --logMode SimpleLog 
+    forge \
+    --outFormat EIGENSTRAT \
+    -d ${scratch_dir}/${input_date} \
+    -o ${TEMPDIR}/${a} \
+    2>&1 | tee -a ${LOG} ## Save stderr/stdout to log file for future reference.
+  
+  check_fail "Package Forge failed for package in: ${TEMPDIR}/${a}"
+  errecho -g "## Package Forge completed ##\n"
 
-if [[ $? -ne 0 ]]; then
-  errecho "${Red}Error${Normal}: Trident failed to create the release. Check the log file for more information."
-  exit 1
-fi
+  if [[ -f ${release_dir}/${a}/POSEIDON.yml ]]; then
+    ## If a release already exists, update it.
+    cp ${release_dir}/${a}/POSEIDON.yml ${TEMPDIR}/${a}/
+  fi
+  LOG=${TEMPDIR}/rectify.log
+  ${trident_path} --logMode SimpleLog rectify \
+    --checksumAll \
+    -d ${TEMPDIR}/${a} \
+    --logText "${a} release: ${date_stamp}" \
+    --packageVersion Major \
+    2>&1 | tee -a ${LOG} ## Save stderr/stdout to log file for future reference.
 
-## Update Group_Name column in ind file
-awk -F "\t" -v OFS="\t" '{if ($1 ~ /_ss$/) {$3 = substr($1, 1,length($1)-6)} else {$3 = substr($1, 1,length($1)-3)}; print $0}' ${release_dir}/${release_name}.ind > ${release_dir}/${release_name}.ind.tmp
-mv ${release_dir}/${release_name}.ind ${release_dir}/.${release_name}.ind.original
-mv ${release_dir}/${release_name}.ind.tmp ${release_dir}/${release_name}.ind
+  check_fail $? "Trident rectify command failed for package in: ${TEMPDIR}/${a}."
+  errecho -g "## Package Rectify completed ##\n"
 
-## Update Group_Name column in janno file
-##    janno has  aheader line, so add NR==1; NR > 1 to only apply the transformation after the first line.
-awk -F "\t" -v OFS="\t" 'NR==1; NR > 1{if ($1 ~ /_ss$/) {$3 = substr($1, 1,length($1)-6)} else {$3 = substr($1, 1,length($1)-3)}; print $0}' ${release_dir}/${release_name}.janno > ${release_dir}/${release_name}.janno.tmp
-mv ${release_dir}/${release_name}.janno ${release_dir}/.${release_name}.janno.original
-mv ${release_dir}/${release_name}.janno.tmp ${release_dir}/${release_name}.janno
+  LOG=${TEMPDIR}/validate.log
+  ${trident_path} --logMode SimpleLog validate \
+    -d ${TEMPDIR}/${a} \
+    2>&1 | tee -a ${LOG} ## Save stderr/stdout to log file for future reference.
+  
+  check_fail $? "Trident validation command failed for package in: ${TEMPDIR}/${a}."
+  errecho -g "## Package validation completed ##\n"
 
-## Rectify the package to add checksums
-CMD="${trident_path} rectify \
-  -d ${release_dir}/${release_name} \
-  --packageVersion Minor \
-  --logText 'Added checksums to package' \
-  --checksumAll"
-
-errecho "${CMD}" | tr -s ' '
-${CMD}
+  ## Move release to live directory
+  mkdir -p ${release_dir}
+  if [[ -d ${release_dir}/${a} ]]; then
+    errecho "[${0##*/}]: Removing old package at '${release_dir}/${a}/'"
+    rm -f ${release_dir}/${a}/*
+    rmdir ${release_dir}/${a}/
+  fi
+  errecho "[${0##*/}]: Publishing package to '${release_dir}/${a}'"
+  mv ${TEMPDIR}/${a} ${release_dir}/${a}
+  check_fail $? "[${0##*/}]: Failed to publish package to '${release_dir}/${a}'"
+  errecho -g "## Package Publish completed ##\n"
+  errecho "[${0##*/}]: Removing temporary directory '${TEMPDIR}'"
+  rm -rf ${TEMPDIR}
+done
