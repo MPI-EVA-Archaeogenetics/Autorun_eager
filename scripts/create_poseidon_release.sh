@@ -20,7 +20,7 @@ function Helptext() {
 }
 
 ## Parse CLI args.
-TEMP=`getopt -q -o a:d:hv --long analysis_type:,packageDate:,help,version -n 'create_poseidon_snapshot.sh' -- "$@"`  
+TEMP=`getopt -q -o a:d:hv --long analysis_type:,packageDate:,help,version -n "$0" -- "$@"`
 eval set -- "$TEMP"
 
 ## parameter defaults

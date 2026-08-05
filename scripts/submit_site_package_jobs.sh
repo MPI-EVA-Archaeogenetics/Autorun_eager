@@ -3,7 +3,7 @@
 ## Bash strict mode (no -e given, since I want to use check_fail to provide informative error info manually):
 set -uo pipefail
 
-VERSION="0.0.0"
+VERSION="0.0.1"
 source /mnt/archgen/Autorun_eager/scripts/helper_functions.sh
 
 # ## Helptext function

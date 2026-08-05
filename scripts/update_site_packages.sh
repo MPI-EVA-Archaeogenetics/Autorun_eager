@@ -9,9 +9,9 @@ source /mnt/archgen/Autorun_eager/scripts/helper_functions.sh
 # ## Helptext function
 function Helptext() {
   echo -ne "\t usage: $0 [options] -a <analysis_type> <site_id>\n\n"
-  echo -ne "This script pulls data and metadata from Autorun_eager and creates a poseidon package with the data for the specified individual.\n\n"
+  echo -ne "This script forges a site-level package from individual-level packages, for a given analysis type.\n\n"
   echo -ne "Options:\n"
-  echo -ne "-a, --analysis_type\t\tThe analysis type from which the genotypes should be pulled. Individuals in the package will also get a suffix that denotes the analysis type. Defaults to SG.\n"
+  echo -ne "-a, --analysis_type\t\tThe analysis type from which poseidon packages should be forged together. Defaults to SG.\n"
   echo -ne "-h, --help\t\tPrint this text and exit.\n"
   echo -ne "-v, --version \t\tPrint version and exit.\n"
 }

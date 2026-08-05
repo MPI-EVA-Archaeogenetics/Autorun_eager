@@ -11,14 +11,14 @@ source /mnt/archgen/Autorun_eager/scripts/helper_functions.sh
 ## Helptext function
 function Helptext() {
   echo -ne "\t usage: $0 [options] <release_name>\n\n"
-  echo -ne "This creates a dated release of all poseidon packages in each analysis type.\n\n"
+  echo -ne "Script to submit a slurm array job that merges site-level packages into letter-batches, in preparation for a snapshot.\n\n"
   echo -ne "Options:\n"
   echo -ne "-h, --help\t\tPrint this text and exit.\n"
   echo -ne "-v, --version \t\tPrint version and exit.\n"
 }
 
 ## Parse CLI args.
-TEMP=`getopt -q -o hv --long help,version -n 'create_poseidon_releases.sh' -- "$@"`  
+TEMP=`getopt -q -o hv --long help,version -n "$0" -- "$@"`
 eval set -- "$TEMP"
 
 ## parameter defaults
