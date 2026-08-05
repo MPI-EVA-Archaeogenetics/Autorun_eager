@@ -49,8 +49,8 @@ for a in SG TF TM RP RM; do
     if [[ ! $? -eq 0 ]]; then errecho -y "Skipping ${a}, ${l}"; continue; fi
 
     errecho -y "Processing ${a}, ${l}"
-    mkdir -p ${scratch_dir}/${date_stamp}
-    TEMPDIR=$(mktemp -d ${scratch_dir}/${date_stamp}/${a}_${l}_XXXXXXXX)
+    mkdir -p ${scratch_dir}/${date_stamp}/${a}
+    TEMPDIR=$(mktemp -d ${scratch_dir}/${date_stamp}/${a}/${a}_${l}_XXXXXXXX)
     ## cd first to only get relative paths. does not affect PWD since it is a subshell
     $( (cd ${root_poseidon_dir}/${a}; ls -d -1 ${l}* | xargs -I{} echo '*'{}'*') > ${TEMPDIR}/forgelist.txt )
     
