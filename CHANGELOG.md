@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.7.5-dev] - 16/06/2026
 
 ### `Added`
+- Scripts to create a poseidon package (v3.0.0) for each individual, forge those into site level and publish them to internal repo:
+  - `scripts/update_poseidon_package.sh`: Script that creates individual poseidon packages (updated)
+  - `scripts/update_site_packages.sh`: Script to create site-level poseidon packages for a given analysis type.
+  - `scripts/submit_site_package_jobs.sh`: Script that batches `update_site_packages.sh` for all analysis types and submits to SLURM.
+- Scripts to create poseidon snapshots for the internal repository:
+  - `scripts/update_letter_forges.sh`: Script to batch the creation of first-letter-of-site packages from the current live version of the internal archive for each analysis type, in preparation for a snapshot.
+  - `scripts/create_poseidon_snapshot.sh`: SCript that forges and publishes a snapshot from all the first-letter-of-site packages for a given analysis type.
 
 ### `Fixed`
 
