@@ -12,7 +12,7 @@ import sqlalchemy
 import country_converter as coco
 import pyPandoraHelper as pH
 pd.options.mode.copy_on_write = True
-VERSION="0.1.0"
+VERSION="0.1.1"
 
 def _get_args(cli_args:str = None):
     '''This function parses and return arguments passed in'''
@@ -882,12 +882,12 @@ def main(cli_args:str = None):
     sample_results = (
         pandora_results
         .filter(['individual.Full_Individual_Id', 'individual.Tags', 'individual.Projects'])
-        .fillna('')
         .drop_duplicates()
-        .groupby("individual.Full_Individual_Id")
-        .agg(lambda x: ";".join([_ for _ in x if _ not in ['']]))
-        .rename(columns={"individual.Tags":"Pandora_Tags", "individual.Projects":"Pandora_Projects"})
-        .reset_index()
+        .assign(
+            Pandora_Tags = lambda x: x['individual.Tags'].str.replace(',', ';', regex=False),
+            Pandora_Projects = lambda x: x['individual.Projects'].str.replace(',', ';', regex=False)
+        )
+        .filter(['individual.Full_Individual_Id', 'Pandora_Tags', 'Pandora_Projects'])
         .merge(sample_results, on="individual.Full_Individual_Id", validate="one_to_one")
     )
     
