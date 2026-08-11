@@ -59,6 +59,7 @@ ${trident_path} --logMode SimpleLog forge \
   --outFormat EIGENSTRAT \
   -d ${scratch_dir}/${input_date}/${analysis} \
   -o ${TEMPDIR}/${analysis} \
+  -n ${analysis}_snapshot_eva_internal \
   2>&1 | tee -a ${LOG} ## Save stderr/stdout to log file for future reference.
 
 check_fail $? "Package Forge failed for package in: ${TEMPDIR}/${analysis}"
