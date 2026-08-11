@@ -12,6 +12,10 @@ import sqlalchemy
 import country_converter as coco
 import pyPandoraHelper as pH
 pd.options.mode.copy_on_write = True
+## options that help with debugging
+pd.set_option('display.width', 400)
+pd.set_option('display.max_columns', 10)
+
 VERSION="0.1.1"
 
 def _get_args(cli_args:str = None):
@@ -1061,4 +1065,3 @@ if __name__ == "__main__":
             mode="w",
             index=False,
         )
-## TODO: Fix Source_Material column inference for validation.
