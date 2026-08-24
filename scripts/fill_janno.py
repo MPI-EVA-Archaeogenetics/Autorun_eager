@@ -11,6 +11,7 @@ import numpy as np
 import sqlalchemy
 import country_converter as coco
 import pyPandoraHelper as pH
+import warnings
 pd.options.mode.copy_on_write = True
 ## options that help with debugging
 pd.set_option('display.width', 400)
@@ -602,6 +603,15 @@ def determine_source_material(row, type_col='type.Name', type_group_col='type.Ty
         case _:
             return pd.NA
 
+def infer_absolute_path(fn, results_dir, dirs_to_check=[ "merged_bams/initial", "trimmed_bam", "merged_bams/additional", "deduplication" ]):
+    """Function to infer the absolute path of a genotyping BAM file within Autorun_eager output directories, by checking for the given file in a given list of directories."""
+    for d in dirs_to_check:
+        path_to_check = os.path.join(results_dir, d, fn)
+        if os.path.exists(path_to_check):
+            return path_to_check
+    warnings.warn(f"File {fn} not found anywhere within {eager_result_dir}")
+    return pd.NA
+
 def main(cli_args:str = None):
     ## args=fj._get_args(["-c", "/mnt/archgen/Autorun_eager/.eva_credentials", "-j", "/mnt/archgen/Autorun_eager/.tmp/v2/AAR001_FnPbRfoC/AAR001/AAR001.janno","-i","AAR001","-a", "RM"])
     args=_get_args(cli_args)
@@ -793,13 +803,14 @@ def main(cli_args:str = None):
     )
     
     ## Create list of Pandora Library IDs that were used, to create Library_Names and Nr_Libraries.
-    ## Janno Columns: Library_Names, Library_Built, Nr_Libraries, UDG
-    library_built_table=tsv_table[["Sample_Name", "Library_ID"]]
+    ## Janno Columns: Library_Names, Library_Built, Nr_Libraries, UDG, Genotyping_BAM
+    library_built_table=tsv_table[["Sample_Name", "Library_ID", "additional_bam_name"]]
     library_built_table["Library_ID"]=library_built_table["Library_ID"].str.replace(r"_ss", "")
+    library_built_table["Genotyping_BAM"] = library_built_table.apply(lambda row: infer_absolute_path(row.additional_bam_name, eager_result_dir), axis=1)
     library_built_table=(
-            library_built_table[["Sample_Name", "Library_ID"]]
+            library_built_table
         .drop_duplicates()
-        .groupby("Sample_Name")[["Library_ID"]]
+        .groupby(["Sample_Name","Genotyping_BAM"])[["Library_ID"]]
         .agg(lambda x: ";".join(x))
         .rename(columns={"Library_ID": "Library_Names"})
         .reset_index()
@@ -831,11 +842,10 @@ def main(cli_args:str = None):
     
     ## Prepare SNP coverage table for joining. Should always be on the sample level, so only need to fix column names.
     ## Janno columns: Nr_SNPs
-    snp_coverage_table = pyEager.wrappers.compile_snp_coverage_table(
-        snp_coverage_json_paths
-    )
-    snp_coverage_table = snp_coverage_table.drop("Total_Snps", axis=1).rename(
-        columns={"id": "Sample_Name", "Covered_Snps": "Nr_SNPs"}
+    snp_coverage_table = (
+        pyEager.wrappers.compile_snp_coverage_table(snp_coverage_json_paths)
+        .drop("Total_Snps", axis=1)
+        .rename(columns={"id": "Sample_Name", "Covered_Snps": "Nr_SNPs"})
     )
     
     sex_determination_table = pyEager.parsers.parse_sexdeterrmine_json(
@@ -1027,6 +1037,7 @@ def main(cli_args:str = None):
         'Data_Preparation_Pipeline_URL',
         'Endogenous',
         'Nr_SNPs',
+        'Genotyping_BAM',
         'Coverage_on_Target_SNPs',
         'Damage',
         'Contamination',
