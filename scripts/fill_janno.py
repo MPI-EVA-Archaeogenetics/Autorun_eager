@@ -575,7 +575,7 @@ def add_country_iso(data: pd.DataFrame, country_column: str = "Country") -> pd.D
     iso_codes=cc.pandas_convert(df[country_column], to="iso2")
     
     # Add the new column to the DataFrame
-    df['Country_ISO'] = iso_codes
+    df['Country_ISO'] = iso_codes.replace("not found", pd.NA)
     
     return df
 
