@@ -612,6 +612,174 @@ def infer_absolute_path(fn, results_dir, dirs_to_check=[ "merged_bams/initial", 
     warnings.warn(f"File {fn} not found anywhere within {eager_result_dir}")
     return pd.NA
 
+def add_mt_result_columns(data:pd.DataFrame, analysis_type) -> pd.DataFrame:
+    df = data.copy()
+    
+    simplified_mt_colnames = {
+        'reads aligned to MT with MQ >= 25' : 'n_mt_reads',
+        'HaploGrep3 haplogroup assignment' : 'MT_Haplogroup',
+        'contamMix contamination estimate [%]' : 'Contammix_Est',
+        'contamMix contamination lower boundary of 95% CI [%]' : 'Contammix_Est_Lower',
+        'contamMix contamination upper boundary of 95% CI [%]' : 'Contammix_Est_Upper',
+        'mean sequencing depth' : 'MT_Mean_Coverage',
+    }
+    
+    ## Dict of the cols to keep, and their intended type.
+    mt_cols_to_keep = {
+        'mt_results_path' : str,
+        'n_mt_reads' : int,
+        'MT_Haplogroup' : str,
+        'Contammix_Est' : np.float32,
+        'Contammix_Est_Lower' : np.float64,
+        'Contammix_Est_Upper' : np.float64,
+        'MT_Mean_Coverage' : np.float64,
+    }
+    
+    def infer_mt_pipeline_results_path(fn:str, analysis_type:str) -> pd.DataFrame:
+        """
+        Function that infers the path to the Human_MT results file from the BAM path of the eager tsv.
+        
+        Parameters:
+        fn : The path to the BAM from the eager input TSV.
+        analysis_type: The analysis type of the results. If not TM/RM, then the mt results are returned as pd.NAs, otherwise they are read from the actual file.
+        """
+        analyses_with_mt_cap = [ "RM", "TM" ]
+        # fn = row[bam_path_col]
+        if not os.path.exists(fn):
+            warnings.warn(f"Inferred results file not found: {fn}")
+            return pd.NA
+        if analysis_type in analyses_with_mt_cap:
+            mt_results_fn = os.path.dirname(fn).replace(f'Human_{analysis_type}','Human_MT') + '/Results.txt'
+            if os.path.exists(mt_results_fn):
+                return mt_results_fn
+        return pd.NA
+    
+    def get_contammix_err(results_path, median, upper, lower) -> pd.DataFrame:
+        if pd.isna(median):
+            ## Return NA if there is no contammix info.
+            return {'mt_results_path' : results_path, 'Contammix_Err' : np.nan }
+        
+        error = max(abs(median-upper), abs(median-lower))
+        return {'mt_results_path' : results_path, 'Contammix_Err' : error }
+    
+    def read_results_txt(fn) -> pd.DataFrame:
+        # Read the file as long format
+        data = {}
+        with open(fn, 'r') as f:
+            for line in f:
+                if line.startswith('@FILE@'):
+                    continue  # Skip file paths
+                key, value = line.split('\t')
+                try:
+                    data[key.strip()] = pd.to_numeric(value.strip())
+                except:
+                    data[key.strip()] = value.strip()
+        
+        # Create DataFrame
+        df = pd.DataFrame([data]).assign(mt_results_path=fn)
+        
+        ## Convert percentages to proportions, where possible
+        percent_cols = df.filter(regex='\[%\]$').columns
+        for col in percent_cols:
+            try:
+                df[col]=df[col].div(100)
+            except:
+                pass
+        return df
+    
+    def read_mt_results(fn, rename_cols:dict, filter_cols:list) -> pd.DataFrame:
+        """
+        Function to read the Results.txt of the Human_MT pipeline into a pd.DataFrame, and keep the columns relevant to out purposes.
+        """
+        ## Read results file, and transpose it so first column becomes header, and second becomes values.
+        try: 
+            mt_results = read_results_txt(fn)
+            ## If requested, rename columns, filter down to only selected ones, and set their types.
+            if rename_cols:
+                mt_results = mt_results.rename(columns=rename_cols)
+            if filter_cols:
+                mt_results = mt_results[filter_cols.keys()].astype(filter_cols)
+        except:
+            warnings.warn(f"Incorporation of mt results failed from: '{fn}'")
+            if filter_cols:
+                x = {val: np.nan if filter_cols[val] is np.float32 else pd.NA for val in filter_cols.keys()}
+            else:
+                x = {val: pd.NA for val in [ 'mt_results_path', 'MT_Haplogroup', 'MT_Mean_Coverage']}
+                x += { val: np.nan for val in ['n_mt_reads', 'Contammix_Est', 'Contammix_Est_Lower', 'Contammix_Est_Upper']}
+            mt_results=pd.DataFrame([x])
+        mt_results = (
+            mt_results
+            .apply(lambda row: get_contammix_err(row.mt_results_path, row.Contammix_Est, row.Contammix_Est_Upper, row.Contammix_Est_Lower), axis=1, result_type='expand')
+            .merge(mt_results, on="mt_results_path")
+        )
+        return mt_results
+    
+    df['mt_results_path'] = df['BAM'].apply(lambda x: infer_mt_pipeline_results_path(x, analysis_type=analysis_type))
+    # Step 1: Apply `read_mt_results` to each path in the Series
+    # This returns a list of DataFrames (one per file)
+    mt_results_dfs = df['mt_results_path'].apply(read_mt_results, rename_cols=simplified_mt_colnames, filter_cols=mt_cols_to_keep)
+    # Step 2: Concatenate all DataFrames into one big DataFrame
+    # Each file becomes one row
+    combined_results = pd.concat(mt_results_dfs.tolist(), ignore_index=True)
+    # Step 3: Merge back into original DataFrame
+    # Use the path column as the key (e.g., 'results_path')
+    ## Then keep only relevant columns and return df.
+    df = df.merge(combined_results, on='mt_results_path', validate='one_to_one').filter(["Library_ID", "n_mt_reads", "MT_Haplogroup", "MT_Mean_Coverage", "Contammix_Est", "Contammix_Err"])
+    
+    ## Compile library-level estimates
+    grouped=df.groupby('Library_ID')
+    ## Apply aggregation functions.
+    result = grouped.apply(
+        lambda g: pd.Series({
+            'n_mt_reads': g['n_mt_reads'].sum(),
+            'MT_Mean_Coverage': g['MT_Mean_Coverage'].sum(),
+            'MT_Haplogroup': g.loc[g['MT_Haplogroup'].str.len().idxmax(), 'MT_Haplogroup'],
+            'Contammix_Est': weighted_mean(
+                g, wt_col='n_mt_reads', val_col='Contammix_Est', filter_col='n_mt_reads', min_val=0
+            ),
+            'Contammix_Err': weighted_mean(
+                g, wt_col='n_mt_reads', val_col='Contammix_Err', filter_col='n_mt_reads', min_val=0
+            )
+        }),
+        include_groups=False
+    ).reset_index()
+    return(result)
+
+def join_non_missing_strings(
+    val1, val2,
+    filter_val1=None, filter_val2=None
+):
+    """
+    Join two values with ';' if both are non-NA.
+    If only one is non-NA, return that value.
+    If both are NA, return pd.NA.
+    
+    Optionally, filter based on separate filter columns.
+    If filter_val1/2 are provided, only join if both filters pass (i.e., are non-NA).
+    """
+    # If filter columns are provided, use them to decide whether to join
+    if filter_val1 is not None and filter_val2 is not None:
+        # Only proceed if both filters are non-NA
+        if pd.isna(filter_val1) or pd.isna(filter_val2):
+            # If either filter is NA, return NA (or could return the non-filtered value)
+            # Here we choose: if one filter is NA, return the non-filtered value
+            if pd.isna(filter_val1) and pd.isna(filter_val2):
+                return pd.NA
+            elif pd.isna(filter_val1):
+                return val2 if pd.notna(val2) else pd.NA
+            else:  # pd.isna(filter_val2)
+                return val1 if pd.notna(val1) else pd.NA
+    
+    # Now handle the actual join logic
+    if pd.isna(val1) and pd.isna(val2):
+        return pd.NA
+    elif pd.notna(val1) and pd.isna(val2):
+        return val1
+    elif pd.isna(val1) and pd.notna(val2):
+        return val2
+    else:  # both non-NA
+        return f"{val1};{val2}"
+
 def main(cli_args:str = None):
     ## args=fj._get_args(["-c", "/mnt/archgen/Autorun_eager/.eva_credentials", "-j", "/mnt/archgen/Autorun_eager/.tmp/v2/AAR001_FnPbRfoC/AAR001/AAR001.janno","-i","AAR001","-a", "RM"])
     args=_get_args(cli_args)
@@ -704,18 +872,20 @@ def main(cli_args:str = None):
     )
     
     ## LIBRARY LEVEL RESULTS THAT NEED AGGRGATION. Need to be put together since weighted mean relies on n_reads from damage_table.
+    mt_result_table = add_mt_result_columns(tsv_table, args.analysis_type)
     lib_results = (
         damage_table
         .merge(endogenous_table, on="Library_ID", validate="one_to_one")
         .merge(contamination_table, on="Library_ID", validate="one_to_one")
+        .merge(mt_result_table, on="Library_ID", validate="many_to_one")
     )
     lib_results["Sample_Name"] = lib_results["Library_ID"].str.replace(r".[A-Z][0-9]{4}$", "", regex=True)
-    lib_results['Contamination_Meas'] = np.where(lib_results['Contamination_Nr_SNPs'] >= 100, 'ANGSD', pd.NA)
-    
+    lib_results['NUC_Contamination_Meas'] = np.where(lib_results['Contamination_Nr_SNPs'] >= 100, 'ANGSD', pd.NA)
+    lib_results['MT_Contamination_Meas'] = np.where(pd.notna(lib_results['Contammix_Est']), 'ContamMix', pd.NA)
+
     ## Aggregate lib_results to sample level
     collected_lib_results = pd.DataFrame()
     collected_lib_results["Sample_Name"] = lib_results["Sample_Name"].unique()
-    
     ## Endogenous: maximum value across libraries
     collected_lib_results = (
         lib_results.groupby("Sample_Name")["endogenous"]
@@ -725,7 +895,6 @@ def main(cli_args:str = None):
         .rename(columns={"endogenous": "Endogenous"})
         .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
     )
-    
     ## Damage: weighted mean across libraries
     collected_lib_results = (
         lib_results.groupby("Sample_Name")[
@@ -743,7 +912,6 @@ def main(cli_args:str = None):
         .rename(columns={0: "Damage"})
         .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
     )
-    
     ## Contamination_Est: weighted mean across libraries
     collected_lib_results = (
         lib_results.groupby("Sample_Name")[
@@ -758,10 +926,9 @@ def main(cli_args:str = None):
         )
         .apply(lambda x: round (x, 3) )
         .reset_index()
-        .rename(columns={0: "Contamination"})
+        .rename(columns={0: "NUC_Contamination"})
         .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
     )
-    
     ## Contamination_SE: weighted mean across libraries
     collected_lib_results = (
         lib_results.groupby("Sample_Name")[
@@ -776,10 +943,43 @@ def main(cli_args:str = None):
         )
         .apply(lambda x: round (x, 5) )
         .reset_index()
-        .rename(columns={0: "Contamination_Err"})
+        .rename(columns={0: "NUC_Contamination_Err"})
         .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
     )
-    
+    ## MT_Contamination_Est: weighted mean across libraries
+    collected_lib_results = (
+        lib_results.groupby("Sample_Name")[
+            ["Contammix_Est", "n_mt_reads"]
+        ]
+        .apply(
+            weighted_mean,
+            wt_col="n_mt_reads",
+            val_col="Contammix_Est",
+            filter_col="n_mt_reads",
+            min_val=0,
+        )
+        .apply(lambda x: round (x, 3) )
+        .reset_index()
+        .rename(columns={0: "MT_Contamination"})
+        .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
+    )
+    ## MT_Contamination_SE: weighted mean across libraries
+    collected_lib_results = (
+        lib_results.groupby("Sample_Name")[
+            ["Contammix_Err", "n_mt_reads"]
+        ]
+        .apply(
+            weighted_mean,
+            wt_col="n_mt_reads",
+            val_col="Contammix_Err",
+            filter_col="n_mt_reads",
+            min_val=0,
+        )
+        .apply(lambda x: round (x, 5) )
+        .reset_index()
+        .rename(columns={0: "MT_Contamination_Err"})
+        .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
+    )
     ## Contamination_Note: message about contamination estimation
     collected_lib_results = (
         lib_results.astype("string")
@@ -787,21 +987,52 @@ def main(cli_args:str = None):
         .agg(
             lambda x: f"Nr Snps (per library): {';'.join(x)}. Estimate and error are weighted means of values per library. Libraries with fewer than {args.contamination_snp_cutoff} SNPs used in contamination estimation were excluded."
         )
-        .rename(columns={"Contamination_Nr_SNPs": "Contamination_Note"})
+        .rename(columns={"Contamination_Nr_SNPs": "NUC_Contamination_Note"})
         .reset_index()
         .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
     )
-    
-    ## Conamination_Meas: onlt ANGSD if some libraries have enough SNPs
+    ## Conamination_Meas: only ANGSD if some libraries have enough SNPs
     collected_lib_results = (
-        lib_results.groupby("Sample_Name")[["Contamination_Meas"]]
+        lib_results.groupby("Sample_Name")[["NUC_Contamination_Meas"]]
         .agg(
-            lambda x: np.nan if x.isna().all() else 'ANGSD'
+            lambda x: pd.NA if x.isna().all() else 'ANGSD'
         )
         .reset_index()
         .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
     )
-    
+    collected_lib_results = (
+        lib_results.groupby("Sample_Name")[["MT_Contamination_Meas"]]
+        .agg(
+            lambda x: pd.NA if x.isna().all() else 'ContamMix',
+        )
+        .reset_index()
+        .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
+    )
+    collected_lib_results = (
+        lib_results.groupby("Sample_Name")[["MT_Contamination_Meas"]]
+        .agg(
+            lambda x: f"mtDNA contamination is based on Human_MT pipeline results. Estimate and error are weighted means of values per runlet."
+        )
+        .rename(columns={"MT_Contamination_Meas": "MT_Contamination_Note"})
+        .reset_index()
+        .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
+    )
+    ## MT_Haplogroup. Longest string across libraries.
+    collected_lib_results = (
+        lib_results.groupby("Sample_Name")[
+            ["MT_Haplogroup"]
+        ]
+        .apply(lambda g: g.loc[g['MT_Haplogroup'].str.len().idxmax(), 'MT_Haplogroup'], include_groups=False)
+        .reset_index(name='MT_Haplogroup')
+        .merge(collected_lib_results, on="Sample_Name", validate="one_to_one")
+    )
+    ## Join together NUC and MT columns where applicable
+    ## Applied to: 'Contamination_Meas', 'Contamination_Note', 'Contamination_Err', 'Contamination'
+    cols_to_join=collected_lib_results.filter(like="NUC_").columns
+    for col in cols_to_join:
+        new_col=col.removeprefix("NUC_")
+        collected_lib_results[new_col] = collected_lib_results.apply(lambda row: join_non_missing_strings(val1=row[col], val2=row[f"MT_{new_col}"], filter_val1=row["NUC_Contamination_Meas"], filter_val2=row["MT_Contamination"]), axis=1)
+    collected_lib_results.drop(['NUC_Contamination_Meas', 'NUC_Contamination_Note', 'NUC_Contamination_Err', 'NUC_Contamination', 'MT_Contamination_Meas', 'MT_Contamination_Note', 'MT_Contamination_Err', 'MT_Contamination'], axis=1, inplace=True)
     ## Create list of Pandora Library IDs that were used, to create Library_Names and Nr_Libraries.
     ## Janno Columns: Library_Names, Library_Built, Nr_Libraries, UDG, Genotyping_BAM
     library_built_table=tsv_table[["Sample_Name", "Library_ID", "additional_bam_name"]]
