@@ -110,7 +110,15 @@ prepare_sql_query <- function(analysis_type, no_query = F) {
       JOIN TAB_Batch      AS SeB ON Se.Batch     = SeB.Id
   WHERE
       -- Remove any deleted analysis entries.
-      A.Deleted = 'false'
+          A.Deleted = 'false'
+      AND R.Deleted = 'false'
+      AND Se.Deleted = 'false'
+      AND C.Deleted = 'false'
+      AND L.Deleted = 'false'
+      AND E.Deleted = 'false'
+      AND S.Deleted = 'false'
+      AND I.Deleted = 'false'
+      AND Si.Deleted = 'false'
       ", tab_query,"
   ORDER BY I.Full_Individual_Id,L.Full_Library_Id;"
   )
