@@ -208,7 +208,7 @@ if [[ ${newest_geno} -nt ${output_dir}/${ind_id}/${ind_id}.geno ]] || [[ "${forc
     --checksumAll \
     --logText "${date_stamp} Package creation" \
     --packageVersion Major \
-    --newContributors '[Thiseas C. Lamnidis](thiseas_christos_lamnidis@eva.mpg.de);[Kay Pruefer](kay_pruefer@eva.mpg.de)' \
+    --newContributors '[Thiseas C. Lamnidis](thiseas_christos_lamnidis@eva.mpg.de)<0000-0003-4485-8570>;[Kay Pruefer](kay_pruefer@eva.mpg.de)<0000-0001-6242-3058>' \
     2>&1 | tee -a ${LOG} ## Save stderr/stdout to log file for future reference.
   
   check_fail $? "[${0##*/}]: Failed to rectify package. See: ${LOG}"

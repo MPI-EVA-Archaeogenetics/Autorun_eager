@@ -68,19 +68,21 @@ ${trident_path} forge \
   -d ${root_poseidon_dir}/.individuals.nobackup/${analysis_type}/${site} \
   -o ${TEMPDIR}/${site} \
   --outFormat EIGENSTRAT \
+  --addTrace \
   2>&1 | tee -a ${LOG} ## Save stderr/stdout to log file for future reference.
 
 check_fail $? "Trident forge command failed for site ${site} in analysis type ${analysis_type}."
 errecho -g "## Package Forge completed ##\n"
 
 errecho -y "## Rectify Package ##"
+port_over_existing_package_metadata "${output_dir}" "${TEMPDIR}/${site}"
 LOG="${TEMPDIR}/package_update.log"
 ${trident_path} rectify \
   -d ${TEMPDIR}/${site} \
   --checksumAll \
-  --logText "$(date -I) Package creation" \
+  --logText "$(date -I) Package creation/update" \
   --packageVersion Major \
-  --newContributors '[Thiseas C. Lamnidis](thiseas_christos_lamnidis@eva.mpg.de);[Kay Pruefer](kay_pruefer@eva.mpg.de)' \
+  --newContributors '[Thiseas C. Lamnidis](thiseas_christos_lamnidis@eva.mpg.de)<0000-0003-4485-8570>;[Kay Pruefer](kay_pruefer@eva.mpg.de)<0000-0001-6242-3058>' \
   2>&1 | tee -a ${LOG} ## Save stderr/stdout to log file for future reference.
 
 check_fail $? "Trident rectify command failed for site ${site} in analysis type ${analysis_type}."
