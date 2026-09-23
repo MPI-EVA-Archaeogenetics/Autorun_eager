@@ -140,7 +140,7 @@ class LibraryResultsAggregator:
         samples = merge_in(
                     lib_results
                     .groupby("Sample_Name")["MT_Mean_Coverage"]
-                    .apply(sum)
+                    .apply(np.sum)
                     .reset_index(name="MT_Mean_Coverage")
         )
         return self._merge_nuc_and_mt_columns(samples)
