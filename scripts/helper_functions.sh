@@ -201,3 +201,30 @@ function make_genotype_dataset_out_of_genotypes() {
     exit 1
   fi
 }
+
+## Ports over persistent package metadata (CHANGELOG.md and packageVersion)
+## from a pre-existing "expected" Poseidon package into a freshly generated
+## "current" package directory, so that these values aren't lost/reset when
+## the package is regenerated.
+## If no POSEIDON.yml is found in expected_dir, this is a silent no-op --
+## i.e. it assumes there is no pre-existing package to carry metadata over
+## from (e.g. on first-time package creation).
+## Usage: port_over_existing_package_metadata expected_dir current_dir
+##   expected_dir: path to the pre-existing package directory to pull CHANGELOG.md and packageVersion from.
+##   current_dir: path to the freshly generated package directory to update in place.
+port_over_existing_package_metadata() {
+  local expected_dir="$1"
+  local current_dir="$2"
+
+  if [[ -f "${expected_dir}/POSEIDON.yml" ]]; then
+    ## Port over the CHANGELOG
+    cp "${expected_dir}/CHANGELOG.md" "${current_dir}/"
+    ## Update the package version to match the live version.
+    local old_vn
+    old_vn=$(grep 'packageVersion:' "${expected_dir}/POSEIDON.yml" | cut -d' ' -f2)
+    sed -i "s/packageVersion:.*/packageVersion: ${old_vn}/" "${current_dir}/POSEIDON.yml"
+    ## Make Poseidon aware of the CHANGELOG file.
+    echo "changelogFile: CHANGELOG.md" >>"${current_dir}/POSEIDON.yml"
+  fi
+}
+

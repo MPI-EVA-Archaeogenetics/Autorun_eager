@@ -175,16 +175,9 @@ if [[ ${newest_geno} -nt ${output_dir}/${ind_id}/${ind_id}.geno ]] || [[ "${forc
   errecho -g "## Initial Package Creation completed ##\n"
   ## Flush out bibfile contents (currently it's template bloat from trident init)
   echo -n '' >${TEMPDIR}/${ind_id}/${ind_id}.bib
-  ## If a package for this individual already exists, update the packageVersion to match the live version, and copy the CHANGELOG ot the new
-  if [[ -f ${output_dir}/${ind_id}/POSEIDON.yml ]]; then
-    ## Port over the CHANGELOG
-    cp ${output_dir}/${ind_id}/CHANGELOG.md ${TEMPDIR}/${ind_id}/
-    ## Update the package version to match the live version.
-    old_vn=$(grep 'packageVersion:' ${output_dir}/${ind_id}/POSEIDON.yml | cut -d' ' -f2)
-    sed -i "s/packageVersion:.*/packageVersion: ${old_vn}/" ${TEMPDIR}/${ind_id}/POSEIDON.yml
-    ## Make Poseidon aware of the CHANGELOG file.
-    echo "changelogFile: CHANGELOG.md" >>${TEMPDIR}/${ind_id}/POSEIDON.yml
-  fi
+  ## If a package for this individual already exists, update the packageVersion to match the live version, and copy the CHANGELOG to the new pkg
+  ## Function imported from helper_functions.sh
+  port_over_existing_package_metadata "${output_dir}/${ind_id}/" "${TEMPDIR}/${ind_id}/"
 
   ## Populate the janno file
   LOG="${TEMPDIR}/populate_janno.log"
