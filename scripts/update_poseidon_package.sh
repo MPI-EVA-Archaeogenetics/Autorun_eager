@@ -3,7 +3,7 @@
 ## Bash strict mode (no -e given, since I want to use check_fail to provide informative error info manually):
 set -uo pipefail
 
-VERSION="2.0.1"
+VERSION="2.1.0"
 
 ## DEPENDENCY
 pandora_helper="/mnt/archgen/tools/helper_scripts/py_helpers/pyPandoraHelper/pyPandoraHelper.py"
@@ -27,9 +27,9 @@ function add_readme() {
   local package_name
   local readme_fn
   local date_stamp
-  local fill_janno_version
+  local populate_janno_version
   local trident_version
-  fill_janno_version=$(${autorun_root_dir}/scripts/fill_janno.py --version)
+  populate_janno_version=$(python -m populate_janno -v)
   trident_version=$(${trident_path} --version)
   package_name=$1
   readme_fn=$2
@@ -37,7 +37,7 @@ function add_readme() {
   echo "# ${package_name}" > ${readme_fn}
   echo "This package was created on ${date_stamp} and was processed using the following versions:" >> ${readme_fn}
   echo "- trident: ${trident_version}" >> ${readme_fn}
-  echo "- fill_janno.py: ${fill_janno_version}" >> ${readme_fn}
+  echo "- populate_janno: ${populate_janno_version}" >> ${readme_fn}
   echo "- update_poseidon_package.sh: ${VERSION}" >> ${readme_fn}
 }
 
@@ -149,7 +149,7 @@ fi
 ## If the genotypes are newer than the output, create a package
 ## This will evaluate to TRUE when the newest AE geno is newer than the output geno, or when there is no output geno (i.e. no existing package).
 if [[ ${newest_geno} -nt ${output_dir}/${ind_id}/${ind_id}.geno ]] || [[ "${force}" == 'true' ]]; then
-    if [[ ! -d ${autorun_root_dir}/.tmp/v2/${analysis_type}/ ]]; then mkdir -p ${autorun_root_dir}/.tmp/v2/${analysis_type}/; fi
+    if [[ ! -d ${scratch_dir}/${analysis_type}/ ]]; then mkdir -p ${scratch_dir}/${analysis_type}/; fi
     TEMPDIR=$(mktemp -d ${scratch_dir}/${analysis_type}/${ind_id}_XXXXXXXX)
     errecho -y "[${0##*/}]: Pulling genotypes for ${ind_id}."
     ## make_genotype_dataset_out_of_genotypes <out_name> <tempdir> <output_ind_suffix> <out_population> <geno_fn1> <geno_fn2> ...
@@ -183,9 +183,11 @@ if [[ ${newest_geno} -nt ${output_dir}/${ind_id}/${ind_id}.geno ]] || [[ "${forc
   fi
 
   ## Populate the janno file
-  LOG="${TEMPDIR}/janno_fill.log"
+  LOG="${TEMPDIR}/populate_janno.log"
   errecho -y "## Janno File Fill ##"
-  ${autorun_root_dir}/scripts/fill_janno.py \
+  ## Running the python package executes __main__.py
+  ## Package must be installed with `pip install -e /mnt/archgen/Autorun_eager/scripts/populate_janno` to work.
+  python -i -m scripts.populate_janno.populate_janno \
     -i ${ind_id} \
     -a ${analysis_type} \
     -j ${TEMPDIR}/${ind_id}/${ind_id}.janno \

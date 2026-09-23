@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.7.5-dev] - 16/06/2026
 
 ### `Added`
+- `scripts/populate_janno`: A python package to populate a janno file with various information from the internal pipelines and Pandora.
 - Scripts to create a poseidon package (v3.0.0) for each individual, forge those into site level and publish them to internal repo:
   - `scripts/update_poseidon_package.sh`: Script that creates individual poseidon packages (updated)
   - `scripts/update_site_packages.sh`: Script to create site-level poseidon packages for a given analysis type.

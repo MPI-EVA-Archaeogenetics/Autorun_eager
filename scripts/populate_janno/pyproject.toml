@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "populate-janno"
+version = "0.1.1"
+description = "Populates poseidon .janno files from nf-core/eager results and Pandora metadata."
+readme = "README.md"
+requires-python = ">=3.10"          # needed for str.removeprefix/removesuffix and match/case
+authors = [
+    { name = "Thiseas Christos Lamnidis", email = "thiseas_christos_lamnidis@eva.mpg.de" },
+]
+
+dependencies = [
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "SQLAlchemy>=2.0",
+    "PyMySQL>=1.1",                  # required at runtime for the mysql+pymysql:// driver
+    "country_converter>=1.2",
+    "pyEager>=1.6.2",
+    "pyPandoraHelper @ file:///mnt/archgen/tools/helper_scripts/py_helpers/",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0",
+    "pytest-mock>=3.14",
+    "pytest-cov>=5.0",
+]
+dev = [
+    "populate-janno[test]",
+    "black>=24.0",
+    "ruff>=0.5",
+]
+
+[project.scripts]
+populate-janno = "populate_janno.populate_janno:main"
+
+[tool.setuptools.packages.find]
+include = ["populate_janno*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["populate_janno"]
+omit = ["tests/*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.black]
+line-length = 120
+target-version = ["py311"]

@@ -22,3 +22,4 @@ stats/
 AE_R_deps_singularity.sif
 *.log
 *.err
+__pycache__/
