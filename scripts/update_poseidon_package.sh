@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+## TODO: Use poseidon doi Crossref query to fill BibTex entries for packages?
+
 ## Bash strict mode (no -e given, since I want to use check_fail to provide informative error info manually):
 set -uo pipefail
 
@@ -19,6 +21,7 @@ function Helptext() {
   echo -ne "-r, --root_output_directory\t\tOptional. The root directory to place the output packages in. Default: '/mnt/archgen/internal_poseidon_archives/'\n"
   echo -ne "-f, --force\t\tOptional. Force package creation even if no new genotypes are found.\n"
   echo -ne "-k, --keep_logs\t\tOptional. Keep the log files generated during package creation. By default these are deleted on successful completion.\n"
+  echo -ne "-i, --interactive\t\tOptional. When provided, an interactive python version will be entered upon execution of populate_janno.\n"
   echo -ne "-h, --help\t\tPrint this text and exit.\n"
   echo -ne "-v, --version \t\tPrint version and exit.\n"
 }
@@ -60,18 +63,18 @@ function validate_ind_id() {
 }
 
 ## Parse CLI args.
-TEMP=`getopt -q -o hfka:r:v --long help,force,keep_logs,analysis_type:,root_output_dir:version -n 'update_poseidon_package.sh' -- "$@"`
+TEMP=`getopt -q -o hfka:r:iv --long help,force,keep_logs,analysis_type:,root_output_dir:,interactive,version -n 'update_poseidon_package.sh' -- "$@"`
 eval set -- "$TEMP"
 
 ## parameter defaults
 force='false'
 keep_logs='false'
 ind_id=''
-contamination_snp_cutoff="100"  ## Provided to fill_in_janno.R
-ss_suffix="_ss"                 ## Provided to fill_in_janno.R
-geno_ploidy='haploid'           ## Provided to fill_in_janno.R
+contamination_snp_cutoff="100"  ## Provided to populate_janno
+geno_ploidy='haploid'           ## Provided to populate_janno
 date_stamp="$(date -I)"
 root_output_dir='/mnt/archgen/internal_poseidon_archives' ## Directory that includes data type, site ID and ind ID subdirs.
+interactive=''
 
 ## Read in CLI arguments
 while true ; do
@@ -82,7 +85,8 @@ while true ; do
     -r|--root_output_dir) root_output_dir=$2; shift 2;;
     -h|--help) Helptext; exit 0 ;;
     -v|--version) echo ${VERSION}; exit 0;;
-    --) ind_id="${2%${ss_suffix}}"; break ;; ## Remove the _ss suffix already if provided.
+    -i|--interactive) interactive="-i"; shift 1;;
+    --) ind_id="${2%_ss}"; break ;; ## Remove the _ss suffix already if provided.
     *) echo -e "invalid option provided: $1.\n"; Helptext; exit 1;;
   esac
 done
@@ -187,7 +191,7 @@ if [[ ${newest_geno} -nt ${output_dir}/${ind_id}/${ind_id}.geno ]] || [[ "${forc
   errecho -y "## Janno File Fill ##"
   ## Running the python package executes __main__.py
   ## Package must be installed with `pip install -e /mnt/archgen/Autorun_eager/scripts/populate_janno` to work.
-  python -i -m scripts.populate_janno.populate_janno \
+  python ${interactive} -m populate_janno \
     -i ${ind_id} \
     -a ${analysis_type} \
     -j ${TEMPDIR}/${ind_id}/${ind_id}.janno \
@@ -249,6 +253,3 @@ if [[ ${newest_geno} -nt ${output_dir}/${ind_id}/${ind_id}.geno ]] || [[ "${forc
 else
   errecho -y "[${0##*/}]: No new genotypes found for ${ind_id}. No package update needed."
 fi
-
-## TODO: Fix version file setup. 
-## TODO: Use poseidon doi Crossref query to fill BibTex entries for packages?
