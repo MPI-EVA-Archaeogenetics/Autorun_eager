@@ -52,6 +52,10 @@ for ind_id in ${input_iids[@]}; do
       errecho -ne " ${analysis_type}..."
       # ls -d ${root_eager_dir}/${analysis_type}/${site_id}/${ind_id}/work
       rm -rf ${root_eager_dir}/${analysis_type}/${site_id}/${ind_id}/work
+    elif [[ -d ${root_eager_dir}/${analysis_type}/${site_id}/${ind_id}/temp ]]; then
+      errecho -ne " ${analysis_type}..."
+      # ls -d ${root_eager_dir}/${analysis_type}/${site_id}/${ind_id}/temp
+      rm -rf ${root_eager_dir}/${analysis_type}/${site_id}/${ind_id}/temp
     fi
   done
   errecho ''
