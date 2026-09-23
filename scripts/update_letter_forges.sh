@@ -59,6 +59,7 @@ for a in SG TF TM RP RM; do
       --outFormat EIGENSTRAT \
       -d ${root_poseidon_dir}/${a} \
       --forgeFile ${TEMPDIR}/forgelist.txt \
+      --addTrace \
       -o ${TEMPDIR}/${date_stamp}_${a}_${l}/"
     echo ${forge_cmd} | tr -s " " >> ${joblist_fn}
   done
