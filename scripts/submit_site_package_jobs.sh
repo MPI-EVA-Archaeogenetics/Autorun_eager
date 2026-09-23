@@ -21,7 +21,6 @@ source /mnt/archgen/Autorun_eager/scripts/helper_functions.sh
 
 root_poseidon_dir="/mnt/archgen/internal_poseidon_archives"
 date_stamp="$(date -I)"
-trident_path="/r1/people/srv_autoeager/bin/trident-2.1.0.0"
 scratch_dir="/mnt/archgen/scratch/srv_autoeager/.sites"
 output_fn="${scratch_dir}/joblists/${date_stamp}_site_package_update_list.txt"
 errecho -y "Creating joblist for site package updates. Output will be written to ${output_fn}."

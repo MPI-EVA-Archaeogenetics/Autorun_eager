@@ -18,7 +18,7 @@ function Helptext() {
 
 root_poseidon_dir="/mnt/archgen/internal_poseidon_archives"
 scratch_dir='/mnt/archgen/scratch/srv_autoeager/.sites'
-trident_path="/r1/people/srv_autoeager/bin/trident-2.1.0.0"
+trident_path="/r1/people/srv_autoeager/bin/trident-2.2.2.1"
 analysis_type="SG"
 site=""
 autorun_root_dir='/mnt/archgen/Autorun_eager/'

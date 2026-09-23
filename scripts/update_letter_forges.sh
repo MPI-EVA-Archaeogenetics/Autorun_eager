@@ -22,7 +22,7 @@ TEMP=`getopt -q -o hv --long help,version -n "$0" -- "$@"`
 eval set -- "$TEMP"
 
 ## parameter defaults
-trident_path="/r1/people/srv_autoeager/bin/trident-2.1.0.0"
+trident_path="/r1/people/srv_autoeager/bin/trident-2.2.2.1"
 scratch_dir='/mnt/archgen/scratch/srv_autoeager/.releases'
 root_poseidon_dir="/mnt/archgen/internal_poseidon_archives"
 release_dir="${root_poseidon_dir}/releases/"
