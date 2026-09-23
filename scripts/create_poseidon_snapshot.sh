@@ -65,19 +65,16 @@ ${trident_path} --logMode SimpleLog forge \
 check_fail $? "Package Forge failed for package in: ${TEMPDIR}/${analysis}"
 errecho -g "## Package Forge completed ##\n"
 
-if [[ -f ${snapshot_dir}/${analysis}/POSEIDON.yml ]]; then
-  errecho -y "## Copying Existing YAML for package ##\n"
-  ## If a snapshot already exists, update it.
-  cp ${snapshot_dir}/${analysis}/POSEIDON.yml ${TEMPDIR}/${analysis}/
-fi
 errecho -y "## Rectify Snapshot ##\n"
+## Pull package version and CHANGELOG from existing release.
+port_over_existing_package_metadata "${snapshot_dir}/${analysis}" "${TEMPDIR}/${analysis}"
 LOG=${TEMPDIR}/rectify.log
 ${trident_path} --logMode SimpleLog rectify \
   --checksumAll \
   -d ${TEMPDIR}/${analysis} \
   --logText "${analysis} snapshot: ${date_stamp}" \
   --packageVersion Major \
-  --newContributors '[Thiseas C. Lamnidis](thiseas_christos_lamnidis@eva.mpg.de);[Kay Pruefer](kay_pruefer@eva.mpg.de)' \
+  --newContributors '[Thiseas C. Lamnidis](thiseas_christos_lamnidis@eva.mpg.de)<0000-0003-4485-8570>;[Kay Pruefer](kay_pruefer@eva.mpg.de)<0000-0001-6242-3058>' \
   2>&1 | tee -a ${LOG} ## Save stderr/stdout to log file for future reference.
 
 check_fail $? "Trident rectify command failed for package in: ${TEMPDIR}/${analysis}."
