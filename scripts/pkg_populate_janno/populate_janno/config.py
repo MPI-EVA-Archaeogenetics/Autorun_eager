@@ -48,6 +48,7 @@ JANNO_DTYPES = {
     "Date_BC_AD_Stop" : "Int64",
     "Chromosomal_Anomalies" : "str",
     "MT_Haplogroup" : "str",
+    "MT_Mean_Coverage" : "str",
     "Y_Haplogroup" : "str",
     "Source_Material" : "str",
     "Nr_Libraries" : "Int64",
@@ -69,7 +70,7 @@ JANNO_DTYPES = {
     "Publication" : "str",
     "Note" : "str",
     "Keywords" : "str",
-    "Publication_Status": "str", 
+    "Publication_Status": "str",
 }
 
 JANNO_OUTPUT_COLUMNS = [
@@ -108,6 +109,7 @@ JANNO_OUTPUT_COLUMNS = [
     'Chromosomal_Anomalies',
     'Chromosomal_Anomalies_Note',
     'MT_Haplogroup',
+    'MT_Mean_Coverage',
     'Y_Haplogroup',
     'Source_Material',
     'Nr_Libraries',
